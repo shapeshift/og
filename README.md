@@ -1,2 +1,0 @@
-# og
-memoless swaps throwback 
