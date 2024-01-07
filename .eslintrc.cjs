@@ -3,13 +3,11 @@ module.exports = {
   env: {
     browser: true,
     es2020: true,
-    // Jest is excluded
   },
   extends: [
     'eslint:recommended',
     'plugin:react-hooks/recommended',
     'react-app',
-    'react-app/jest', // This line can be removed if not using Jest
     'plugin:jsx-a11y/recommended',
     'prettier',
   ],
@@ -30,11 +28,8 @@ module.exports = {
     'prettier',
     'simple-import-sort',
     'eslint-plugin-react-memo',
-    // Jest plugin is excluded
   ],
   rules: {
-    // Combine the rules from both configurations
-    // Excluding Jest and storybook specific rules
     'jsx-a11y/alt-text': 'error',
     'jsx-a11y/no-autofocus': 'off',
     '@typescript-eslint/no-unused-vars': 'error',
