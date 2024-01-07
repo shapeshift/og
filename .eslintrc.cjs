@@ -1,18 +1,94 @@
 module.exports = {
   root: true,
-  env: { browser: true, es2020: true },
+  env: {
+    browser: true,
+    es2020: true,
+    // Jest is excluded
+  },
   extends: [
     'eslint:recommended',
-    'plugin:@typescript-eslint/recommended',
     'plugin:react-hooks/recommended',
+    'react-app',
+    'react-app/jest', // This line can be removed if not using Jest
+    'plugin:jsx-a11y/recommended',
+    'prettier',
   ],
-  ignorePatterns: ['dist', '.eslintrc.cjs'],
+  ignorePatterns: [
+    'build',
+    'dist',
+    'coverage',
+    'generated',
+    'node_modules',
+    '.eslintrc.cjs',
+  ],
   parser: '@typescript-eslint/parser',
-  plugins: ['react-refresh'],
+  parserOptions: {
+    sourceType: 'module',
+  },
+  plugins: [
+    'react-refresh',
+    'prettier',
+    'simple-import-sort',
+    'eslint-plugin-react-memo',
+    // Jest plugin is excluded
+  ],
   rules: {
+    // Combine the rules from both configurations
+    // Excluding Jest and storybook specific rules
+    'jsx-a11y/alt-text': 'error',
+    'jsx-a11y/no-autofocus': 'off',
+    '@typescript-eslint/no-unused-vars': 'error',
+    'prettier/prettier': [
+      'error',
+      {
+        printWidth: 100,
+        endOfLine: 'lf',
+        tabWidth: 2,
+        useTabs: false,
+        singleQuote: true,
+        semi: false,
+        arrowParens: 'avoid',
+        jsxSingleQuote: true,
+        trailingComma: 'all',
+      },
+    ],
+    'default-case': 'error',
+    'import/no-default-export': 'error',
+    'simple-import-sort/imports': [
+      'error',
+      {
+        groups: [
+          ['^\\u0000'],
+          [
+            '^@?\\w',
+            '^assets(/.*|$)',
+            '^components(/.*|$)',
+            '^context(/.*|$)',
+            '^hooks(/.*|$)',
+            '^lib(/.*|$)',
+            '^pages(/.*|$)',
+            '^services(/.*|$)',
+            '^state(/.*|$)',
+            '^theme(/.*|$)',
+            '^types(/.*|$)',
+          ],
+          ['^\\.'],
+        ],
+      },
+    ],
+    'object-shorthand': 'error',
+    'eqeqeq': 'error',
+    'react-hooks/exhaustive-deps': 'error',
+    '@typescript-eslint/array-type': 'error',
+    '@typescript-eslint/consistent-type-imports': 'error',
+    'react/jsx-handler-names': 'error',
+    'require-await': 'error',
+    'import/no-duplicates': 'error',
+    'react-memo/require-usememo': 'error',
     'react-refresh/only-export-components': [
       'warn',
       { allowConstantExport: true },
     ],
   },
 }
+
