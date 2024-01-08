@@ -14,7 +14,7 @@ const assertIsCleanRepo = async () => {
 
 const getCommitsList = async () => {
   const log = await git().log({
-    from: 'main',
+    from: 'master',
     to: 'develop',
   })
   return log.all.map(commit => `${commit.hash} - ${commit.message}`)
@@ -26,7 +26,7 @@ const inquireProceedWithCommits = async (commits: string[]) => {
     {
       type: 'confirm',
       name: 'shouldProceed',
-      message: 'Do you want to merge and push these commits into main?',
+      message: 'Do you want to merge and push these commits into master?',
       default: true,
     },
   ]
@@ -39,7 +39,7 @@ const mergeAndPush = async () => {
 
   console.log(chalk.green('Fetching latest changes...'))
   await git().fetch(['origin', 'develop'])
-  await git().fetch(['origin', 'main'])
+  await git().fetch(['origin', 'master'])
 
   const commits = await getCommitsList()
 
@@ -49,10 +49,10 @@ const mergeAndPush = async () => {
     exit()
   }
 
-  console.log(chalk.green('Checking out main...'))
-  await git().checkout(['main'])
+  console.log(chalk.green('Checking out master...'))
+  await git().checkout(['master'])
 
-  console.log(chalk.green('Merging develop into main...'))
+  console.log(chalk.green('Merging develop into master...'))
   try {
     await git().merge(['develop'])
   } catch (error) {
@@ -60,8 +60,8 @@ const mergeAndPush = async () => {
     exit()
   }
 
-  console.log(chalk.green('Pushing main to remote...'))
-  await git().push(['origin', 'main'])
+  console.log(chalk.green('Pushing master to remote...'))
+  await git().push(['origin', 'master'])
   console.log(chalk.green('Merge and push completed successfully.'))
 }
 
