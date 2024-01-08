@@ -35,7 +35,7 @@ export const SelectPair = () => {
           />
           <IconButton variant='ghost' icon={switchIcon} aria-label='Switch assets' />
           <AssetSelection
-            label='Recieve'
+            label='Receive'
             onClick={handleToAssetClick}
             assetIcon={ETHImage}
             assetName='Ethereum'
