@@ -2,6 +2,7 @@ import { Button, Card, CardBody, Flex, Heading, IconButton } from '@chakra-ui/re
 import { useCallback, useMemo } from 'react'
 import { FaArrowRightArrowLeft } from 'react-icons/fa6'
 import { useNavigate } from 'react-router-dom'
+import { BTCImage, ETHImage } from 'lib/const'
 
 import { AssetSelection } from './AssetSelection'
 
@@ -26,9 +27,19 @@ export const SelectPair = () => {
           Choose which assets to trade
         </Heading>
         <Flex alignItems='center' gap={4} color='text.subtle' width='full'>
-          <AssetSelection label='Deposit' onClick={handleFromAssetClick} />
+          <AssetSelection
+            label='Deposit'
+            onClick={handleFromAssetClick}
+            assetIcon={BTCImage}
+            assetName='Bitcoin'
+          />
           <IconButton variant='ghost' icon={switchIcon} aria-label='Switch assets' />
-          <AssetSelection label='Recieve' onClick={handleToAssetClick} />
+          <AssetSelection
+            label='Recieve'
+            onClick={handleToAssetClick}
+            assetIcon={ETHImage}
+            assetName='Ethereum'
+          />
         </Flex>
         <Button size='lg' colorScheme='blue' onClick={handleSubmit}>
           Continue

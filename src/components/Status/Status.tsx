@@ -5,6 +5,7 @@ import {
   CardFooter,
   CardHeader,
   Center,
+  Collapse,
   Divider,
   Flex,
   IconButton,
@@ -74,47 +75,49 @@ export const Status = () => {
         <Text color='text.subtle'>TX ID</Text>
         <Text>0x124567</Text>
       </CardHeader>
-      <CardBody display='flex' flexDir='row-reverse' gap={6} px={4}>
-        <Flex flexDir='column' gap={4}>
-          <Center boxSize='150px' bg='background.surface.raised.base' borderRadius='xl' />
-          <Tag colorScheme='green' size='sm' justifyContent='center'>
-            Time remaining 06:23
-          </Tag>
-        </Flex>
-        <Stack spacing={4} flex={1}>
-          <Stack>
-            <Text fontWeight='bold'>Send</Text>
-            <Flex alignItems='center' gap={2}>
-              <Avatar size='sm' src={BTCImage} />
-              <Text>0.002 BTC</Text>
-            </Flex>
+      <Collapse in={activeStep === 0}>
+        <CardBody display='flex' flexDir='row-reverse' gap={6} px={4}>
+          <Flex flexDir='column' gap={4}>
+            <Center boxSize='150px' bg='background.surface.raised.base' borderRadius='xl' />
+            <Tag colorScheme='green' size='sm' justifyContent='center'>
+              Time remaining 06:23
+            </Tag>
+          </Flex>
+          <Stack spacing={4} flex={1}>
+            <Stack>
+              <Text fontWeight='bold'>Send</Text>
+              <Flex alignItems='center' gap={2}>
+                <Avatar size='sm' src={BTCImage} />
+                <Text>0.002 BTC</Text>
+              </Flex>
+            </Stack>
+            <Stack>
+              <Text fontWeight='bold'>To</Text>
+              <InputGroup>
+                <Input isReadOnly value='bc1q8n6t65jpm6k0...x7gl' />
+                <InputRightElement>
+                  <IconButton
+                    borderRadius='lg'
+                    size='sm'
+                    variant='ghost'
+                    icon={isToAddressCopied ? CheckIcon : CopyIcon}
+                    aria-label='Copy address'
+                    onClick={handleCopyToAddress}
+                  />
+                </InputRightElement>
+              </InputGroup>
+            </Stack>
+            <Divider borderColor='border.base' />
+            <Stack>
+              <Text fontWeight='bold'>You will receive</Text>
+              <Flex gap={2} alignItems='center'>
+                <Avatar size='xs' src={ETHImage} />
+                <Text>0.000158162 ETH</Text>
+              </Flex>
+            </Stack>
           </Stack>
-          <Stack>
-            <Text fontWeight='bold'>To</Text>
-            <InputGroup>
-              <Input isReadOnly value='bc1q8n6t65jpm6k0...x7gl' />
-              <InputRightElement>
-                <IconButton
-                  borderRadius='lg'
-                  size='sm'
-                  variant='ghost'
-                  icon={isToAddressCopied ? CheckIcon : CopyIcon}
-                  aria-label='Copy address'
-                  onClick={handleCopyToAddress}
-                />
-              </InputRightElement>
-            </InputGroup>
-          </Stack>
-          <Divider borderColor='border.base' />
-          <Stack>
-            <Text fontWeight='bold'>You will receive</Text>
-            <Flex gap={2} alignItems='center'>
-              <Avatar size='xs' src={ETHImage} />
-              <Text>0.000158162 ETH</Text>
-            </Flex>
-          </Stack>
-        </Stack>
-      </CardBody>
+        </CardBody>
+      </Collapse>
       <StatusStepper steps={steps} activeStep={activeStep} />
       <CardFooter
         flexDir='column'
