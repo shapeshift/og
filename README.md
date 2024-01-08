@@ -1,3 +1,9 @@
+# Getting started
+
+You may need to add sensitive env vars locally. This can be done by copying .env.example to .env.local and replacing with your own values
+
+- `cp .env.example .env.local`
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.

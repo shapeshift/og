@@ -34,11 +34,6 @@ jobs:
       - name: Install
         run: yarn install --immutable
 
-      # TODO(gomes): support env vars. vite already comes with dotenv support so we should be able to do this easily
-      # https://vitejs.dev/guide/env-and-mode.html#env-files
-      # - name: Set environment variables
-        # run: cp ./.env.example ./.env
-
       - name: Lint
         run: yarn lint
 
