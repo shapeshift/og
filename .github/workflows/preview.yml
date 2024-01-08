@@ -1,12 +1,13 @@
 name: Vercel Preview Deployment
 
-on:
-  push:
-    branches:
-      - develop
-  pull_request:
-    branches:
-      - develop
+# CI temporarily disabled as we crunch the first commits and PRs of this repo to avoid spamming it.
+# on:
+  # push:
+    # branches:
+      # - develop
+  # pull_request:
+    # branches:
+      # - develop
 
 concurrency:
   # don't allow multiple deployments at once

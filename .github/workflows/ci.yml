@@ -1,12 +1,15 @@
 name: CI
 
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+# CI temporarily disabled as we crunch the first commits and PRs of this repo to avoid spamming it.
+# on:
+  # push:
+    # branches:
+      # - main
+      # - develop
+  # pull_request:
+    # branches:
+      # - main
+      # - develop
 
 jobs:
   install-and-cache:
