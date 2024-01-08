@@ -1,4 +1,5 @@
 import chalk from 'chalk'
+import inquirer from 'inquirer'
 import { simpleGit as git } from 'simple-git'
 
 export const exit = (reason?: string) => Boolean(reason && console.log(reason)) || process.exit(0)
@@ -11,15 +12,42 @@ const assertIsCleanRepo = async () => {
   }
 }
 
+const getCommitsList = async () => {
+  const log = await git().log({
+    from: 'main',
+    to: 'develop',
+  })
+  return log.all.map(commit => `${commit.hash} - ${commit.message}`)
+}
+
+const inquireProceedWithCommits = async (commits: string[]) => {
+  console.log(chalk.blue(['', ...commits, ''].join('\n')))
+  const questions = [
+    {
+      type: 'confirm',
+      name: 'shouldProceed',
+      message: 'Do you want to merge and push these commits into main?',
+      default: true,
+    },
+  ]
+  const answers = await inquirer.prompt(questions)
+  return answers.shouldProceed
+}
+
 const mergeAndPush = async () => {
   await assertIsCleanRepo()
 
-  console.log(chalk.green('Checking out develop...'))
-  await git().checkout(['develop'])
-
-  console.log(chalk.green('Fetching latest changes for develop...'))
+  console.log(chalk.green('Fetching latest changes...'))
   await git().fetch(['origin', 'develop'])
-  await git().pull('origin', 'develop')
+  await git().fetch(['origin', 'main'])
+
+  const commits = await getCommitsList()
+
+  const shouldProceed = await inquireProceedWithCommits(commits)
+  if (!shouldProceed) {
+    console.log(chalk.yellow('Merge and push cancelled.'))
+    exit()
+  }
 
   console.log(chalk.green('Checking out main...'))
   await git().checkout(['main'])
@@ -34,7 +62,6 @@ const mergeAndPush = async () => {
 
   console.log(chalk.green('Pushing main to remote...'))
   await git().push(['origin', 'main'])
-
   console.log(chalk.green('Merge and push completed successfully.'))
 }
 
