@@ -6,7 +6,7 @@ export const InputStyle = {
   baseStyle: () => ({
     field: {
       _placeholder: {
-        color: 'text.subtle',
+        color: 'text.subtlest',
       },
     },
   }),
@@ -66,5 +66,7 @@ export const InputStyle = {
     }),
   },
   // The default `size` or `variant` values
-  defaultProps: {},
+  defaultProps: {
+    variant: 'filled',
+  },
 }

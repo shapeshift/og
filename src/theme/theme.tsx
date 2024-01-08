@@ -3,6 +3,10 @@ import { extendTheme } from '@chakra-ui/react'
 import { mode } from '@chakra-ui/theme-tools'
 
 import { colors } from './colors'
+import { ButtonStyle as Button } from './components/Button'
+import { CardStyle as Card } from './components/Card'
+import { InputStyle as Input } from './components/Input'
+import { stepperTheme as Stepper } from './components/Stepper'
 import { semanticTokens } from './semanticTokens'
 
 export const breakpoints = {
@@ -21,6 +25,8 @@ const styles = {
       backgroundSize: 'cover',
       fontFeatureSettings: `'zero' on`,
       overflowX: 'hidden',
+      textRendering: 'optimizeLegibility',
+      fontSmoothing: 'antialiased',
     },
     html: {
       scrollBehavior: 'smooth',
@@ -87,6 +93,12 @@ export const theme = extendTheme({
   fonts: {
     body: 'Inter, system-ui, sans-serif',
     heading: 'Work Sans, system-ui, sans-serif',
+  },
+  components: {
+    Button,
+    Card,
+    Input,
+    Stepper,
   },
   colors,
   sizes: {
