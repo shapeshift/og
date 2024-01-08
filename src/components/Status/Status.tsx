@@ -19,6 +19,7 @@ import {
 } from '@chakra-ui/react'
 import { useCallback, useMemo } from 'react'
 import { FaArrowDown, FaArrowRightArrowLeft, FaCheck, FaRegCopy } from 'react-icons/fa6'
+import { Amount } from 'components/Amount/Amount'
 import { useCopyToClipboard } from 'hooks/useCopyToClipboard'
 import { BTCImage, ETHImage } from 'lib/const'
 
@@ -88,7 +89,7 @@ export const Status = () => {
               <Text fontWeight='bold'>Send</Text>
               <Flex alignItems='center' gap={2}>
                 <Avatar size='sm' src={BTCImage} />
-                <Text>0.002 BTC</Text>
+                <Amount.Crypto value='0.002' symbol='BTC' />
               </Flex>
             </Stack>
             <Stack>
@@ -112,7 +113,7 @@ export const Status = () => {
               <Text fontWeight='bold'>You will receive</Text>
               <Flex gap={2} alignItems='center'>
                 <Avatar size='xs' src={ETHImage} />
-                <Text>0.000158162 ETH</Text>
+                <Amount.Crypto value='0.000158162' symbol='ETH' />
               </Flex>
             </Stack>
           </Stack>
@@ -133,7 +134,7 @@ export const Status = () => {
               <Avatar size='xs' src={BTCImage} />
               <Text>Deposit</Text>
             </Flex>
-            <Text color='text.subtle'>0.002 BTC</Text>
+            <Amount.Crypto value='0.002' symbol='BTC' />
           </Flex>
           <Flex alignItems='center' gap={2}>
             <Text>bc1q8n6t65jpm6k048ejvwgfa69xp5laqr2sexx7gl</Text>
@@ -152,7 +153,7 @@ export const Status = () => {
               <Avatar size='xs' src={ETHImage} />
               <Text>Receive</Text>
             </Flex>
-            <Text color='text.subtle'>0.00158162 ETH</Text>
+            <Amount.Crypto value='0.00158162' symbol='ETH' />
           </Flex>
           <Flex alignItems='center' gap={2}>
             <Text>0x1234484844949494949</Text>
@@ -161,7 +162,10 @@ export const Status = () => {
         <Divider borderColor='border.base' />
         <Flex alignItems='center' justifyContent='space-between'>
           <Text>Estimated Rate</Text>
-          <Text>1 BTC = 12.90126 ETH</Text>
+          <Flex gap={1}>
+            <Amount.Crypto value='1' symbol='BTC' suffix='=' />
+            <Amount.Crypto value='12.90126' symbol='ETH' />
+          </Flex>
         </Flex>
       </CardFooter>
     </Card>

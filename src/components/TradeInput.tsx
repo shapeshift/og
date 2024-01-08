@@ -20,6 +20,8 @@ import { FaArrowRightArrowLeft } from 'react-icons/fa6'
 import { useNavigate } from 'react-router-dom'
 import { BTCImage, ETHImage } from 'lib/const'
 
+import { Amount } from './Amount/Amount'
+
 export const TradeInput = () => {
   const navigate = useNavigate()
   const Divider = useMemo(() => <StackDivider borderColor='border.base' />, [])
@@ -48,20 +50,29 @@ export const TradeInput = () => {
           bg='background.surface.raised.base'
         >
           <Text color='text.subtle'>Your rate</Text>
-          <Text>1 BTC = 12.90126 ETH</Text>
+          <Flex gap={1}>
+            <Amount.Crypto value='1' symbol='BTC' suffix='=' />
+            <Amount.Crypto value='12.90126' symbol='ETH' />
+          </Flex>
         </Flex>
         <HStack divider={Divider} fontSize='sm'>
           <Stat size='sm' textAlign='center' py={4}>
             <StatLabel color='text.subtle'>Deposit This</StatLabel>
-            <StatNumber>0.002 BTC</StatNumber>
+            <StatNumber>
+              <Amount.Crypto value='0.002' symbol='BTC' />
+            </StatNumber>
           </Stat>
           <Stat size='sm' textAlign='center' py={4}>
             <StatLabel color='text.subtle'>To Get This</StatLabel>
-            <StatNumber>0.0248 ETH</StatNumber>
+            <StatNumber>
+              <Amount.Crypto value='0.0248' symbol='ETH' />
+            </StatNumber>
           </Stat>
           <Stat size='sm' textAlign='center' py={4}>
             <StatLabel color='text.subtle'>Miner Fee</StatLabel>
-            <StatNumber>$10</StatNumber>
+            <StatNumber>
+              <Amount.Fiat value='10' />
+            </StatNumber>
           </Stat>
         </HStack>
       </CardHeader>
