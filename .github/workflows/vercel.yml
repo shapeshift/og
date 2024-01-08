@@ -1,16 +1,12 @@
 name: Vercel Deployment
 
 on:
-  workflow_dispatch:
+  push:
     branches:
-      - main
-    inputs:
-      environment:
-        type: choice
-        description: 'Environment'
-        options:
-          - preview
-          - production
+      - master
+  pull_request:
+    branches:
+      - master
 
 concurrency:
   # don't allow multiple deployments at once
@@ -44,19 +40,6 @@ jobs:
             node_modules
           key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
 
-  create_deploy_request:
-    if: ${{ github.event.inputs.environment == 'preview' }}
-    needs: [setup]
-    name: Create Deploy Request
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        # this can probably be removed later
-      - name: Set short SHA
-        id: vars
-        run: |
-          echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
   deploy-preview:
     if: ${{ github.event.inputs.environment == 'preview' }}
     name: Deploy Preview
