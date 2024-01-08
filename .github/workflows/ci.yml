@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  install-and-cache:
+    name: Install Lint Type-check
+    container: node:18-bullseye
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'yarn'
+
+      - name: Cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            node_modules
+          key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: ${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+
+      - name: Install
+        run: yarn install --immutable
+
+      # TODO(gomes): support env vars. vite already comes with dotenv support so we should be able to do this easily
+      # https://vitejs.dev/guide/env-and-mode.html#env-files
+      # - name: Set environment variables
+        # run: cp ./.env.example ./.env
+
+      - name: Lint
+        run: yarn lint
+
+      - name: Type check
+        run: yarn type-check
+
+      - name: Test
+        run: yarn test
