@@ -3,15 +3,17 @@ import { useCallback, useMemo } from 'react'
 import { FaArrowRightArrowLeft } from 'react-icons/fa6'
 import { useNavigate } from 'react-router-dom'
 import { BTCImage, ETHImage } from 'lib/const'
+import { getMixPanel } from 'lib/mixpanelSingleton'
 
 import { AssetSelection } from './AssetSelection'
 
 export const SelectPair = () => {
+  const mixpanel = getMixPanel()
   const navigate = useNavigate()
   const switchIcon = useMemo(() => <FaArrowRightArrowLeft />, [])
   const handleSubmit = useCallback(() => {
     navigate('/input')
-  }, [navigate])
+  }, [mixpanel, navigate])
 
   const handleFromAssetClick = useCallback(() => {
     console.info('asset click')

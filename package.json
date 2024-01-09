@@ -25,6 +25,7 @@
   },
   "devDependencies": {
     "@types/inquirer": "^9.0.7",
+    "@types/mixpanel-browser": "^2.48.1",
     "@types/node": "^20.10.7",
     "@types/react": "^18.2.43",
     "@types/react-dom": "^18.2.17",
