@@ -12,6 +12,10 @@ export const SelectPair = () => {
   const navigate = useNavigate()
   const switchIcon = useMemo(() => <FaArrowRightArrowLeft />, [])
   const handleSubmit = useCallback(() => {
+    mixpanel?.track('Pair selected', {
+      'some key': 'some val',
+    })
+
     navigate('/input')
   }, [mixpanel, navigate])
 
