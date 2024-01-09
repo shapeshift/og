@@ -90,7 +90,7 @@ export const AssetSelectModal: React.FC<AssetSelectModalProps> = ({ isOpen, onCl
     if (!existingEntry) {
       accumulator.push({
         chainId: currentAsset.chainId,
-        icon: currentAsset.icon,
+        icon: currentAsset.networkIcon ?? currentAsset.icon,
         name: currentAsset.networkName ?? currentAsset.name,
       })
     }
