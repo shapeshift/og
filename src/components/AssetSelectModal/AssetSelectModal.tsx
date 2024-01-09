@@ -53,7 +53,7 @@ export const AssetSelectModal: React.FC<AssetSelectModalProps> = ({ isOpen, onCl
     setActiveChain(chainId)
   }, [])
 
-  const handleAllChain = useCallback(() => {
+  const handleAllClick = useCallback(() => {
     setActiveChain('All')
   }, [])
 
@@ -143,7 +143,7 @@ export const AssetSelectModal: React.FC<AssetSelectModalProps> = ({ isOpen, onCl
               variant='outline'
               fontSize='sm'
               px={2}
-              onClick={handleAllChain}
+              onClick={handleAllClick}
             >
               All
             </Button>

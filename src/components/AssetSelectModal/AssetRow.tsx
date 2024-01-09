@@ -19,7 +19,7 @@ export const AssetRow: FC<AssetRowProps> = memo(({ onClick, ...asset }) => {
     onClick(asset)
   }, [asset, onClick])
 
-  const handleImgLoad = useCallback(() => {
+  const handleImageLoad = useCallback(() => {
     setImgLoaded(true)
   }, [])
 
@@ -37,7 +37,7 @@ export const AssetRow: FC<AssetRowProps> = memo(({ onClick, ...asset }) => {
     >
       <Flex gap={4} alignItems='center'>
         <SkeletonCircle isLoaded={imgLoaded}>
-          <Avatar src={icon} size='sm' onLoad={handleImgLoad} />
+          <Avatar src={icon} size='sm' onLoad={handleImageLoad} />
         </SkeletonCircle>
         <Box textAlign='left'>
           <Text
