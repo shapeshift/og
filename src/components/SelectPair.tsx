@@ -3,7 +3,8 @@ import { useCallback, useMemo } from 'react'
 import { FaArrowRightArrowLeft } from 'react-icons/fa6'
 import { useNavigate } from 'react-router-dom'
 import { BTCImage, ETHImage } from 'lib/const'
-import { getMixPanel } from 'lib/mixpanelSingleton'
+import { getMixPanel } from 'lib/mixpanel/mixpanelSingleton'
+import { MixPanelEvent } from 'lib/mixpanel/types'
 
 import { AssetSelection } from './AssetSelection'
 
@@ -12,7 +13,7 @@ export const SelectPair = () => {
   const navigate = useNavigate()
   const switchIcon = useMemo(() => <FaArrowRightArrowLeft />, [])
   const handleSubmit = useCallback(() => {
-    mixpanel?.track('Pair selected', {
+    mixpanel?.track(MixPanelEvent.PairSelected, {
       'some key': 'some val',
     })
 
