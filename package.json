@@ -17,6 +17,7 @@
     "@emotion/react": "^11.11.3",
     "@emotion/styled": "^11.11.0",
     "framer-motion": "^10.17.9",
+    "mixpanel-browser": "^2.48.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-icons": "^4.12.0",
@@ -24,6 +25,7 @@
   },
   "devDependencies": {
     "@types/inquirer": "^9.0.7",
+    "@types/mixpanel-browser": "^2.48.1",
     "@types/node": "^20.10.7",
     "@types/react": "^18.2.43",
     "@types/react-dom": "^18.2.17",
