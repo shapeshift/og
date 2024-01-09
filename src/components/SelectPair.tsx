@@ -3,8 +3,7 @@ import { useCallback, useMemo } from 'react'
 import { FaArrowRightArrowLeft } from 'react-icons/fa6'
 import { useNavigate } from 'react-router-dom'
 import { BTCImage, ETHImage } from 'lib/const'
-import { getMixPanel } from 'lib/mixpanel/mixpanelSingleton'
-import { MixPanelEvent } from 'lib/mixpanel/types'
+import { getMixPanel, MixPanelEvent } from 'lib/mixpanel'
 
 import { AssetSelection } from './AssetSelection'
 
