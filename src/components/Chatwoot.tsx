@@ -1,8 +1,9 @@
 import { Button } from '@chakra-ui/react'
 import { useCallback, useEffect } from 'react'
+import { getFeatureFlag } from 'lib/utils'
 
 export const ChatwootButton: React.FC = () => {
-  const chatWootEnabled = import.meta.env.VITE_FEATURE_CHATWOOT
+  const chatWootEnabled = getFeatureFlag('chatwoot')
   useEffect(() => {
     if (!chatWootEnabled) return // Add Chatwoot Settings
     ;(window as any).chatwootSettings = {

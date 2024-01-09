@@ -1,4 +1,5 @@
 import Mixpanel from 'mixpanel-browser'
+import { getFeatureFlag } from 'lib/utils'
 
 import type { MixPanelType } from './types'
 
@@ -6,7 +7,7 @@ import type { MixPanelType } from './types'
 export const mixpanel = (() => {
   let _mixPanel: MixPanelType | undefined = undefined
 
-  const mixPanelEnabled = import.meta.env.VITE_FEATURE_MIXPANEL
+  const mixPanelEnabled = getFeatureFlag('mixpanel')
   if (!mixPanelEnabled) return undefined
   if (_mixPanel) return _mixPanel
   const mixpanelToken = import.meta.env.VITE_MIXPANEL_TOKEN
