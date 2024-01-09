@@ -30,7 +30,7 @@ type AssetSelectModalProps = {
 
 export const AssetSelectModal: React.FC<AssetSelectModalProps> = ({ isOpen, onClose, onClick }) => {
   const [searchQuery, setSearchQuery] = useState('')
-  const assets = Object.values(AssetData)
+  const assets = useMemo(() => Object.values(AssetData), [])
   const [activeChain, setActiveChain] = useState<ChainId | 'All'>('All')
   const [searchTermAssets, setSearchTermAssets] = useState<Asset[]>([])
   const iniitalRef = useRef(null)

@@ -15,7 +15,7 @@ type AssetRowProps = {
 export const AssetRow: FC<AssetRowProps> = memo(({ onClick, ...asset }) => {
   const [imgLoaded, setImgLoaded] = useState(false)
   const { name, icon, symbol, id } = asset
-  const handleOnClick = useCallback(() => {
+  const handleClick = useCallback(() => {
     onClick(asset)
   }, [asset, onClick])
 
@@ -29,7 +29,7 @@ export const AssetRow: FC<AssetRowProps> = memo(({ onClick, ...asset }) => {
     <Button
       width='full'
       variant='ghost'
-      onClick={handleOnClick}
+      onClick={handleClick}
       justifyContent='space-between'
       _focus={focus}
       height='auto'
