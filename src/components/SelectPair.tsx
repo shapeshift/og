@@ -1,4 +1,4 @@
-import { Button, Card, CardBody, Flex, Heading, IconButton } from '@chakra-ui/react'
+import { Button, Card, CardBody, Flex, Heading, IconButton, useDisclosure } from '@chakra-ui/react'
 import { useCallback, useMemo } from 'react'
 import { FaArrowRightArrowLeft } from 'react-icons/fa6'
 import { useNavigate } from 'react-router-dom'
@@ -6,8 +6,10 @@ import { BTCImage, ETHImage } from 'lib/const'
 import { mixpanel, MixPanelEvent } from 'lib/mixpanel'
 
 import { AssetSelection } from './AssetSelection'
+import { AssetSelectModal } from './AssetSelectModal/AssetSelectModal'
 
 export const SelectPair = () => {
+  const { isOpen, onClose, onOpen } = useDisclosure()
   const navigate = useNavigate()
   const switchIcon = useMemo(() => <FaArrowRightArrowLeft />, [])
   const handleSubmit = useCallback(() => {
@@ -19,11 +21,12 @@ export const SelectPair = () => {
   }, [navigate])
 
   const handleFromAssetClick = useCallback(() => {
+    onOpen()
     console.info('asset click')
-  }, [])
+  }, [onOpen])
   const handleToAssetClick = useCallback(() => {
-    console.info('to asset click')
-  }, [])
+    onOpen()
+  }, [onOpen])
 
   return (
     <Card width='full' maxWidth='450px'>
@@ -50,6 +53,7 @@ export const SelectPair = () => {
           Continue
         </Button>
       </CardBody>
+      <AssetSelectModal isOpen={isOpen} onClose={onClose} />
     </Card>
   )
 }

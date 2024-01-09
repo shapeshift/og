@@ -6,6 +6,7 @@ import { colors } from './colors'
 import { ButtonStyle as Button } from './components/Button'
 import { CardStyle as Card } from './components/Card'
 import { InputStyle as Input } from './components/Input'
+import { ModalStyle as Modal } from './components/Modal'
 import { stepperTheme as Stepper } from './components/Stepper'
 import { semanticTokens } from './semanticTokens'
 
@@ -97,6 +98,7 @@ export const theme = extendTheme({
   components: {
     Button,
     Card,
+    Modal,
     Input,
     Stepper,
   },
