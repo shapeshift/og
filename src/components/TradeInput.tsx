@@ -19,12 +19,11 @@ import { useCallback, useMemo } from 'react'
 import { FaArrowRightArrowLeft } from 'react-icons/fa6'
 import { useNavigate } from 'react-router-dom'
 import { BTCImage, ETHImage } from 'lib/const'
-import { getMixPanel, MixPanelEvent } from 'lib/mixpanel'
+import { mixpanel, MixPanelEvent } from 'lib/mixpanel'
 
 import { Amount } from './Amount/Amount'
 
 export const TradeInput = () => {
-  const mixpanel = getMixPanel()
   const navigate = useNavigate()
   const Divider = useMemo(() => <StackDivider borderColor='border.base' />, [])
   const FromAssetIcon = useMemo(() => <Avatar size='sm' src={BTCImage} />, [])
@@ -35,7 +34,7 @@ export const TradeInput = () => {
       'some key': 'some val',
     })
     navigate('/status')
-  }, [mixpanel, navigate])
+  }, [navigate])
 
   const handleFromAssetClick = useCallback(() => {
     console.info('asset click')
