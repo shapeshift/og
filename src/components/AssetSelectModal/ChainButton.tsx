@@ -20,7 +20,7 @@ export const ChainButton: React.FC<ChainButtonProps> = ({
   isActive,
 }) => {
   const chainIcon = useMemo(() => {
-    return <Avatar size='sm' src={icon} />
+    return <Avatar size='xs' src={icon} />
   }, [icon])
 
   const handleClick = useCallback(() => {

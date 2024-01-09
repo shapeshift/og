@@ -12,7 +12,7 @@ import {
 } from '@chakra-ui/react'
 import type { ChainId } from '@shapeshiftoss/caip'
 import type { ChangeEvent } from 'react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import AssetData from 'lib/generatedAssetData.json'
 import { isNft } from 'lib/utils'
 import type { Asset } from 'types/Asset'
@@ -25,13 +25,15 @@ import { filterAssetsBySearchTerm } from './helpers/filterAssetsBySearchTerm'
 type AssetSelectModalProps = {
   isOpen: boolean
   onClose: () => void
+  onClick: (asset: Asset) => void
 }
 
-export const AssetSelectModal: React.FC<AssetSelectModalProps> = ({ isOpen, onClose }) => {
+export const AssetSelectModal: React.FC<AssetSelectModalProps> = ({ isOpen, onClose, onClick }) => {
   const [searchQuery, setSearchQuery] = useState('')
   const assets = Object.values(AssetData)
   const [activeChain, setActiveChain] = useState<ChainId | 'All'>('All')
   const [searchTermAssets, setSearchTermAssets] = useState<Asset[]>([])
+  const iniitalRef = useRef(null)
 
   const filteredAssets = useMemo(
     () =>
@@ -42,10 +44,6 @@ export const AssetSelectModal: React.FC<AssetSelectModalProps> = ({ isOpen, onCl
   )
 
   const searching = useMemo(() => searchQuery.length > 0, [searchQuery])
-
-  const handleClick = useCallback((asset: Asset) => {
-    console.info(asset.assetId)
-  }, [])
 
   const handleSearchQuery = useCallback((value: ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(value.target.value)
@@ -59,8 +57,23 @@ export const AssetSelectModal: React.FC<AssetSelectModalProps> = ({ isOpen, onCl
     setActiveChain('All')
   }, [])
 
+  const handleClose = useCallback(() => {
+    // Reset state on close
+    setActiveChain('All')
+    setSearchQuery('')
+    onClose()
+  }, [onClose])
+
+  const handleClick = useCallback(
+    (asset: Asset) => {
+      onClick(asset)
+      handleClose()
+    },
+    [handleClose, onClick],
+  )
+
   useEffect(() => {
-    if (filteredAssets) {
+    if (filteredAssets && searching) {
       setSearchTermAssets(
         searching ? filterAssetsBySearchTerm(searchQuery, filteredAssets) : filteredAssets,
       )
@@ -101,7 +114,7 @@ export const AssetSelectModal: React.FC<AssetSelectModalProps> = ({ isOpen, onCl
   }, [activeChain, handleChainClick, uniqueChainIds])
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} isCentered>
+    <Modal isOpen={isOpen} onClose={handleClose} isCentered initialFocusRef={iniitalRef}>
       <ModalOverlay />
       <ModalContent>
         <ModalHeader
@@ -120,6 +133,7 @@ export const AssetSelectModal: React.FC<AssetSelectModalProps> = ({ isOpen, onCl
           <Input
             size='lg'
             placeholder='Search name or paste address'
+            ref={iniitalRef}
             onChange={handleSearchQuery}
           />
           <Flex mt={4} flexWrap='wrap' gap={2} justifyContent='space-between'>
