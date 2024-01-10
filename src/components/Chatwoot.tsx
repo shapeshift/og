@@ -35,5 +35,9 @@ export const ChatwootButton: React.FC = () => {
     if (window.$chatwoot) window.$chatwoot.toggle()
   }, [])
 
-  return chatWootEnabled ? <Button onClick={handleChatWoot}>Get support</Button> : null
+  return chatWootEnabled ? (
+    <Button position='absolute' right='1rem' bottom='1rem' onClick={handleChatWoot}>
+      Get support
+    </Button>
+  ) : null
 }
