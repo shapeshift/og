@@ -92,4 +92,19 @@ export type ChainflipSwapParams = {
   commissionBps?: number
   numberOfChunks?: number
   chunkIntervalBlocks?: number
-} 
+}
+
+export type ChainflipSwapEgress = {
+  transactionReference?: string
+}
+
+export type ChainflipSwapStatus = {
+  state: 'waiting' | 'receiving' | 'swapping' | 'sending' | 'sent' | 'completed' | 'failed'
+  swapEgress?: ChainflipSwapEgress
+}
+
+export type ChainflipStatusResponse = {
+  id: number
+  status: ChainflipSwapStatus
+}
+
