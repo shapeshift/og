@@ -19,9 +19,6 @@ export const usdcOnSolanaAssetId: AssetId =
 export const flipAssetId: AssetId = 'eip155:1/erc20:0x826180541412d574cf1336d22c0c0a287822678a'
 
 export const btcChainId: ChainId = 'bip122:000000000019d6689c085ae165831e93'
-export const bchChainId: ChainId = 'bip122:000000000000000000651ef99cb9fcbe'
-export const dogeChainId: ChainId = 'bip122:00000000001a91e3dace36e2be3bf030'
-export const ltcChainId: ChainId = 'bip122:12a765e31ffd4059bada1e25190f6e98'
 
 export const ethChainId: ChainId = 'eip155:1'
 export const arbitrumChainId: ChainId = 'eip155:42161'
