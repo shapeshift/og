@@ -11,6 +11,7 @@ import {
   usdcOnSolanaAssetId,
   usdtAssetId,
 } from 'constants/caip'
+
 import type { ChainflipAssetsResponse } from './types'
 
 const CHAINFLIP_API_URL = import.meta.env.VITE_CHAINFLIP_API_URL
@@ -38,11 +39,9 @@ export const useChainflipAssetsQuery = () => {
   return useQuery({
     queryKey: ['chainflip', 'assets'],
     queryFn: async () => {
-      const { data } = await axios.get<ChainflipAssetsResponse>(
-        `${CHAINFLIP_API_URL}/assets`,
-      )
+      const { data } = await axios.get<ChainflipAssetsResponse>(`${CHAINFLIP_API_URL}/assets`)
       return data
     },
     select: transformChainflipAssets,
   })
-} 
+}

@@ -9,8 +9,8 @@ export const createWrapper = () => {
       },
     },
   })
-  
+
   return ({ children }: PropsWithChildren) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   )
-} 
+}

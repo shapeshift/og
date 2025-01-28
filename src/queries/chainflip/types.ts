@@ -107,4 +107,3 @@ export type ChainflipStatusResponse = {
   id: number
   status: ChainflipSwapStatus
 }
-

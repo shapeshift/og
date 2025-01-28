@@ -21,4 +21,4 @@ export const useChainflipSwapQuery = (params: ChainflipSwapParams) => {
       return data
     },
   })
-} 
+}

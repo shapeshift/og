@@ -88,4 +88,4 @@ describe('transformChainflipAssets', () => {
 
     expect(transformChainflipAssets(mockResponse)).toEqual([])
   })
-}) 
+})
