@@ -47,7 +47,6 @@ export const ASSET_NAMESPACE = {
   erc721: 'erc721',
   erc1155: 'erc1155',
   slip44: 'slip44',
-  ibc: 'ibc',
   splToken: 'token',
 } as const
 
@@ -58,5 +57,4 @@ export const ASSET_REFERENCE = {
   Solana: '501',
 } as const
 
-// We should prob change this once we add more chains
 export const FEE_ASSET_IDS = [ethAssetId, btcAssetId, arbitrumAssetId, solAssetId]
