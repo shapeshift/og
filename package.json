@@ -31,6 +31,7 @@
     "viem": "^2.0.3"
   },
   "devDependencies": {
+    "@testing-library/react": "^16.2.0",
     "@types/inquirer": "^9.0.7",
     "@types/mixpanel-browser": "^2.48.1",
     "@types/node": "^20.10.7",

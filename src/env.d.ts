@@ -7,6 +7,8 @@ interface ImportMetaEnv {
   readonly VITE_CHATWOOT_URL: string
   readonly VITE_CHATWOOT_TOKEN: string
   readonly VITE_FEATURE_CHATWOOT: boolean
+  readonly VITE_CHAINFLIP_API_KEY: string
+  readonly VITE_CHAINFLIP_API_URL: string
 }
 
 interface ImportMeta {
