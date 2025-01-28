@@ -36,10 +36,10 @@ export const CHAIN_NAMESPACE = {
 export const CHAIN_REFERENCE = {
   EthereumMainnet: '1',
   BitcoinMainnet: '000000000019d6689c085ae165831e93',
-  ArbitrumMainnet: '42161', // https://chainlist.org/chain/42161
-  ArbitrumNovaMainnet: '42170', // https://chainlist.org/chain/42170
-  BaseMainnet: '8453', // https://chainlist.org/chain/8453
-  SolanaMainnet: '5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp', // https://namespaces.chainagnostic.org/solana/caip2
+  ArbitrumMainnet: '42161',
+  ArbitrumNovaMainnet: '42170',
+  BaseMainnet: '8453',
+  SolanaMainnet: '5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp',
 } as const
 
 export const ASSET_NAMESPACE = {

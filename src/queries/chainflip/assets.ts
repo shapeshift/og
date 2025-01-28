@@ -30,9 +30,7 @@ const chainflipToAssetId: Record<string, string> = {
 }
 
 export const transformChainflipAssets = (data: ChainflipAssetsResponse) => {
-  return data.assets
-    .map(asset => chainflipToAssetId[asset.id])
-    .filter((assetId): assetId is string => Boolean(assetId))
+  return data.assets.map(asset => chainflipToAssetId[asset.id]).filter(Boolean)
 }
 
 export const useChainflipAssetsQuery = () => {
