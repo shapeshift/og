@@ -67,4 +67,29 @@ export type ChainflipQuoteParams = {
   destinationAsset: string
   amount: string
   commissionBps?: number
+}
+
+export type ChainflipSwapResponse = {
+  id: number
+  address: string
+  issuedBlock: number
+  network: string
+  channelId: number
+  sourceExpiryBlock: number
+  explorerUrl: string
+  channelOpeningFee: number
+  channelOpeningFeeNative: string
+}
+
+export type ChainflipSwapParams = {
+  sourceAsset: string
+  destinationAsset: string
+  destinationAddress: string
+  minimumPrice: string
+  refundAddress: string
+  maxBoostFee?: number
+  retryDurationInBlocks?: number
+  commissionBps?: number
+  numberOfChunks?: number
+  chunkIntervalBlocks?: number
 } 
