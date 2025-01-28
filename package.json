@@ -13,7 +13,7 @@
     "type-check": "yarn tsc --noEmit"
   },
   "dependencies": {
-    "@chakra-ui/react": "^2.8.2",
+    "@chakra-ui/react": "^2.10.3",
     "@emotion/react": "^11.11.3",
     "@emotion/styled": "^11.11.0",
     "@shapeshiftoss/caip": "^8.15.0",
