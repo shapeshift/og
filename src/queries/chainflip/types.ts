@@ -1,5 +1,5 @@
 export type ChainflipAsset = {
-  id: string // e.g. "flip.eth"
+  id: string
   direction: 'both' | 'ingress' | 'egress'
   ticker: string
   name: string
