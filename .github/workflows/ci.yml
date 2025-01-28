@@ -22,6 +22,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
+          node-version: '18.20.4'
           node-version-file: '.nvmrc'
           cache: 'yarn'
 
