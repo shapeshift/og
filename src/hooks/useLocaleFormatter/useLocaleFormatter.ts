@@ -89,7 +89,7 @@ const getParts = (locale: string, fiatType = 'USD') => {
       style: 'currency',
       useGrouping: true,
     })
-    const parts = groupFormatter.formatToParts(1234567.1234567890123456789)
+    const parts = groupFormatter.formatToParts(1234567)
     const groups = parts.filter(p => p.type === 'integer')
 
     // @TODO: Do we want to support non-arabic numerals?

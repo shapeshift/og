@@ -1,15 +1,14 @@
 name: CI
 
-# CI temporarily disabled as we crunch the first commits and PRs of this repo to avoid spamming it.
-# on:
-  # push:
-    # branches:
-      # - main
-      # - develop
-  # pull_request:
-    # branches:
-      # - main
-      # - develop
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
 
 jobs:
   install-and-cache:
@@ -23,6 +22,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
+          node-version: '18.20.4'
           node-version-file: '.nvmrc'
           cache: 'yarn'
 

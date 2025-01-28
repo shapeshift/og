@@ -1,13 +1,12 @@
 name: Vercel Preview Deployment
 
-# CI temporarily disabled as we crunch the first commits and PRs of this repo to avoid spamming it.
-# on:
-  # push:
-    # branches:
-      # - develop
-  # pull_request:
-    # branches:
-      # - develop
+on:
+  push:
+    branches:
+      - develop
+  pull_request:
+    branches:
+      - develop
 
 concurrency:
   # don't allow multiple deployments at once
@@ -55,6 +54,8 @@ jobs:
         with:
           node-version-file: '.nvmrc'
           cache: 'yarn'
+      - name: Install Vercel CLI
+        run: npm i vercel@latest -g
       - name: Cache
         uses: actions/cache@v3
         with:
