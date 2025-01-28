@@ -18,7 +18,6 @@ import { isNft } from 'lib/utils'
 import type { Asset } from 'types/Asset'
 
 import { AssetList } from './AssetList'
-import type { ChainRow } from './ChainButton'
 import { ChainButton } from './ChainButton'
 import { filterAssetsBySearchTerm } from './helpers/filterAssetsBySearchTerm'
 
@@ -28,9 +27,15 @@ type AssetSelectModalProps = {
   onClick: (asset: Asset) => void
 }
 
+type NetworkItem = {
+  chainId: ChainId
+  icon: string
+  name: string
+}
+
 export const AssetSelectModal: React.FC<AssetSelectModalProps> = ({ isOpen, onClose, onClick }) => {
   const [searchQuery, setSearchQuery] = useState('')
-  const assets = useMemo(() => Object.values(AssetData), [])
+  const assets = useMemo(() => Object.values(AssetData) as Asset[], [])
   const [activeChain, setActiveChain] = useState<ChainId | 'All'>('All')
   const [searchTermAssets, setSearchTermAssets] = useState<Asset[]>([])
   const iniitalRef = useRef(null)
@@ -82,21 +87,24 @@ export const AssetSelectModal: React.FC<AssetSelectModalProps> = ({ isOpen, onCl
 
   const listAssets = searching ? searchTermAssets : filteredAssets
 
-  const uniqueChainIds: ChainRow[] = assets.reduce((accumulator, currentAsset: Asset) => {
-    const existingEntry = accumulator.find(
-      (entry: ChainRow) => entry.chainId === currentAsset.chainId,
-    )
+  const uniqueChainIds: NetworkItem[] = assets.reduce<NetworkItem[]>(
+    (accumulator, currentAsset) => {
+      const existingEntry = accumulator.find(
+        (entry: NetworkItem) => entry.chainId === currentAsset.chainId,
+      )
 
-    if (!existingEntry) {
-      accumulator.push({
-        chainId: currentAsset.chainId,
-        icon: currentAsset.networkIcon ?? currentAsset.icon,
-        name: currentAsset.networkName ?? currentAsset.name,
-      })
-    }
+      if (!existingEntry) {
+        accumulator.push({
+          chainId: currentAsset.chainId,
+          icon: currentAsset.networkIcon || currentAsset.icon,
+          name: currentAsset.networkName || currentAsset.name,
+        })
+      }
 
-    return accumulator
-  }, [])
+      return accumulator
+    },
+    [],
+  )
 
   const renderRows = useMemo(() => {
     return <AssetList assets={listAssets} handleClick={handleClick} />
