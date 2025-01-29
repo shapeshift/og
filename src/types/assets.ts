@@ -1,5 +1,4 @@
-export type AssetId = string
-export type ChainId = string
+import type { AssetId, ChainId } from '@shapeshiftoss/caip'
 
 export type Asset = {
   assetId: AssetId
