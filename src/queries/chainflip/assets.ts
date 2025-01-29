@@ -1,5 +1,4 @@
 import { useQuery } from '@tanstack/react-query'
-import axios from 'axios'
 import {
   arbitrumAssetId,
   btcAssetId,
@@ -12,9 +11,8 @@ import {
   usdtAssetId,
 } from 'constants/caip'
 
+import { reactQueries } from '../react-queries'
 import type { ChainflipAssetsResponse } from './types'
-
-const CHAINFLIP_API_URL = import.meta.env.VITE_CHAINFLIP_API_URL
 
 // Map Chainflip internal asset IDs to CAIPs
 const chainflipToAssetId: Record<string, string> = {
@@ -35,11 +33,7 @@ export const transformChainflipAssets = (data: ChainflipAssetsResponse) => {
 
 export const useChainflipAssetsQuery = () => {
   return useQuery({
-    queryKey: ['chainflip', 'assets'],
-    queryFn: async () => {
-      const { data } = await axios.get<ChainflipAssetsResponse>(`${CHAINFLIP_API_URL}/assets`)
-      return data
-    },
+    ...reactQueries.chainflip.assets,
     select: transformChainflipAssets,
   })
 }

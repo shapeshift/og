@@ -12,6 +12,7 @@ import {
   usdtAssetId,
 } from 'constants/caip'
 
+import { reactQueries } from '../react-queries'
 import type { CoinGeckoAssetData, MarketData } from './types'
 
 const COINGECKO_BASE_URL = 'https://api.proxy.shapeshift.com/api/v1/markets'
@@ -56,8 +57,7 @@ export const findByAssetId = async (assetId: string): Promise<MarketData | null>
 }
 
 export const useMarketDataByAssetIdQuery = (assetId: string) => {
-  return useQuery<MarketData | null>({
-    queryKey: ['marketData', assetId],
-    queryFn: () => findByAssetId(assetId),
+  return useQuery({
+    ...reactQueries.marketData.byAssetId(assetId),
   })
 }
