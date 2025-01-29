@@ -6,7 +6,7 @@ import type { Asset, AssetId } from '../types/assets'
 interface AssetsState {
   byId: Record<AssetId, Asset>
   ids: AssetId[]
-  getAssetById: (assetId: AssetId) => Asset | undefined
+  getAssetById: (assetId: AssetId) => Asset
 }
 
 export const useAssetsStore = create<AssetsState>((_set, get) => ({
