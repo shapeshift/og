@@ -1,4 +1,4 @@
-// Subset of web caip constants with Chainfli-supported assets only
+// Subset of web caip constants with Chainflip-supported assets only
 // We need to redeclare things here as @shapeshiftoss/caip is actually a monorepo project and not published on npm
 
 import type { AssetId, ChainId } from '@shapeshiftoss/caip'
