@@ -2365,6 +2365,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@lukemorales/query-key-factory@npm:^1.3.4":
+  version: 1.3.4
+  resolution: "@lukemorales/query-key-factory@npm:1.3.4"
+  peerDependencies:
+    "@tanstack/query-core": ">= 4.0.0"
+    "@tanstack/react-query": ">= 4.0.0"
+  checksum: 10c0/d4e829aad970c159e3e3d6545f4f1e47d1a02621cd692bc0e13b7cc36861541e205f801d7ab8081ed8b1c8c3fd365483e1656537ef1ab165cb14743b4b1f1d6c
+  languageName: node
+  linkType: hard
+
 "@nicolo-ribaudo/eslint-scope-5-internals@npm:5.1.1-v1":
   version: 5.1.1-v1
   resolution: "@nicolo-ribaudo/eslint-scope-5-internals@npm:5.1.1-v1"
@@ -2750,6 +2760,24 @@ __metadata:
   version: 0.1.5
   resolution: "@swc/types@npm:0.1.5"
   checksum: 10c0/b35f93fe896a2240f6f10544e408f9648c2bd4bcff9bd8d022d9a6942d31cf859f86119fb0bbb04a12eefa1f6a6745ffc7d18f3a490d76d7b6a074a7c9608144
+  languageName: node
+  linkType: hard
+
+"@tanstack/query-core@npm:5.65.0":
+  version: 5.65.0
+  resolution: "@tanstack/query-core@npm:5.65.0"
+  checksum: 10c0/8c957082819dc90aa162256e0cc9d7d33e90f4ba9a55ec788ef5ec36bbb2b1863663dda594f9b6eb820ec9855f8d6aecd01324a020d16b58ad012c99270fe989
+  languageName: node
+  linkType: hard
+
+"@tanstack/react-query@npm:^5.65.1":
+  version: 5.65.1
+  resolution: "@tanstack/react-query@npm:5.65.1"
+  dependencies:
+    "@tanstack/query-core": "npm:5.65.0"
+  peerDependencies:
+    react: ^18 || ^19
+  checksum: 10c0/0b0ed414c59ee1d7a5a8e72d2e2f2513f7367b59ee33d5663b114fcf5108438786b9bbbd12173ae7f8124538f313cd4dff942c7080b60d26d011c18918b1d563
   languageName: node
   linkType: hard
 
@@ -7311,8 +7339,10 @@ __metadata:
     "@chakra-ui/react": "npm:^2.10.3"
     "@emotion/react": "npm:^11.11.3"
     "@emotion/styled": "npm:^11.11.0"
+    "@lukemorales/query-key-factory": "npm:^1.3.4"
     "@shapeshiftoss/caip": "npm:^8.15.0"
     "@shapeshiftoss/types": "npm:^8.6.0"
+    "@tanstack/react-query": "npm:^5.65.1"
     "@types/inquirer": "npm:^9.0.7"
     "@types/mixpanel-browser": "npm:^2.48.1"
     "@types/node": "npm:^20.10.7"
