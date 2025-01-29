@@ -17,5 +17,3 @@ export type Asset = {
   networkIcon?: string
   networkColor?: string
 }
-
-export type AssetsByIdPartial = Record<AssetId, Asset> 

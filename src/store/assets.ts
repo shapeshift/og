@@ -1,10 +1,10 @@
 import { create } from 'zustand'
 
 import { initialAssetsById } from '../constants/assets'
-import type { Asset, AssetId, AssetsByIdPartial } from '../types/assets'
+import type { Asset, AssetId } from '../types/assets'
 
 interface AssetsState {
-  byId: AssetsByIdPartial
+  byId: Record<AssetId, Asset>
   ids: AssetId[]
   getAssetById: (assetId: AssetId) => Asset | undefined
 }
