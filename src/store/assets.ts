@@ -1,7 +1,8 @@
+import type { AssetId } from '@shapeshiftoss/caip'
 import { create } from 'zustand'
 
 import { initialAssetsById } from '../constants/assets'
-import type { Asset, AssetId } from '../types/assets'
+import type { Asset } from '../types/assets'
 
 interface AssetsState {
   byId: Record<AssetId, Asset>
