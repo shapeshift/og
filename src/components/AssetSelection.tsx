@@ -1,13 +1,16 @@
 import { Avatar, Button, Text } from '@chakra-ui/react'
-import type { Asset } from 'types/Asset'
+import type { AssetId } from '@shapeshiftoss/caip'
+import { useAssetById } from 'store/assets'
 
 type AssetSelectionProps = {
   onClick: () => void
   label: string
-  asset?: Asset
+  assetId?: AssetId
 }
 
-export const AssetSelection: React.FC<AssetSelectionProps> = ({ label, onClick, asset }) => {
+export const AssetSelection: React.FC<AssetSelectionProps> = ({ label, onClick, assetId }) => {
+  const asset = assetId ? useAssetById(assetId) : undefined
+
   return (
     <Button flexDir='column' height='auto' py={4} gap={4} flex={1} onClick={onClick}>
       <Text color='text.subtle'>{label}</Text>

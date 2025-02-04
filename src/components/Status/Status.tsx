@@ -18,10 +18,12 @@ import {
   useSteps,
 } from '@chakra-ui/react'
 import { useCallback, useMemo } from 'react'
+import { useFormContext } from 'react-hook-form'
 import { FaArrowDown, FaArrowRightArrowLeft, FaCheck, FaRegCopy } from 'react-icons/fa6'
 import { Amount } from 'components/Amount/Amount'
 import { useCopyToClipboard } from 'hooks/useCopyToClipboard'
 import { BTCImage, ETHImage } from 'lib/const'
+import type { SwapFormData } from 'types/form'
 
 import type { StepProps } from './components/StatusStepper'
 import { StatusStepper } from './components/StatusStepper'
@@ -46,6 +48,9 @@ export const Status = () => {
     index: 0,
     count: steps.length,
   })
+  const { watch } = useFormContext<SwapFormData>()
+  const { sellAmount, buyAmount, destinationAddress, refundAddress } = watch()
+
   const CopyIcon = useMemo(() => <FaRegCopy />, [])
   const CheckIcon = useMemo(() => <FaCheck />, [])
   const { copyToClipboard: copyToAddress, isCopied: isToAddressCopied } = useCopyToClipboard({
@@ -55,12 +60,12 @@ export const Status = () => {
     useCopyToClipboard({ timeout: 3000 })
 
   const handleCopyToAddress = useCallback(() => {
-    copyToAddress('1234')
-  }, [copyToAddress])
+    copyToAddress(destinationAddress)
+  }, [copyToAddress, destinationAddress])
 
   const handleCopyDepositAddress = useCallback(() => {
-    copyDepositAddress('1234')
-  }, [copyDepositAddress])
+    copyDepositAddress(refundAddress)
+  }, [copyDepositAddress, refundAddress])
 
   return (
     <Card width='full' maxW='465px'>
@@ -89,13 +94,13 @@ export const Status = () => {
               <Text fontWeight='bold'>Send</Text>
               <Flex alignItems='center' gap={2}>
                 <Avatar size='sm' src={BTCImage} />
-                <Amount.Crypto value='0.002' symbol='BTC' />
+                <Amount.Crypto value={sellAmount} symbol='BTC' />
               </Flex>
             </Stack>
             <Stack>
               <Text fontWeight='bold'>To</Text>
               <InputGroup>
-                <Input isReadOnly value='bc1q8n6t65jpm6k0...x7gl' />
+                <Input isReadOnly value={refundAddress} />
                 <InputRightElement>
                   <IconButton
                     borderRadius='lg'
@@ -113,7 +118,7 @@ export const Status = () => {
               <Text fontWeight='bold'>You will receive</Text>
               <Flex gap={2} alignItems='center'>
                 <Avatar size='xs' src={ETHImage} />
-                <Amount.Crypto value='0.000158162' symbol='ETH' />
+                <Amount.Crypto value={buyAmount || '0'} symbol='ETH' />
               </Flex>
             </Stack>
           </Stack>
@@ -134,10 +139,10 @@ export const Status = () => {
               <Avatar size='xs' src={BTCImage} />
               <Text>Deposit</Text>
             </Flex>
-            <Amount.Crypto value='0.002' symbol='BTC' />
+            <Amount.Crypto value={sellAmount || '0'} symbol='BTC' />
           </Flex>
           <Flex alignItems='center' gap={2}>
-            <Text>bc1q8n6t65jpm6k048ejvwgfa69xp5laqr2sexx7gl</Text>
+            <Text>{refundAddress}</Text>
             <IconButton
               size='sm'
               variant='ghost'
@@ -153,10 +158,10 @@ export const Status = () => {
               <Avatar size='xs' src={ETHImage} />
               <Text>Receive</Text>
             </Flex>
-            <Amount.Crypto value='0.00158162' symbol='ETH' />
+            <Amount.Crypto value={buyAmount || '0'} symbol='ETH' />
           </Flex>
           <Flex alignItems='center' gap={2}>
-            <Text>0x1234484844949494949</Text>
+            <Text>{destinationAddress || 'No destination address'}</Text>
           </Flex>
         </Stack>
         <Divider borderColor='border.base' />

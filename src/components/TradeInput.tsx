@@ -16,15 +16,20 @@ import {
   Text,
 } from '@chakra-ui/react'
 import { useCallback, useMemo } from 'react'
+import { useFormContext } from 'react-hook-form'
 import { FaArrowRightArrowLeft } from 'react-icons/fa6'
 import { useNavigate } from 'react-router-dom'
 import { BTCImage, ETHImage } from 'lib/const'
 import { mixpanel, MixPanelEvent } from 'lib/mixpanel'
+import type { SwapFormData } from 'types/form'
 
 import { Amount } from './Amount/Amount'
 
 export const TradeInput = () => {
   const navigate = useNavigate()
+  const { register, watch } = useFormContext<SwapFormData>()
+  const { sellAmount, destinationAddress, refundAddress } = watch()
+  
   const Divider = useMemo(() => <StackDivider borderColor='border.base' />, [])
   const FromAssetIcon = useMemo(() => <Avatar size='sm' src={BTCImage} />, [])
   const ToAssetIcon = useMemo(() => <Avatar size='sm' src={ETHImage} />, [])
@@ -103,14 +108,34 @@ export const TradeInput = () => {
           </Flex>
         </Flex>
         <Flex gap={6}>
-          <Input variant='filled' placeholder='0.0 BTC' />
-          <Input variant='filled' placeholder='0.0 ETH' />
+          <Input 
+            variant='filled' 
+            placeholder='0.0 BTC' 
+            {...register('sellAmount', { required: true })}
+          />
+          <Input 
+            variant='filled' 
+            placeholder='0.0 ETH' 
+            {...register('buyAmount', { required: true })}
+          />
         </Flex>
-        <Input placeholder='Destionation address (ETH)' />
-        <Input placeholder='Refund address (BTC)' />
+        <Input 
+          placeholder='Destination address (ETH)' 
+          {...register('destinationAddress', { required: true })}
+        />
+        <Input 
+          placeholder='Refund address (BTC)' 
+          {...register('refundAddress', { required: true })}
+        />
       </CardBody>
       <CardFooter>
-        <Button colorScheme='blue' size='lg' width='full' onClick={handleSubmit}>
+        <Button 
+          colorScheme='blue' 
+          size='lg' 
+          width='full' 
+          onClick={handleSubmit}
+          isDisabled={!sellAmount || !destinationAddress || !refundAddress}
+        >
           Start Transaction
         </Button>
       </CardFooter>
