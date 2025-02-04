@@ -26,6 +26,7 @@ import { fromBaseUnit, toBaseUnit } from 'lib/bignumber/conversion'
 import { bn, bnOrZero } from 'lib/bignumber/bignumber'
 import { useChainflipQuoteQuery } from 'queries/chainflip/quote'
 import { getChainflipAssetId } from 'queries/chainflip/assets'
+import { useMarketDataByAssetIdQuery } from 'queries/marketData'
 import { useAssetById } from 'store/assets'
 import type { SwapFormData } from 'types/form'
 
@@ -38,6 +39,10 @@ export const TradeInput = () => {
   
   const fromAsset = sellAsset ? useAssetById(sellAsset) : undefined
   const toAsset = buyAsset ? useAssetById(buyAsset) : undefined
+
+  // Market data queries for fallback rates
+  const { data: fromMarketData } = useMarketDataByAssetIdQuery(fromAsset?.assetId || '')
+  const { data: toMarketData } = useMarketDataByAssetIdQuery(toAsset?.assetId || '')
 
   // Convert to base units for the API
   const sellAmountBaseUnit = useMemo(() => {
@@ -57,26 +62,56 @@ export const TradeInput = () => {
     }
   )
   
-  // Convert quote amount from base units to display amount
+  // Calculate buy amount using either quote or market data
   const buyAmountCryptoPrecision = useMemo(() => {
-    if (!quote?.egressAmount || !toAsset?.precision) return '0'
-    return fromBaseUnit(quote.egressAmount.toString(), toAsset.precision)
-  }, [quote?.egressAmount, toAsset?.precision])
+    // If we have a quote, use it
+    if (quote?.egressAmountNative && toAsset?.precision) {
+      return fromBaseUnit(quote.egressAmountNative, toAsset.precision)
+    }
+    
+    // Otherwise use market data as fallback
+    if (fromMarketData?.price && toMarketData?.price && sellAmount) {
+      const fromPrice = bnOrZero(fromMarketData.price)
+      const toPrice = bnOrZero(toMarketData.price)
+      if (toPrice.isZero()) return '0'
+      
+      return bnOrZero(sellAmount)
+        .times(fromPrice)
+        .div(toPrice)
+        .toString()
+    }
+    
+    return '0'
+  }, [quote?.egressAmountNative, toAsset?.precision, fromMarketData?.price, toMarketData?.price, sellAmount])
 
-  // Update buyAmount whenever quote changes
+  // Update buyAmount whenever it changes
   useEffect(() => {
     if (buyAmountCryptoPrecision) {
       setValue('buyAmount', buyAmountCryptoPrecision)
     }
   }, [buyAmountCryptoPrecision, setValue])
 
-  // Calculate rate from quote
+  // Calculate rate using either quote or market data
   const rate = useMemo(() => {
-    if (!quote || !sellAmount) return '0'
     const sellBn = bnOrZero(sellAmount)
     if (sellBn.isZero()) return '0'
-    return bnOrZero(buyAmountCryptoPrecision).div(sellBn).toString()
-  }, [buyAmountCryptoPrecision, quote, sellAmount])
+
+    // If we have a quote, calculate rate from the quote amounts
+    if (quote) {
+      return bnOrZero(buyAmountCryptoPrecision).div(sellBn).toString()
+    }
+    
+    // Otherwise use market data as fallback
+    if (fromMarketData?.price && toMarketData?.price) {
+      const fromPrice = bnOrZero(fromMarketData.price)
+      const toPrice = bnOrZero(toMarketData.price)
+      if (toPrice.isZero()) return '0'
+      
+      return fromPrice.div(toPrice).toString()
+    }
+    
+    return '0'
+  }, [buyAmountCryptoPrecision, quote, sellAmount, fromMarketData?.price, toMarketData?.price])
   
   const isLoading = isQuoteFetching
   
