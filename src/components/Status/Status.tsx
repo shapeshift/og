@@ -31,7 +31,10 @@ import type { SwapFormData } from 'types/form'
 import type { StepProps } from './components/StatusStepper'
 import { StatusStepper } from './components/StatusStepper'
 
-const MOCK_BTC_ADDRESS = 'bc1q8n6t65jpm6k048ejvwgfa69xp5laqr2sexx7gl'
+// Mock values - will come from API later
+const MOCK_CHANNEL_ID = '0xa5567...8c'
+const MOCK_SHAPESHIFT_FEE = 4.00
+const MOCK_PROTOCOL_FEE = '0.000'
 
 const steps: StepProps[] = [
   {
@@ -41,11 +44,7 @@ const steps: StepProps[] = [
   {
     title: 'Awaiting Exchange',
     icon: FaArrowRightArrowLeft,
-  },
-  {
-    title: 'Trade Complete',
-    icon: FaCheck,
-  },
+  }
 ]
 
 export const Status = () => {
@@ -85,8 +84,8 @@ export const Status = () => {
         fontSize='sm'
         py={2}
       >
-        <Text color='text.subtle'>TX ID</Text>
-        <Text>0x124567</Text>
+        <Text color='text.subtle'>Channel ID:</Text>
+        <Text>{MOCK_CHANNEL_ID}</Text>
       </CardHeader>
       <Collapse in={activeStep === 0}>
         <CardBody display='flex' flexDir='row-reverse' gap={6} px={4}>
@@ -178,13 +177,23 @@ export const Status = () => {
           </Flex>
         </Stack>
         <Divider borderColor='border.base' />
-        <Flex alignItems='center' justifyContent='space-between'>
-          <Text>Estimated Rate</Text>
-          <Flex gap={1}>
-            <Amount.Crypto value='1' symbol={fromAsset?.symbol || 'BTC'} suffix='=' />
-            <Amount.Crypto value='12.90126' symbol='ETH' />
+        <Stack spacing={2}>
+          <Flex alignItems='center' justifyContent='space-between'>
+            <Text>Estimated Rate</Text>
+            <Flex gap={1}>
+              <Amount.Crypto value='1' symbol={fromAsset?.symbol || 'BTC'} suffix='=' />
+              <Amount.Crypto value='12.90126' symbol='ETH' />
+            </Flex>
           </Flex>
-        </Flex>
+          <Flex alignItems='center' justifyContent='space-between'>
+            <Text>ShapeShift Fee</Text>
+            <Amount.Fiat value={MOCK_SHAPESHIFT_FEE.toString()} prefix='$' />
+          </Flex>
+          <Flex alignItems='center' justifyContent='space-between'>
+            <Text>Protocol Fee</Text>
+            <Amount.Crypto value={MOCK_PROTOCOL_FEE} symbol={fromAsset?.symbol || 'BTC'} />
+          </Flex>
+        </Stack>
       </CardFooter>
     </Card>
   )
