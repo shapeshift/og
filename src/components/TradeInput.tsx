@@ -16,7 +16,7 @@ import {
   StatNumber,
   Text,
 } from '@chakra-ui/react'
-import { useCallback, useMemo } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { useFormContext } from 'react-hook-form'
 import { FaArrowRightArrowLeft } from 'react-icons/fa6'
 import { useNavigate } from 'react-router-dom'
@@ -30,7 +30,7 @@ import { Amount } from './Amount/Amount'
 
 export const TradeInput = () => {
   const navigate = useNavigate()
-  const { register, watch } = useFormContext<SwapFormData>()
+  const { register, watch, setValue } = useFormContext<SwapFormData>()
   const { sellAmount, destinationAddress, refundAddress, sellAsset, buyAsset } = watch()
   
   const fromAsset = sellAsset ? useAssetById(sellAsset) : undefined
@@ -52,6 +52,11 @@ export const TradeInput = () => {
     if (!sellAmount || !rate) return '0'
     return (parseFloat(sellAmount) * parseFloat(rate)).toString()
   }, [rate, sellAmount])
+
+  // Update buyAmount in form whenever toAmount changes
+  useEffect(() => {
+    setValue('buyAmount', toAmount)
+  }, [toAmount, setValue])
   
   const Divider = useMemo(() => <StackDivider borderColor='border.base' />, [])
   const FromAssetIcon = useMemo(() => <Avatar size='sm' src={fromAsset?.icon || BTCImage} />, [fromAsset?.icon])
@@ -148,7 +153,11 @@ export const TradeInput = () => {
           <Input 
             variant='filled' 
             placeholder={`0.0 ${toAsset?.symbol || 'ETH'}`}
-            {...register('buyAmount', { required: true })}
+            isReadOnly
+            value={toAmount}
+            bg="background.surface.raised.base"
+            _hover={{ bg: "background.surface.raised.base" }}
+            _focus={{ bg: "background.surface.raised.base" }}
           />
         </Flex>
         <Input 
