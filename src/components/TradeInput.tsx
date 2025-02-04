@@ -22,7 +22,10 @@ import { FaArrowRightArrowLeft } from 'react-icons/fa6'
 import { useNavigate } from 'react-router-dom'
 import { BTCImage, ETHImage } from 'lib/const'
 import { mixpanel, MixPanelEvent } from 'lib/mixpanel'
-import { useMarketDataByAssetIdQuery } from 'queries/marketData'
+import { fromBaseUnit, toBaseUnit } from 'lib/bignumber/conversion'
+import { bn, bnOrZero } from 'lib/bignumber/bignumber'
+import { useChainflipQuoteQuery } from 'queries/chainflip/quote'
+import { getChainflipAssetId } from 'queries/chainflip/assets'
 import { useAssetById } from 'store/assets'
 import type { SwapFormData } from 'types/form'
 
@@ -35,28 +38,47 @@ export const TradeInput = () => {
   
   const fromAsset = sellAsset ? useAssetById(sellAsset) : undefined
   const toAsset = buyAsset ? useAssetById(buyAsset) : undefined
-  
-  const { data: fromMarketData, isFetching: isFromFetching } = useMarketDataByAssetIdQuery(sellAsset || '')
-  const { data: toMarketData, isFetching: isToFetching } = useMarketDataByAssetIdQuery(buyAsset || '')
-  
-  const isLoading = isFromFetching || isToFetching
-  
-  const rate = useMemo(() => {
-    if (!fromMarketData?.price || !toMarketData?.price) return '0'
-    const fromPrice = parseFloat(fromMarketData.price)
-    const toPrice = parseFloat(toMarketData.price)
-    return (fromPrice / toPrice).toString()
-  }, [fromMarketData?.price, toMarketData?.price])
-  
-  const toAmount = useMemo(() => {
-    if (!sellAmount || !rate) return '0'
-    return (parseFloat(sellAmount) * parseFloat(rate)).toString()
-  }, [rate, sellAmount])
 
-  // Update buyAmount in form whenever toAmount changes
+  // Convert to base units for the API
+  const sellAmountBaseUnit = useMemo(() => {
+    if (!fromAsset?.precision || !sellAmount) return '0'
+    return toBaseUnit(sellAmount, fromAsset.precision)
+  }, [fromAsset?.precision, sellAmount])
+
+  // Quote query
+  const { data: quote, isFetching: isQuoteFetching } = useChainflipQuoteQuery(
+    {
+      sourceAsset: fromAsset ? getChainflipAssetId(fromAsset.assetId) : '',
+      destinationAsset: toAsset ? getChainflipAssetId(toAsset.assetId) : '',
+      amount: sellAmountBaseUnit,
+    },
+    {
+      enabled: Boolean(fromAsset && toAsset && sellAmount),
+    }
+  )
+  
+  // Convert quote amount from base units to display amount
+  const buyAmountCryptoPrecision = useMemo(() => {
+    if (!quote?.egressAmount || !toAsset?.precision) return '0'
+    return fromBaseUnit(quote.egressAmount.toString(), toAsset.precision)
+  }, [quote?.egressAmount, toAsset?.precision])
+
+  // Update buyAmount whenever quote changes
   useEffect(() => {
-    setValue('buyAmount', toAmount)
-  }, [toAmount, setValue])
+    if (buyAmountCryptoPrecision) {
+      setValue('buyAmount', buyAmountCryptoPrecision)
+    }
+  }, [buyAmountCryptoPrecision, setValue])
+
+  // Calculate rate from quote
+  const rate = useMemo(() => {
+    if (!quote || !sellAmount) return '0'
+    const sellBn = bnOrZero(sellAmount)
+    if (sellBn.isZero()) return '0'
+    return bnOrZero(buyAmountCryptoPrecision).div(sellBn).toString()
+  }, [buyAmountCryptoPrecision, quote, sellAmount])
+  
+  const isLoading = isQuoteFetching
   
   const Divider = useMemo(() => <StackDivider borderColor='border.base' />, [])
   const FromAssetIcon = useMemo(() => <Avatar size='sm' src={fromAsset?.icon || BTCImage} />, [fromAsset?.icon])
@@ -108,7 +130,7 @@ export const TradeInput = () => {
             <StatNumber>
               <Skeleton isLoaded={!isLoading}>
                 <Amount.Crypto 
-                  value={toAmount} 
+                  value={buyAmountCryptoPrecision} 
                   symbol={toAsset?.symbol || 'ETH'} 
                 />
               </Skeleton>
@@ -154,7 +176,7 @@ export const TradeInput = () => {
             variant='filled' 
             placeholder={`0.0 ${toAsset?.symbol || 'ETH'}`}
             isReadOnly
-            value={toAmount}
+            value={buyAmountCryptoPrecision}
             bg="background.surface.raised.base"
             _hover={{ bg: "background.surface.raised.base" }}
             _focus={{ bg: "background.surface.raised.base" }}

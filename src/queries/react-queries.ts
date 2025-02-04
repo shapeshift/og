@@ -38,6 +38,7 @@ export const reactQueries = createQueryKeyStore({
         })
         return data[0]
       },
+      enabled: Boolean(params.sourceAsset && params.destinationAsset && params.amount),
     }),
     swap: (params: ChainflipSwapParams) => ({
       queryKey: [params],
@@ -57,11 +58,10 @@ export const reactQueries = createQueryKeyStore({
       queryKey: [swapId],
       queryFn: async () => {
         const { data } = await axios.get<ChainflipStatusResponse>(
-          `${CHAINFLIP_API_URL}/status-by-id`,
+          `${CHAINFLIP_API_URL}/swap/${swapId}`,
           {
             params: {
               apiKey: CHAINFLIP_API_KEY,
-              swapId,
             },
           },
         )
