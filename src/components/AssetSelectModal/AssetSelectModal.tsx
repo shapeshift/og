@@ -13,7 +13,7 @@ import {
 import type { ChainId } from '@shapeshiftoss/caip'
 import type { ChangeEvent } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import AssetData from 'lib/generatedAssetData.json'
+import { useAllAssets } from 'store/assets'
 import { isNft } from 'lib/utils'
 import type { Asset } from 'types/Asset'
 
@@ -35,7 +35,7 @@ type NetworkItem = {
 
 export const AssetSelectModal: React.FC<AssetSelectModalProps> = ({ isOpen, onClose, onClick }) => {
   const [searchQuery, setSearchQuery] = useState('')
-  const assets = useMemo(() => Object.values(AssetData) as Asset[], [])
+  const assets = useAllAssets()
   const [activeChain, setActiveChain] = useState<ChainId | 'All'>('All')
   const [searchTermAssets, setSearchTermAssets] = useState<Asset[]>([])
   const iniitalRef = useRef(null)
