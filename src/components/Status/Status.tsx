@@ -16,17 +16,22 @@ import {
   Tag,
   Text,
   useSteps,
+  Box,
 } from '@chakra-ui/react'
 import { useCallback, useMemo } from 'react'
 import { useFormContext } from 'react-hook-form'
 import { FaArrowDown, FaArrowRightArrowLeft, FaCheck, FaRegCopy } from 'react-icons/fa6'
 import { Amount } from 'components/Amount/Amount'
+import { QRCode } from 'components/QRCode/QRCode'
 import { useCopyToClipboard } from 'hooks/useCopyToClipboard'
 import { BTCImage, ETHImage } from 'lib/const'
+import { useAssetById } from 'store/assets'
 import type { SwapFormData } from 'types/form'
 
 import type { StepProps } from './components/StatusStepper'
 import { StatusStepper } from './components/StatusStepper'
+
+const MOCK_BTC_ADDRESS = 'bc1q8n6t65jpm6k048ejvwgfa69xp5laqr2sexx7gl'
 
 const steps: StepProps[] = [
   {
@@ -49,7 +54,9 @@ export const Status = () => {
     count: steps.length,
   })
   const { watch } = useFormContext<SwapFormData>()
-  const { sellAmount, buyAmount, destinationAddress, refundAddress } = watch()
+  const { sellAmount, buyAmount, destinationAddress, refundAddress, sellAsset } = watch()
+
+  const fromAsset = sellAsset ? useAssetById(sellAsset) : undefined
 
   const CopyIcon = useMemo(() => <FaRegCopy />, [])
   const CheckIcon = useMemo(() => <FaCheck />, [])
@@ -84,7 +91,13 @@ export const Status = () => {
       <Collapse in={activeStep === 0}>
         <CardBody display='flex' flexDir='row-reverse' gap={6} px={4}>
           <Flex flexDir='column' gap={4}>
-            <Center boxSize='150px' bg='background.surface.raised.base' borderRadius='xl' />
+            <Box bg='white' p={4} borderRadius='xl'>
+              <QRCode
+                content={refundAddress || ''}
+                width={150}
+                icon={<Avatar size='xs' src={fromAsset?.icon} />}
+              />
+            </Box>
             <Tag colorScheme='green' size='sm' justifyContent='center'>
               Time remaining 06:23
             </Tag>
@@ -93,8 +106,8 @@ export const Status = () => {
             <Stack>
               <Text fontWeight='bold'>Send</Text>
               <Flex alignItems='center' gap={2}>
-                <Avatar size='sm' src={BTCImage} />
-                <Amount.Crypto value={sellAmount} symbol='BTC' />
+                <Avatar size='sm' src={fromAsset?.icon || BTCImage} />
+                <Amount.Crypto value={sellAmount} symbol={fromAsset?.symbol || 'BTC'} />
               </Flex>
             </Stack>
             <Stack>
@@ -136,10 +149,10 @@ export const Status = () => {
         <Stack>
           <Flex width='full' justifyContent='space-between'>
             <Flex alignItems='center' gap={2}>
-              <Avatar size='xs' src={BTCImage} />
+              <Avatar size='xs' src={fromAsset?.icon || BTCImage} />
               <Text>Deposit</Text>
             </Flex>
-            <Amount.Crypto value={sellAmount || '0'} symbol='BTC' />
+            <Amount.Crypto value={sellAmount || '0'} symbol={fromAsset?.symbol || 'BTC'} />
           </Flex>
           <Flex alignItems='center' gap={2}>
             <Text>{refundAddress}</Text>
@@ -168,7 +181,7 @@ export const Status = () => {
         <Flex alignItems='center' justifyContent='space-between'>
           <Text>Estimated Rate</Text>
           <Flex gap={1}>
-            <Amount.Crypto value='1' symbol='BTC' suffix='=' />
+            <Amount.Crypto value='1' symbol={fromAsset?.symbol || 'BTC'} suffix='=' />
             <Amount.Crypto value='12.90126' symbol='ETH' />
           </Flex>
         </Flex>
