@@ -5,7 +5,6 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { FormProvider, useForm } from 'react-hook-form'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { ChatwootButton } from 'components/Chatwoot'
-import { TestDepositAddressCard } from 'components/DepositAddressCard/DepositAddressCard.test'
 import { SelectPair } from 'components/SelectPair'
 import { Status } from 'components/Status/Status'
 import { TradeInput } from 'components/TradeInput'
@@ -25,10 +24,6 @@ const router = createBrowserRouter([
   {
     path: '/status',
     element: <Status />,
-  },
-  {
-    path: '/test-qr',
-    element: <TestDepositAddressCard />,
   },
 ])
 
