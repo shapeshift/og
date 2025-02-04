@@ -136,7 +136,7 @@ export const AssetSelectModal: React.FC<AssetSelectModalProps> = ({ isOpen, onCl
             <Text fontWeight='bold' fontSize='md'>
               Select asset
             </Text>
-            <CloseButton position='relative' />
+            <CloseButton position='relative' onClick={handleClose} />
           </Flex>
           <Input
             size='lg'
