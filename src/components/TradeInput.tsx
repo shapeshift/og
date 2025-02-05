@@ -31,6 +31,7 @@ import { BTCImage, ETHImage } from 'lib/const'
 import { mixpanel, MixPanelEvent } from 'lib/mixpanel'
 import { validateAddress } from 'lib/validation'
 import type { SwapFormData } from 'types/form'
+import { useChainflipSwapMutation } from 'queries/chainflip/swap'
 
 import { Amount } from './Amount/Amount'
 
@@ -125,23 +126,43 @@ export const TradeInput = () => {
   )
   const SwitchIcon = useMemo(() => <FaArrowRightArrowLeft />, [])
 
+  const { mutate: createSwap, isPending: isSwapPending } = useChainflipSwapMutation({
+    onSuccess: (swapData) => {
+      // Ensure form values are in URL before navigation
+      const formValues = watch()
+      const searchParams = new URLSearchParams()
+      Object.entries(formValues).forEach(([key, value]) => {
+        if (value) {
+          searchParams.set(key, String(value))
+        }
+      })
+
+      // Add swap ID to URL
+      searchParams.set('swapId', swapData.id.toString())
+
+      navigate({
+        pathname: '/status',
+        search: searchParams.toString(),
+      })
+    },
+  })
+
   const onSubmit = useCallback(() => {
     mixpanel?.track(MixPanelEvent.StartTransaction, {
       'some key': 'some val',
     })
-    // Ensure form values are in URL before navigation
-    const formValues = watch()
-    const searchParams = new URLSearchParams()
-    Object.entries(formValues).forEach(([key, value]) => {
-      if (value) {
-        searchParams.set(key, String(value))
-      }
-    })
-    navigate({
-      pathname: '/status',
-      search: searchParams.toString(),
-    })
-  }, [navigate, watch])
+
+    // Request the swap
+    if (quote && fromAsset && toAsset) {
+      createSwap({
+        sourceAsset: getChainflipAssetId(fromAsset.assetId),
+        destinationAsset: getChainflipAssetId(toAsset.assetId),
+        destinationAddress: destinationAddress || '',
+        refundAddress: refundAddress || '',
+        minimumPrice: quote.egressAmountNative,
+      })
+    }
+  }, [quote, fromAsset, toAsset, destinationAddress, refundAddress, createSwap])
 
   const handleFromAssetClick = useCallback(() => {
     console.info('asset click')
@@ -413,6 +434,8 @@ export const TradeInput = () => {
           isDisabled={
             !sellAmountCryptoBaseUnit || !destinationAddress || !refundAddress || !isValid
           }
+          isLoading={isSwapPending}
+          loadingText='Creating Swap'
         >
           Start Transaction
         </Button>

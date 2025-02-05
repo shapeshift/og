@@ -1,10 +1,13 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, type UseMutationOptions } from '@tanstack/react-query'
 
-import { reactQueries } from '../react-queries'
-import type { ChainflipSwapParams } from './types'
+import { createSwap } from '../react-queries'
+import type { ChainflipSwapParams, ChainflipSwapResponse } from './types'
 
-export const useChainflipSwapQuery = (params: ChainflipSwapParams) => {
-  return useQuery({
-    ...reactQueries.chainflip.swap(params),
+export const useChainflipSwapMutation = (
+  options?: UseMutationOptions<ChainflipSwapResponse, Error, ChainflipSwapParams>
+) => {
+  return useMutation<ChainflipSwapResponse, Error, ChainflipSwapParams>({
+    mutationFn: createSwap,
+    ...options,
   })
 }
