@@ -24,8 +24,7 @@ type StatusStepperProps = {
 }
 
 const getProgressPercent = (activeStep: number): number => {
-  // 6 states total, so each state is worth 16.67% (100/6)
-  return Math.min((activeStep + 1) * (100 / 6), 100)
+  return activeStep === 0 ? 50 : 100
 }
 
 export const StatusStepper: React.FC<StatusStepperProps> = ({
