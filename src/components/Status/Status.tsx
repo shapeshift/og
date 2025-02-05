@@ -21,6 +21,7 @@ import {
 import { useCallback, useMemo } from 'react'
 import { useFormContext } from 'react-hook-form'
 import { FaArrowDown, FaArrowRightArrowLeft, FaCheck, FaRegCopy } from 'react-icons/fa6'
+import { useSearchParams } from 'react-router'
 import { Amount } from 'components/Amount/Amount'
 import { QRCode } from 'components/QRCode/QRCode'
 import { useCopyToClipboard } from 'hooks/useCopyToClipboard'
@@ -30,6 +31,7 @@ import { useAssetById } from 'store/assets'
 import type { SwapFormData } from 'types/form'
 import { getChainflipAssetId } from 'queries/chainflip/assets'
 import { useChainflipQuoteQuery } from 'queries/chainflip/quote'
+import { useChainflipStatusQuery } from 'queries/chainflip/status'
 
 import type { StepProps } from './components/StatusStepper'
 import { StatusStepper } from './components/StatusStepper'
@@ -51,6 +53,9 @@ const SWAP_STEPS: StepProps[] = [
 ]
 
 export const Status = () => {
+  const [searchParams] = useSearchParams()
+  const swapId = searchParams.get('swapId')
+
   const { activeStep } = useSteps({
     index: 0,
     count: SWAP_STEPS.length,
@@ -60,12 +65,6 @@ export const Status = () => {
 
   const fromAsset = sellAsset ? useAssetById(sellAsset) : undefined
   const toAsset = buyAsset ? useAssetById(buyAsset) : undefined
-
-  // Convert base units to crypto precision for display
-  const sellAmountCryptoPrecision = useMemo(() => {
-    if (!fromAsset?.precision || !sellAmountCryptoBaseUnit) return '0'
-    return fromBaseUnit(sellAmountCryptoBaseUnit, fromAsset.precision)
-  }, [fromAsset?.precision, sellAmountCryptoBaseUnit])
 
   // Get quote for buy amount
   const { data: quote } = useChainflipQuoteQuery(
@@ -78,6 +77,22 @@ export const Status = () => {
       enabled: Boolean(fromAsset && toAsset && sellAmountCryptoBaseUnit),
     },
   )
+
+  // Get swap data from URL params
+  const swapData = useMemo(() => {
+    const channelId = searchParams.get('channelId')
+    const depositAddress = searchParams.get('depositAddress')
+    return {
+      channelId: channelId ? Number(channelId) : undefined,
+      address: depositAddress || '',
+    }
+  }, [searchParams])
+
+  // Convert base units to crypto precision for display
+  const sellAmountCryptoPrecision = useMemo(() => {
+    if (!fromAsset?.precision || !sellAmountCryptoBaseUnit) return '0'
+    return fromBaseUnit(sellAmountCryptoBaseUnit, fromAsset.precision)
+  }, [fromAsset?.precision, sellAmountCryptoBaseUnit])
 
   // Calculate buy amount from quote
   const buyAmountCryptoPrecision = useMemo(() => {
@@ -94,12 +109,16 @@ export const Status = () => {
     useCopyToClipboard({ timeout: 3000 })
 
   const handleCopyToAddress = useCallback(() => {
-    copyToAddress(destinationAddress)
-  }, [copyToAddress, destinationAddress])
+    if (swapData.address) {
+      copyToAddress(swapData.address)
+    }
+  }, [copyToAddress, swapData.address])
 
   const handleCopyDepositAddress = useCallback(() => {
-    copyDepositAddress(refundAddress)
-  }, [copyDepositAddress, refundAddress])
+    if (swapData.address) {
+      copyDepositAddress(swapData.address)
+    }
+  }, [copyDepositAddress, swapData.address])
 
   return (
     <Card width='full' maxW='465px'>
@@ -113,14 +132,14 @@ export const Status = () => {
         py={2}
       >
         <Text color='text.subtle'>Channel ID:</Text>
-        <Text>{MOCK_CHANNEL_ID}</Text>
+        <Text>{swapData.channelId?.toString() || 'Loading...'}</Text>
       </CardHeader>
       <Collapse in={activeStep === 0}>
         <CardBody display='flex' flexDir='row-reverse' gap={6} px={4}>
           <Flex flexDir='column' gap={4}>
             <Box bg='white' p={4} borderRadius='xl'>
               <QRCode
-                content={refundAddress || ''}
+                content={swapData.address || ''}
                 width={150}
                 icon={<Avatar size='xs' src={fromAsset?.icon} />}
               />
@@ -140,7 +159,7 @@ export const Status = () => {
             <Stack>
               <Text fontWeight='bold'>To</Text>
               <InputGroup>
-                <Input isReadOnly value={refundAddress} />
+                <Input isReadOnly value={swapData.address || ''} />
                 <InputRightElement>
                   <IconButton
                     borderRadius='lg'
@@ -182,7 +201,7 @@ export const Status = () => {
             <Amount.Crypto value={sellAmountCryptoPrecision || '0'} symbol={fromAsset?.symbol || 'BTC'} />
           </Flex>
           <Flex alignItems='center' gap={2}>
-            <Text>{refundAddress}</Text>
+            <Text>{swapData.address || ''}</Text>
             <IconButton
               size='sm'
               variant='ghost'

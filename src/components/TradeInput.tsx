@@ -137,8 +137,10 @@ export const TradeInput = () => {
         }
       })
 
-      // Add swap ID to URL
+      // Add swap data to URL
       searchParams.set('swapId', swapData.id.toString())
+      searchParams.set('channelId', swapData.channelId.toString())
+      searchParams.set('depositAddress', swapData.address)
 
       navigate({
         pathname: '/status',
