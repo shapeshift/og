@@ -25,7 +25,7 @@
     "axios": "^1.6.5",
     "bech32": "^2.0.0",
     "bignumber.js": "^9.1.2",
-    "framer-motion": "^10.17.9",
+    "framer-motion": "^12.3.0",
     "lodash": "^4.17.21",
     "match-sorter": "^6.3.1",
     "mixpanel-browser": "^2.48.1",
