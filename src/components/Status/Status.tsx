@@ -24,9 +24,12 @@ import { FaArrowDown, FaArrowRightArrowLeft, FaCheck, FaRegCopy } from 'react-ic
 import { Amount } from 'components/Amount/Amount'
 import { QRCode } from 'components/QRCode/QRCode'
 import { useCopyToClipboard } from 'hooks/useCopyToClipboard'
+import { fromBaseUnit } from 'lib/bignumber/conversion'
 import { BTCImage, ETHImage } from 'lib/const'
 import { useAssetById } from 'store/assets'
 import type { SwapFormData } from 'types/form'
+import { getChainflipAssetId } from 'queries/chainflip/assets'
+import { useChainflipQuoteQuery } from 'queries/chainflip/quote'
 
 import type { StepProps } from './components/StatusStepper'
 import { StatusStepper } from './components/StatusStepper'
@@ -53,9 +56,34 @@ export const Status = () => {
     count: steps.length,
   })
   const { watch } = useFormContext<SwapFormData>()
-  const { sellAmount, buyAmount, destinationAddress, refundAddress, sellAsset } = watch()
+  const { sellAmountCryptoBaseUnit, destinationAddress, refundAddress, sellAsset, buyAsset } = watch()
 
   const fromAsset = sellAsset ? useAssetById(sellAsset) : undefined
+  const toAsset = buyAsset ? useAssetById(buyAsset) : undefined
+
+  // Convert base units to crypto precision for display
+  const sellAmountCryptoPrecision = useMemo(() => {
+    if (!fromAsset?.precision || !sellAmountCryptoBaseUnit) return '0'
+    return fromBaseUnit(sellAmountCryptoBaseUnit, fromAsset.precision)
+  }, [fromAsset?.precision, sellAmountCryptoBaseUnit])
+
+  // Get quote for buy amount
+  const { data: quote } = useChainflipQuoteQuery(
+    {
+      sourceAsset: fromAsset ? getChainflipAssetId(fromAsset.assetId) : '',
+      destinationAsset: toAsset ? getChainflipAssetId(toAsset.assetId) : '',
+      amount: sellAmountCryptoBaseUnit,
+    },
+    {
+      enabled: Boolean(fromAsset && toAsset && sellAmountCryptoBaseUnit),
+    },
+  )
+
+  // Calculate buy amount from quote
+  const buyAmountCryptoPrecision = useMemo(() => {
+    if (!quote?.egressAmountNative || !toAsset?.precision) return '0'
+    return fromBaseUnit(quote.egressAmountNative, toAsset.precision)
+  }, [quote?.egressAmountNative, toAsset?.precision])
 
   const CopyIcon = useMemo(() => <FaRegCopy />, [])
   const CheckIcon = useMemo(() => <FaCheck />, [])
@@ -106,7 +134,7 @@ export const Status = () => {
               <Text fontWeight='bold'>Send</Text>
               <Flex alignItems='center' gap={2}>
                 <Avatar size='sm' src={fromAsset?.icon || BTCImage} />
-                <Amount.Crypto value={sellAmount} symbol={fromAsset?.symbol || 'BTC'} />
+                <Amount.Crypto value={sellAmountCryptoPrecision} symbol={fromAsset?.symbol || 'BTC'} />
               </Flex>
             </Stack>
             <Stack>
@@ -130,7 +158,7 @@ export const Status = () => {
               <Text fontWeight='bold'>You will receive</Text>
               <Flex gap={2} alignItems='center'>
                 <Avatar size='xs' src={ETHImage} />
-                <Amount.Crypto value={buyAmount || '0'} symbol='ETH' />
+                <Amount.Crypto value={buyAmountCryptoPrecision || '0'} symbol={toAsset?.symbol || 'ETH'} />
               </Flex>
             </Stack>
           </Stack>
@@ -151,7 +179,7 @@ export const Status = () => {
               <Avatar size='xs' src={fromAsset?.icon || BTCImage} />
               <Text>Deposit</Text>
             </Flex>
-            <Amount.Crypto value={sellAmount || '0'} symbol={fromAsset?.symbol || 'BTC'} />
+            <Amount.Crypto value={sellAmountCryptoPrecision || '0'} symbol={fromAsset?.symbol || 'BTC'} />
           </Flex>
           <Flex alignItems='center' gap={2}>
             <Text>{refundAddress}</Text>
@@ -170,7 +198,7 @@ export const Status = () => {
               <Avatar size='xs' src={ETHImage} />
               <Text>Receive</Text>
             </Flex>
-            <Amount.Crypto value={buyAmount || '0'} symbol='ETH' />
+            <Amount.Crypto value={buyAmountCryptoPrecision || '0'} symbol={toAsset?.symbol || 'ETH'} />
           </Flex>
           <Flex alignItems='center' gap={2}>
             <Text>{destinationAddress || 'No destination address'}</Text>
