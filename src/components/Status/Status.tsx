@@ -39,7 +39,7 @@ const MOCK_CHANNEL_ID = '0xa5567...8c'
 const MOCK_SHAPESHIFT_FEE = 4.00
 const MOCK_PROTOCOL_FEE = '0.000'
 
-const steps: StepProps[] = [
+const SWAP_STEPS: StepProps[] = [
   {
     title: 'Awaiting Deposit',
     icon: FaArrowDown,
@@ -53,7 +53,7 @@ const steps: StepProps[] = [
 export const Status = () => {
   const { activeStep } = useSteps({
     index: 0,
-    count: steps.length,
+    count: SWAP_STEPS.length,
   })
   const { watch } = useFormContext<SwapFormData>()
   const { sellAmountCryptoBaseUnit, destinationAddress, refundAddress, sellAsset, buyAsset } = watch()
@@ -164,7 +164,7 @@ export const Status = () => {
           </Stack>
         </CardBody>
       </Collapse>
-      <StatusStepper steps={steps} activeStep={activeStep} />
+      <StatusStepper steps={SWAP_STEPS} activeStep={activeStep} />
       <CardFooter
         flexDir='column'
         gap={4}

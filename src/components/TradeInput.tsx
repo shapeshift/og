@@ -29,17 +29,22 @@ import { fromBaseUnit, toBaseUnit } from 'lib/bignumber/conversion'
 import { BTCImage, ETHImage } from 'lib/const'
 import { mixpanel, MixPanelEvent } from 'lib/mixpanel'
 import type { SwapFormData } from 'types/form'
+import { validateAddress } from 'lib/validation'
+import { fromAssetId } from '@shapeshiftoss/caip'
 
 import { Amount } from './Amount/Amount'
 
 export const TradeInput = () => {
   const navigate = useNavigate()
-  const { register, watch, setValue } = useFormContext<SwapFormData>()
+  const { register, watch, setValue, handleSubmit: hookFormSubmit, formState: { errors, isValid } } = useFormContext<SwapFormData>()
   const { sellAmountCryptoBaseUnit, destinationAddress, refundAddress, sellAsset, buyAsset } =
     watch()
 
-  const fromAsset = sellAsset ? useAssetById(sellAsset) : undefined
-  const toAsset = buyAsset ? useAssetById(buyAsset) : undefined
+  // Always call hooks unconditionally at the top level
+  const fromAssetData = useAssetById(sellAsset || '')
+  const toAssetData = useAssetById(buyAsset || '')
+  const fromAsset = useMemo(() => sellAsset ? fromAssetData : undefined, [sellAsset, fromAssetData])
+  const toAsset = useMemo(() => buyAsset ? toAssetData : undefined, [buyAsset, toAssetData])
 
   // Market data queries for fallback rates
   const { data: fromMarketData } = useMarketDataByAssetIdQuery(fromAsset?.assetId || '')
@@ -112,12 +117,23 @@ export const TradeInput = () => {
   )
   const SwitchIcon = useMemo(() => <FaArrowRightArrowLeft />, [])
 
-  const handleSubmit = useCallback(() => {
+  const onSubmit = useCallback(() => {
     mixpanel?.track(MixPanelEvent.StartTransaction, {
       'some key': 'some val',
     })
-    navigate('/status')
-  }, [navigate])
+    // Ensure form values are in URL before navigation
+    const formValues = watch()
+    const searchParams = new URLSearchParams()
+    Object.entries(formValues).forEach(([key, value]) => {
+      if (value) {
+        searchParams.set(key, String(value))
+      }
+    })
+    navigate({
+      pathname: '/status',
+      search: searchParams.toString()
+    })
+  }, [navigate, watch])
 
   const handleFromAssetClick = useCallback(() => {
     console.info('asset click')
@@ -190,8 +206,51 @@ export const TradeInput = () => {
     [fromAsset?.precision, setValue],
   )
 
+  // Validation functions at top level
+  const validateDestinationAddress = useCallback(async (value: string) => {
+    if (!value || !buyAsset) return true
+    const { chainId } = fromAssetId(buyAsset)
+    // If the value hasn't changed and was previously valid, return true immediately
+    if (destinationAddress === value && !errors.destinationAddress) {
+      return true
+    }
+    const isValid = await validateAddress(value, chainId)
+    return isValid || 'Invalid address format'
+  }, [buyAsset, destinationAddress, errors.destinationAddress])
+
+  const validateRefundAddress = useCallback(async (value: string) => {
+    if (!value || !sellAsset) return true
+    const { chainId } = fromAssetId(sellAsset)
+    // If the value hasn't changed and was previously valid, return true immediately
+    if (refundAddress === value && !errors.refundAddress) {
+      return true
+    }
+    const isValid = await validateAddress(value, chainId)
+    return isValid || 'Invalid address format'
+  }, [sellAsset, refundAddress, errors.refundAddress])
+
+  // Validation rules using the memoized validation functions
+  const destinationAddressRules = useMemo(
+    () => ({
+      required: true,
+      validate: validateDestinationAddress
+    }),
+    [validateDestinationAddress]
+  )
+
+  const refundAddressRules = useMemo(
+    () => ({
+      required: true,
+      validate: validateRefundAddress
+    }),
+    [validateRefundAddress]
+  )
+
   return (
-    <Card width='full' maxWidth='450px' overflow='hidden'>
+    <Card width='full' maxWidth='450px' overflow='hidden' as='form' onSubmit={(e) => {
+      e.preventDefault()
+      if (isValid) onSubmit()
+    }}>
       <CardHeader px={0} py={0} bg='background.surface.raised.base'>
         <Flex
           fontSize='sm'
@@ -296,22 +355,48 @@ export const TradeInput = () => {
             />
           )}
         </Flex>
-        <Input
-          placeholder={`Destination address (${toAsset?.symbol || 'ETH'})`}
-          {...register('destinationAddress', { required: true })}
-        />
-        <Input
-          placeholder={`Refund address (${fromAsset?.symbol || 'BTC'})`}
-          {...register('refundAddress', { required: true })}
-        />
+        <Flex direction='column' gap={2}>
+          <Text fontSize='sm' color='text.subtle'>
+            Destination Address
+          </Text>
+          <Input
+            {...register('destinationAddress', destinationAddressRules)}
+            placeholder={`Enter ${toAsset?.symbol || ''} address`}
+            isInvalid={!!errors.destinationAddress}
+            required
+            title="Please enter a valid destination address"
+          />
+          {errors.destinationAddress && (
+            <Text fontSize='sm' color='red.500'>
+              {errors.destinationAddress.message}
+            </Text>
+          )}
+        </Flex>
+        <Flex direction='column' gap={2}>
+          <Text fontSize='sm' color='text.subtle'>
+            Refund Address
+          </Text>
+          <Input
+            {...register('refundAddress', refundAddressRules)}
+            placeholder={`Enter ${fromAsset?.symbol || ''} address`}
+            isInvalid={!!errors.refundAddress}
+            required
+            title="Please enter a valid refund address"
+          />
+          {errors.refundAddress && (
+            <Text fontSize='sm' color='red.500'>
+              {errors.refundAddress.message}
+            </Text>
+          )}
+        </Flex>
       </CardBody>
       <CardFooter>
         <Button
+          type="submit"
           colorScheme='blue'
           size='lg'
           width='full'
-          onClick={handleSubmit}
-          isDisabled={!sellAmountCryptoBaseUnit || !destinationAddress || !refundAddress}
+          isDisabled={!sellAmountCryptoBaseUnit || !destinationAddress || !refundAddress || !isValid}
         >
           Start Transaction
         </Button>
