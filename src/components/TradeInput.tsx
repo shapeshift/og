@@ -16,18 +16,18 @@ import {
   StatNumber,
   Text,
 } from '@chakra-ui/react'
+import { getChainflipAssetId } from 'queries/chainflip/assets'
+import { useChainflipQuoteQuery } from 'queries/chainflip/quote'
+import { useMarketDataByAssetIdQuery } from 'queries/marketData'
 import { useCallback, useEffect, useMemo } from 'react'
 import { useFormContext } from 'react-hook-form'
 import { FaArrowRightArrowLeft } from 'react-icons/fa6'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router'
+import { useAssetById } from 'store/assets'
+import { bn, bnOrZero } from 'lib/bignumber/bignumber'
+import { fromBaseUnit, toBaseUnit } from 'lib/bignumber/conversion'
 import { BTCImage, ETHImage } from 'lib/const'
 import { mixpanel, MixPanelEvent } from 'lib/mixpanel'
-import { fromBaseUnit, toBaseUnit } from 'lib/bignumber/conversion'
-import { bn, bnOrZero } from 'lib/bignumber/bignumber'
-import { useChainflipQuoteQuery } from 'queries/chainflip/quote'
-import { getChainflipAssetId } from 'queries/chainflip/assets'
-import { useMarketDataByAssetIdQuery } from 'queries/marketData'
-import { useAssetById } from 'store/assets'
 import type { SwapFormData } from 'types/form'
 
 import { Amount } from './Amount/Amount'
@@ -36,7 +36,7 @@ export const TradeInput = () => {
   const navigate = useNavigate()
   const { register, watch, setValue } = useFormContext<SwapFormData>()
   const { sellAmount, destinationAddress, refundAddress, sellAsset, buyAsset } = watch()
-  
+
   const fromAsset = sellAsset ? useAssetById(sellAsset) : undefined
   const toAsset = buyAsset ? useAssetById(buyAsset) : undefined
 
@@ -59,30 +59,33 @@ export const TradeInput = () => {
     },
     {
       enabled: Boolean(fromAsset && toAsset && sellAmount),
-    }
+    },
   )
-  
+
   // Calculate buy amount using either quote or market data
   const buyAmountCryptoPrecision = useMemo(() => {
     // If we have a quote, use it
     if (quote?.egressAmountNative && toAsset?.precision) {
       return fromBaseUnit(quote.egressAmountNative, toAsset.precision)
     }
-    
+
     // Otherwise use market data as fallback
     if (fromMarketData?.price && toMarketData?.price && sellAmount) {
       const fromPrice = bnOrZero(fromMarketData.price)
       const toPrice = bnOrZero(toMarketData.price)
       if (toPrice.isZero()) return '0'
-      
-      return bnOrZero(sellAmount)
-        .times(fromPrice)
-        .div(toPrice)
-        .toString()
+
+      return bnOrZero(sellAmount).times(fromPrice).div(toPrice).toString()
     }
-    
+
     return '0'
-  }, [quote?.egressAmountNative, toAsset?.precision, fromMarketData?.price, toMarketData?.price, sellAmount])
+  }, [
+    quote?.egressAmountNative,
+    toAsset?.precision,
+    fromMarketData?.price,
+    toMarketData?.price,
+    sellAmount,
+  ])
 
   // Update buyAmount whenever it changes
   useEffect(() => {
@@ -100,26 +103,32 @@ export const TradeInput = () => {
     if (quote) {
       return bnOrZero(buyAmountCryptoPrecision).div(sellBn).toString()
     }
-    
+
     // Otherwise use market data as fallback
     if (fromMarketData?.price && toMarketData?.price) {
       const fromPrice = bnOrZero(fromMarketData.price)
       const toPrice = bnOrZero(toMarketData.price)
       if (toPrice.isZero()) return '0'
-      
+
       return fromPrice.div(toPrice).toString()
     }
-    
+
     return '0'
   }, [buyAmountCryptoPrecision, quote, sellAmount, fromMarketData?.price, toMarketData?.price])
-  
+
   const isLoading = isQuoteFetching
-  
+
   const Divider = useMemo(() => <StackDivider borderColor='border.base' />, [])
-  const FromAssetIcon = useMemo(() => <Avatar size='sm' src={fromAsset?.icon || BTCImage} />, [fromAsset?.icon])
-  const ToAssetIcon = useMemo(() => <Avatar size='sm' src={toAsset?.icon || ETHImage} />, [toAsset?.icon])
+  const FromAssetIcon = useMemo(
+    () => <Avatar size='sm' src={fromAsset?.icon || BTCImage} />,
+    [fromAsset?.icon],
+  )
+  const ToAssetIcon = useMemo(
+    () => <Avatar size='sm' src={toAsset?.icon || ETHImage} />,
+    [toAsset?.icon],
+  )
   const SwitchIcon = useMemo(() => <FaArrowRightArrowLeft />, [])
-  
+
   const handleSubmit = useCallback(() => {
     mixpanel?.track(MixPanelEvent.StartTransaction, {
       'some key': 'some val',
@@ -130,7 +139,7 @@ export const TradeInput = () => {
   const handleFromAssetClick = useCallback(() => {
     console.info('asset click')
   }, [])
-  
+
   const handleToAssetClick = useCallback(() => {
     console.info('to asset click')
   }, [])
@@ -164,10 +173,7 @@ export const TradeInput = () => {
             <StatLabel color='text.subtle'>To Get This</StatLabel>
             <StatNumber>
               <Skeleton isLoaded={!isLoading}>
-                <Amount.Crypto 
-                  value={buyAmountCryptoPrecision} 
-                  symbol={toAsset?.symbol || 'ETH'} 
-                />
+                <Amount.Crypto value={buyAmountCryptoPrecision} symbol={toAsset?.symbol || 'ETH'} />
               </Skeleton>
             </StatNumber>
           </Stat>
@@ -202,35 +208,35 @@ export const TradeInput = () => {
           </Flex>
         </Flex>
         <Flex gap={6}>
-          <Input 
-            variant='filled' 
+          <Input
+            variant='filled'
             placeholder={`0.0 ${fromAsset?.symbol || 'BTC'}`}
             {...register('sellAmount', { required: true })}
           />
-          <Input 
-            variant='filled' 
+          <Input
+            variant='filled'
             placeholder={`0.0 ${toAsset?.symbol || 'ETH'}`}
             isReadOnly
             value={buyAmountCryptoPrecision}
-            bg="background.surface.raised.base"
-            _hover={{ bg: "background.surface.raised.base" }}
-            _focus={{ bg: "background.surface.raised.base" }}
+            bg='background.surface.raised.base'
+            _hover={{ bg: 'background.surface.raised.base' }}
+            _focus={{ bg: 'background.surface.raised.base' }}
           />
         </Flex>
-        <Input 
+        <Input
           placeholder={`Destination address (${toAsset?.symbol || 'ETH'})`}
           {...register('destinationAddress', { required: true })}
         />
-        <Input 
+        <Input
           placeholder={`Refund address (${fromAsset?.symbol || 'BTC'})`}
           {...register('refundAddress', { required: true })}
         />
       </CardBody>
       <CardFooter>
-        <Button 
-          colorScheme='blue' 
-          size='lg' 
-          width='full' 
+        <Button
+          colorScheme='blue'
+          size='lg'
+          width='full'
           onClick={handleSubmit}
           isDisabled={!sellAmount || !destinationAddress || !refundAddress}
         >

@@ -1,8 +1,8 @@
 import { Button, Card, CardBody, Flex, Heading, IconButton, useDisclosure } from '@chakra-ui/react'
 import { useCallback, useMemo, useState } from 'react'
-import { FaArrowRightArrowLeft } from 'react-icons/fa6'
 import { useFormContext } from 'react-hook-form'
-import { useNavigate } from 'react-router-dom'
+import { FaArrowRightArrowLeft } from 'react-icons/fa6'
+import { useNavigate } from 'react-router'
 import { mixpanel, MixPanelEvent } from 'lib/mixpanel'
 import type { Asset } from 'types/Asset'
 import type { SwapFormData } from 'types/form'
@@ -17,9 +17,9 @@ export const SelectPair = () => {
   const navigate = useNavigate()
   const { setValue, watch } = useFormContext<SwapFormData>()
   const { sellAsset, buyAsset } = watch()
-  
+
   const switchIcon = useMemo(() => <FaArrowRightArrowLeft />, [])
-  
+
   const handleSubmit = useCallback(() => {
     mixpanel?.track(MixPanelEvent.PairSelected, {
       'some key': 'some val',
@@ -61,9 +61,9 @@ export const SelectPair = () => {
           <IconButton variant='ghost' icon={switchIcon} aria-label='Switch assets' />
           <AssetSelection label='Receive' onClick={handleToAssetClick} assetId={buyAsset} />
         </Flex>
-        <Button 
-          size='lg' 
-          colorScheme='blue' 
+        <Button
+          size='lg'
+          colorScheme='blue'
           onClick={handleSubmit}
           isDisabled={!sellAsset || !buyAsset}
         >
