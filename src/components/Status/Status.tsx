@@ -1,6 +1,7 @@
 import {
   Avatar,
   Box,
+  Button,
   Card,
   CardBody,
   CardFooter,
@@ -178,7 +179,7 @@ const PendingSwapCardBody = ({
       case 'completed':
         return {
           icon: FaCheck,
-          message: 'Swap complete',
+          message: 'Swap Complete',
           color: 'green.200',
         }
       case 'failed':
@@ -198,16 +199,30 @@ const PendingSwapCardBody = ({
 
   const config = getStatusConfig(swapStatus?.status.state, swapStatus?.status.swapEgress)
   const StatusIcon = config.icon
+  // const isCompleted = swapStatus?.status.state === 'completed'
+  const isCompleted = true // TODO(gomes): revert
 
   return (
     <CardBody py={2} height='160px' display='flex' alignItems='center' justifyContent='center'>
-      <VStack spacing={1}>
+      <VStack spacing={isCompleted ? 4 : 1}>
         <Circle size='36px' bg={config.color}>
           <StatusIcon size={18} color='black' />
         </Circle>
-        <Text fontSize='lg' fontWeight='medium'>
-          {config.message}
-        </Text>
+        <VStack spacing={2}>
+          <Text fontSize='lg' fontWeight='medium'>
+            {config.message}
+          </Text>
+          {isCompleted && (
+            <>
+              <Text fontSize='md' color='gray.500'>
+                Do more with the ShapeShift platform
+              </Text>
+              <Button colorScheme='blue' size='md'>
+                Launch Shapeshift App
+              </Button>
+            </>
+          )}
+        </VStack>
       </VStack>
     </CardBody>
   )
@@ -215,14 +230,17 @@ const PendingSwapCardBody = ({
 
 export const Status = () => {
   const [searchParams] = useSearchParams()
-  const swapId = searchParams.get('swapId')
   // TODO: This is temporary for testing only. Replace with actual waiting state heuristics
   const [shouldDisplayPendingSwapBody, setShouldDisplayPendingSwapBody] = useState(false)
 
+  const swapId = searchParams.get('swapId')
   const { data: swapStatus } = useChainflipStatusQuery({
     swapId: Number(swapId),
     enabled: Boolean(swapId),
   })
+
+  // const isCompleted = swapStatus?.status.state === 'completed'
+  const isCompleted = true // TODO(gomes): revert
 
   useEffect(() => {
     // TODO(gomes): temp, use actual 'waiting' state discrimination to make this proper work
@@ -311,7 +329,7 @@ export const Status = () => {
         <Text color='text.subtle'>Channel ID:</Text>
         <Text>{swapData.channelId?.toString() || 'Loading...'}</Text>
       </CardHeader>
-      <Box position='relative' minH='150px'>
+      <Box position='relative' minH={isCompleted ? '250px' : '150px'}>
         <SlideFade in={!shouldDisplayPendingSwapBody} unmountOnExit>
           <IdleSwapCardBody
             swapData={swapData}
