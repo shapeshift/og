@@ -50,6 +50,14 @@ export const SelectPair = () => {
     [assetSelectType, setValue],
   )
 
+  const handleSwitchAssets = useCallback(() => {
+    const currentSellAsset = sellAsset
+    const currentBuyAsset = buyAsset
+    
+    setValue('sellAsset', currentBuyAsset)
+    setValue('buyAsset', currentSellAsset)
+  }, [sellAsset, buyAsset, setValue])
+
   return (
     <Card width='full' maxWidth='450px'>
       <CardBody display='flex' flexDir='column' gap={8}>
@@ -58,7 +66,12 @@ export const SelectPair = () => {
         </Heading>
         <Flex alignItems='center' gap={4} color='text.subtle' width='full'>
           <AssetSelection label='Deposit' onClick={handleFromAssetClick} assetId={sellAsset} />
-          <IconButton variant='ghost' icon={switchIcon} aria-label='Switch assets' />
+          <IconButton 
+            variant='ghost' 
+            icon={switchIcon} 
+            aria-label='Switch assets' 
+            onClick={handleSwitchAssets}
+          />
           <AssetSelection label='Receive' onClick={handleToAssetClick} assetId={buyAsset} />
         </Flex>
         <Button
