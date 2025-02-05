@@ -6,9 +6,7 @@ import {
   CardBody,
   CardFooter,
   CardHeader,
-  Center,
   Circle,
-  Collapse,
   Divider,
   Flex,
   IconButton,
@@ -25,7 +23,7 @@ import {
 import { getChainflipAssetId } from 'queries/chainflip/assets'
 import { useChainflipQuoteQuery } from 'queries/chainflip/quote'
 import { useChainflipStatusQuery } from 'queries/chainflip/status'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { useFormContext } from 'react-hook-form'
 import { FaArrowDown, FaArrowRightArrowLeft, FaCheck, FaClock, FaRegCopy } from 'react-icons/fa6'
 import { useSearchParams } from 'react-router'
@@ -41,7 +39,6 @@ import type { StepProps } from './components/StatusStepper'
 import { StatusStepper } from './components/StatusStepper'
 
 // Mock values - will come from API later
-const MOCK_CHANNEL_ID = '0xa5567...8c'
 const MOCK_SHAPESHIFT_FEE = 4.0
 const MOCK_PROTOCOL_FEE = '0.000'
 
@@ -263,8 +260,8 @@ export const Status = () => {
   const { sellAmountCryptoBaseUnit, destinationAddress, refundAddress, sellAsset, buyAsset } =
     watch()
 
-  const fromAsset = sellAsset ? useAssetById(sellAsset) : undefined
-  const toAsset = buyAsset ? useAssetById(buyAsset) : undefined
+  const fromAsset = useAssetById(sellAsset)
+  const toAsset = useAssetById(buyAsset)
 
   // Get quote for buy amount
   const { data: quote } = useChainflipQuoteQuery(
@@ -354,7 +351,7 @@ export const Status = () => {
           <PendingSwapCardBody swapStatus={swapStatus} />
         </SlideFade>
       </Box>
-      <StatusStepper steps={SWAP_STEPS} activeStep={activeStep} />
+      <StatusStepper steps={SWAP_STEPS} activeStep={activeStep} swapStatus={swapStatus} />
       <CardFooter
         flexDir='column'
         gap={4}

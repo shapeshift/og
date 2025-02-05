@@ -20,5 +20,5 @@ export const isNft = (assetId: AssetId): boolean => {
   return ['erc721', 'erc1155', 'bep721', 'bep1155'].includes(assetNamespace)
 }
 
-export const isEvmChainId = (chainId: string): boolean => 
+export const isEvmChainId = (chainId: string): boolean =>
   fromChainId(chainId).chainNamespace === 'eip155'

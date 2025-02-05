@@ -1,7 +1,7 @@
 import { Avatar, Button, Text } from '@chakra-ui/react'
 import type { AssetId } from '@shapeshiftoss/caip'
-import { useAssetById } from 'store/assets'
 import { memo } from 'react'
+import { useAssetById } from 'store/assets'
 
 type AssetSelectionProps = {
   onClick: () => void
@@ -9,8 +9,12 @@ type AssetSelectionProps = {
   assetId?: AssetId
 }
 
-export const AssetSelection = memo(function AssetSelection({ label, onClick, assetId }: AssetSelectionProps) {
-  const asset = assetId ? useAssetById(assetId) : undefined
+export const AssetSelection = memo(function AssetSelection({
+  label,
+  onClick,
+  assetId,
+}: AssetSelectionProps) {
+  const asset = useAssetById(assetId)
 
   return (
     <Button flexDir='column' height='auto' py={4} gap={4} flex={1} onClick={onClick}>

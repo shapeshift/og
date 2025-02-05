@@ -1,6 +1,6 @@
 import { Box, Center } from '@chakra-ui/react'
-import { useEffect, useRef } from 'react'
 import qrcode from 'qrcode'
+import { useEffect, useRef } from 'react'
 
 type QRCodeProps = {
   content: string
@@ -41,4 +41,4 @@ export const QRCode: React.FC<QRCodeProps> = ({ content, width, icon, standardCo
       <canvas ref={ref} style={{ width: '100%' }} />
     </Box>
   )
-} 
+}

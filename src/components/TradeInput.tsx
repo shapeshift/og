@@ -19,6 +19,7 @@ import {
 import { fromAssetId } from '@shapeshiftoss/caip'
 import { getChainflipAssetId } from 'queries/chainflip/assets'
 import { useChainflipQuoteQuery } from 'queries/chainflip/quote'
+import { useChainflipSwapMutation } from 'queries/chainflip/swap'
 import { useMarketDataByAssetIdQuery } from 'queries/marketData'
 import { useCallback, useMemo } from 'react'
 import { useFormContext } from 'react-hook-form'
@@ -31,7 +32,6 @@ import { BTCImage, ETHImage } from 'lib/const'
 import { mixpanel, MixPanelEvent } from 'lib/mixpanel'
 import { validateAddress } from 'lib/validation'
 import type { SwapFormData } from 'types/form'
-import { useChainflipSwapMutation } from 'queries/chainflip/swap'
 
 import { Amount } from './Amount/Amount'
 
@@ -127,8 +127,8 @@ export const TradeInput = () => {
   const SwitchIcon = useMemo(() => <FaArrowRightArrowLeft />, [])
 
   const { mutate: createSwap, isPending: isSwapPending } = useChainflipSwapMutation({
-    onSuccess: (swapData) => {
-      // Ensure form values are in URL before navigation
+    onSuccess: swapData => {
+      // Push form state into queryParams
       const formValues = watch()
       const searchParams = new URLSearchParams()
       Object.entries(formValues).forEach(([key, value]) => {
@@ -137,7 +137,7 @@ export const TradeInput = () => {
         }
       })
 
-      // Add swap data to URL
+      // And also push additional ones (i.e the ones not part of the form state)
       searchParams.set('swapId', swapData.id.toString())
       searchParams.set('channelId', swapData.channelId.toString())
       searchParams.set('depositAddress', swapData.address)
@@ -150,20 +150,19 @@ export const TradeInput = () => {
   })
 
   const onSubmit = useCallback(() => {
-    mixpanel?.track(MixPanelEvent.StartTransaction, {
-      'some key': 'some val',
-    })
+    if (!(quote && fromAsset && toAsset)) return
 
-    // Request the swap
-    if (quote && fromAsset && toAsset) {
-      createSwap({
-        sourceAsset: getChainflipAssetId(fromAsset.assetId),
-        destinationAsset: getChainflipAssetId(toAsset.assetId),
-        destinationAddress: destinationAddress || '',
-        refundAddress: refundAddress || '',
-        minimumPrice: quote.egressAmountNative,
-      })
+    const createSwapPayload = {
+      sourceAsset: getChainflipAssetId(fromAsset.assetId),
+      destinationAsset: getChainflipAssetId(toAsset.assetId),
+      destinationAddress: destinationAddress || '',
+      refundAddress: refundAddress || '',
+      minimumPrice: quote.egressAmountNative,
     }
+
+    mixpanel?.track(MixPanelEvent.StartTransaction, createSwapPayload)
+
+    createSwap(createSwapPayload)
   }, [quote, fromAsset, toAsset, destinationAddress, refundAddress, createSwap])
 
   const handleFromAssetClick = useCallback(() => {
@@ -180,7 +179,7 @@ export const TradeInput = () => {
     const currentFromAsset = fromAsset
     const currentToAsset = toAsset
 
-    // Only prorate if we have market data and precision info
+    // Only prorate if we have market data and precision data
     if (
       currentFromAsset?.precision &&
       currentToAsset?.precision &&
@@ -289,6 +288,7 @@ export const TradeInput = () => {
       maxWidth='450px'
       overflow='hidden'
       as='form'
+      // eslint-disable-next-line react-memo/require-usememo
       onSubmit={e => {
         e.preventDefault()
         if (isValid) onSubmit()

@@ -2,17 +2,21 @@ import './App.css'
 
 import { Center } from '@chakra-ui/react'
 import { QueryClientProvider } from '@tanstack/react-query'
-import { FormProvider, useForm, useWatch } from 'react-hook-form'
-import { BrowserRouter, Routes, Route, useSearchParams, useLocation } from 'react-router'
 import { AnimatePresence, motion } from 'framer-motion'
+import { useEffect, useMemo, useRef } from 'react'
+import { FormProvider, useForm, useWatch } from 'react-hook-form'
+import { BrowserRouter, Route, Routes, useLocation, useSearchParams } from 'react-router'
 import { ChatwootButton } from 'components/Chatwoot'
 import { SelectPair } from 'components/SelectPair'
 import { Status } from 'components/Status/Status'
 import { TradeInput } from 'components/TradeInput'
 import type { SwapFormData } from 'types/form'
-import { useEffect, useMemo, useRef } from 'react'
 
 import { queryClient } from './config/react-query'
+
+const selectPair = <SelectPair />
+const tradeInput = <TradeInput />
+const status = <Status />
 
 const slideVariants = {
   initial: { opacity: 0, x: 20 },
@@ -42,25 +46,28 @@ function AppContent() {
   const [searchParams, setSearchParams] = useSearchParams()
   const location = useLocation()
   const isInitialMount = useRef(true)
-  
+
   // Initialize form with values from URL
-  const defaultValues = useMemo(() => ({
-    sellAsset: searchParams.get('sellAsset') || undefined,
-    buyAsset: searchParams.get('buyAsset') || undefined,
-    sellAmountCryptoBaseUnit: searchParams.get('sellAmountCryptoBaseUnit') || '',
-    destinationAddress: searchParams.get('destinationAddress') || '',
-    refundAddress: searchParams.get('refundAddress') || '',
-  }), [searchParams])
-  
+  const defaultValues = useMemo(
+    () => ({
+      sellAsset: searchParams.get('sellAsset') || undefined,
+      buyAsset: searchParams.get('buyAsset') || undefined,
+      sellAmountCryptoBaseUnit: searchParams.get('sellAmountCryptoBaseUnit') || '',
+      destinationAddress: searchParams.get('destinationAddress') || '',
+      refundAddress: searchParams.get('refundAddress') || '',
+    }),
+    [searchParams],
+  )
+
   const methods = useForm<SwapFormData>({
     mode: 'all',
     reValidateMode: 'onChange',
-    defaultValues
+    defaultValues,
   })
 
   // Watch form changes and update URL regardless of validation state
   const formValues = useWatch({ control: methods.control })
-  
+
   // Sync form values to URL
   useEffect(() => {
     if (isInitialMount.current) {
@@ -69,7 +76,7 @@ function AppContent() {
     }
 
     const params = new URLSearchParams(searchParams)
-    
+
     // Update URL with all form values, even if invalid
     Object.entries(formValues || {}).forEach(([key, value]) => {
       if (value) {
@@ -80,7 +87,7 @@ function AppContent() {
     })
 
     setSearchParams(params, { replace: true })
-  }, [formValues, setSearchParams])
+  }, [searchParams, formValues, setSearchParams])
 
   // Handle external URL changes
   useEffect(() => {
@@ -105,22 +112,22 @@ function AppContent() {
         <AnimatePresence mode='wait' initial={false}>
           <motion.div
             key={location.pathname}
-            initial="initial"
-            animate="animate"
-            exit="exit"
+            initial='initial'
+            animate='animate'
+            exit='exit'
             variants={getVariants(location.pathname)}
             transition={transition}
-            style={{ 
+            style={{
               width: '100%',
               maxWidth: '450px', // Match the TradeInput max width
               display: 'flex',
-              justifyContent: 'center'
+              justifyContent: 'center',
             }}
           >
             <Routes location={location}>
-              <Route path="/" element={<SelectPair />} />
-              <Route path="/input" element={<TradeInput />} />
-              <Route path="/status" element={<Status />} />
+              <Route path='/' element={selectPair} />
+              <Route path='/input' element={tradeInput} />
+              <Route path='/status' element={status} />
             </Routes>
           </motion.div>
         </AnimatePresence>

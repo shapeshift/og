@@ -21,6 +21,11 @@ type StatusStepperProps = {
   steps: StepProps[]
   activeStep: number
   colorScheme?: string
+  swapStatus?: {
+    status: {
+      state: 'waiting' | 'receiving' | 'swapping' | 'sending' | 'sent' | 'completed' | 'failed'
+    }
+  }
 }
 
 const getProgressPercent = (activeStep: number): number => {

@@ -28,4 +28,4 @@ export const convertPrecision = ({
   return bnOrZero(value)
     .dividedBy(bn(10).exponentiatedBy(inputExponent))
     .multipliedBy(bn(10).exponentiatedBy(outputExponent))
-} 
+}

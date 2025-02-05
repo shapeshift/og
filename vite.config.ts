@@ -11,5 +11,5 @@ export default defineConfig({
   plugins: [tsconfigPaths(), react()],
   define: {
     global: 'globalThis',
-  }
+  },
 })

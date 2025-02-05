@@ -6,4 +6,4 @@ export type SwapFormData = {
   sellAmountCryptoBaseUnit: string
   destinationAddress: string
   refundAddress: string
-} 
+}

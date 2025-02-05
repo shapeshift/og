@@ -19,8 +19,8 @@ export const useAssetsStore = create<AssetsState>((_set, get) => ({
   getAllAssets: () => get().ids.map(id => get().byId[id]),
 }))
 
-export const useAssetById = (assetId: AssetId) => {
-  return useAssetsStore(state => state.byId[assetId])
+export const useAssetById = (assetId: AssetId | undefined) => {
+  return useAssetsStore(state => state.byId[assetId ?? ''])
 }
 
 export const useAllAssets = () => {

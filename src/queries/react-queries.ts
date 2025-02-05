@@ -1,5 +1,5 @@
 import type { inferQueryKeyStore } from '@lukemorales/query-key-factory'
-import { createQueryKeyStore, createMutationKeys } from '@lukemorales/query-key-factory'
+import { createMutationKeys, createQueryKeyStore } from '@lukemorales/query-key-factory'
 import axios from 'axios'
 
 import type {
