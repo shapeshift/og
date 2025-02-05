@@ -1,10 +1,12 @@
 import {
   Avatar,
+  Box,
   Card,
   CardBody,
   CardFooter,
   CardHeader,
   Center,
+  Circle,
   Collapse,
   Divider,
   Flex,
@@ -12,33 +14,34 @@ import {
   Input,
   InputGroup,
   InputRightElement,
+  SlideFade,
   Stack,
   Tag,
   Text,
   useSteps,
-  Box,
+  VStack,
 } from '@chakra-ui/react'
-import { useCallback, useMemo } from 'react'
+import { getChainflipAssetId } from 'queries/chainflip/assets'
+import { useChainflipQuoteQuery } from 'queries/chainflip/quote'
+import { useChainflipStatusQuery } from 'queries/chainflip/status'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useFormContext } from 'react-hook-form'
-import { FaArrowDown, FaArrowRightArrowLeft, FaCheck, FaRegCopy } from 'react-icons/fa6'
+import { FaArrowDown, FaArrowRightArrowLeft, FaCheck, FaClock, FaRegCopy } from 'react-icons/fa6'
 import { useSearchParams } from 'react-router'
+import { useAssetById } from 'store/assets'
 import { Amount } from 'components/Amount/Amount'
 import { QRCode } from 'components/QRCode/QRCode'
 import { useCopyToClipboard } from 'hooks/useCopyToClipboard'
 import { fromBaseUnit } from 'lib/bignumber/conversion'
 import { BTCImage, ETHImage } from 'lib/const'
-import { useAssetById } from 'store/assets'
 import type { SwapFormData } from 'types/form'
-import { getChainflipAssetId } from 'queries/chainflip/assets'
-import { useChainflipQuoteQuery } from 'queries/chainflip/quote'
-import { useChainflipStatusQuery } from 'queries/chainflip/status'
 
 import type { StepProps } from './components/StatusStepper'
 import { StatusStepper } from './components/StatusStepper'
 
 // Mock values - will come from API later
 const MOCK_CHANNEL_ID = '0xa5567...8c'
-const MOCK_SHAPESHIFT_FEE = 4.00
+const MOCK_SHAPESHIFT_FEE = 4.0
 const MOCK_PROTOCOL_FEE = '0.000'
 
 const SWAP_STEPS: StepProps[] = [
@@ -49,19 +52,193 @@ const SWAP_STEPS: StepProps[] = [
   {
     title: 'Awaiting Exchange',
     icon: FaArrowRightArrowLeft,
-  }
+  },
 ]
+
+const IdleSwapCardBody = ({
+  swapData,
+  fromAsset,
+  toAsset,
+  sellAmountCryptoPrecision,
+  buyAmountCryptoPrecision,
+  handleCopyToAddress,
+  isToAddressCopied,
+}: {
+  swapData: { address: string; channelId?: number }
+  fromAsset: any
+  toAsset: any
+  sellAmountCryptoPrecision: string
+  buyAmountCryptoPrecision: string
+  handleCopyToAddress: () => void
+  isToAddressCopied: boolean
+}) => {
+  const CopyIcon = useMemo(() => <FaRegCopy />, [])
+  const CheckIcon = useMemo(() => <FaCheck />, [])
+
+  return (
+    <CardBody display='flex' flexDir='row-reverse' gap={6} px={4}>
+      <Flex flexDir='column' gap={4}>
+        <Box bg='white' p={4} borderRadius='xl'>
+          <QRCode
+            content={swapData.address || ''}
+            width={150}
+            icon={<Avatar size='xs' src={fromAsset?.icon} />}
+          />
+        </Box>
+        <Tag colorScheme='green' size='sm' justifyContent='center'>
+          Time remaining 06:23
+        </Tag>
+      </Flex>
+      <Stack spacing={4} flex={1}>
+        <Stack>
+          <Text fontWeight='bold'>Send</Text>
+          <Flex alignItems='center' gap={2}>
+            <Avatar size='sm' src={fromAsset?.icon || BTCImage} />
+            <Amount.Crypto value={sellAmountCryptoPrecision} symbol={fromAsset?.symbol || 'BTC'} />
+          </Flex>
+        </Stack>
+        <Stack>
+          <Text fontWeight='bold'>To</Text>
+          <InputGroup>
+            <Input isReadOnly value={swapData.address || ''} />
+            <InputRightElement>
+              <IconButton
+                borderRadius='lg'
+                size='sm'
+                variant='ghost'
+                icon={isToAddressCopied ? CheckIcon : CopyIcon}
+                aria-label='Copy address'
+                onClick={handleCopyToAddress}
+              />
+            </InputRightElement>
+          </InputGroup>
+        </Stack>
+        <Divider borderColor='border.base' />
+        <Stack>
+          <Text fontWeight='bold'>You will receive</Text>
+          <Flex gap={2} alignItems='center'>
+            <Avatar size='xs' src={toAsset?.icon || ETHImage} />
+            <Amount.Crypto
+              value={buyAmountCryptoPrecision || '0'}
+              symbol={toAsset?.symbol || 'ETH'}
+            />
+          </Flex>
+        </Stack>
+      </Stack>
+    </CardBody>
+  )
+}
+
+const PendingSwapCardBody = ({
+  swapStatus,
+}: {
+  swapStatus?: {
+    status: {
+      state: 'waiting' | 'receiving' | 'swapping' | 'sending' | 'sent' | 'completed' | 'failed'
+      swapEgress?: {
+        transactionReference?: string
+      }
+    }
+  }
+}) => {
+  const getStatusConfig = (state?: string, swapEgress?: { transactionReference?: string }) => {
+    switch (state) {
+      case 'receiving':
+        return {
+          icon: FaArrowDown,
+          message: 'Deposit detected, waiting for confirmation...',
+          color: 'green.200',
+        }
+      case 'swapping':
+        return {
+          icon: FaArrowRightArrowLeft,
+          message: 'Processing swap...',
+          color: 'green.200',
+        }
+      case 'sending':
+        return {
+          icon: FaArrowDown,
+          message: swapEgress?.transactionReference
+            ? 'Outbound transaction initiated...'
+            : 'Preparing outbound transaction...',
+          color: 'green.200',
+        }
+      case 'sent':
+        return {
+          icon: FaArrowDown,
+          message: 'Transaction sent, waiting for confirmation...',
+          color: 'green.200',
+        }
+      case 'completed':
+        return {
+          icon: FaCheck,
+          message: 'Swap complete',
+          color: 'green.200',
+        }
+      case 'failed':
+        return {
+          icon: FaCheck,
+          message: 'Swap failed',
+          color: 'red.500',
+        }
+      case 'waiting':
+        return {
+          icon: FaClock,
+          message: 'Waiting for deposit...',
+          color: 'green.200',
+        }
+      default:
+        return {
+          icon: FaClock,
+          message: 'Unknown status',
+          color: 'green.200',
+        }
+    }
+  }
+
+  const config = getStatusConfig(swapStatus?.status.state, swapStatus?.status.swapEgress)
+  const StatusIcon = config.icon
+
+  return (
+    <CardBody py={2} height='160px' display='flex' alignItems='center' justifyContent='center'>
+      <VStack spacing={1}>
+        <Circle size='36px' bg={config.color}>
+          <StatusIcon size={18} color='black' />
+        </Circle>
+        <Text fontSize='lg' fontWeight='medium'>
+          {config.message}
+        </Text>
+      </VStack>
+    </CardBody>
+  )
+}
 
 export const Status = () => {
   const [searchParams] = useSearchParams()
   const swapId = searchParams.get('swapId')
+  // TODO: This is temporary for testing only. Replace with actual waiting state heuristics
+  const [shouldDisplayPendingSwapBody, setShouldDisplayPendingSwapBody] = useState(false)
+
+  const { data: swapStatus } = useChainflipStatusQuery({
+    swapId: Number(swapId),
+    enabled: Boolean(swapId),
+  })
+
+  useEffect(() => {
+    // TODO(gomes): temp, use actual 'waiting' state discrimination to make this proper work
+    const timer = setTimeout(() => {
+      setShouldDisplayPendingSwapBody(true)
+    }, 2000)
+    return () => clearTimeout(timer)
+  }, [])
 
   const { activeStep } = useSteps({
     index: 0,
     count: SWAP_STEPS.length,
   })
   const { watch } = useFormContext<SwapFormData>()
-  const { sellAmountCryptoBaseUnit, destinationAddress, refundAddress, sellAsset, buyAsset } = watch()
+  const { sellAmountCryptoBaseUnit, destinationAddress, refundAddress, sellAsset, buyAsset } =
+    watch()
 
   const fromAsset = sellAsset ? useAssetById(sellAsset) : undefined
   const toAsset = buyAsset ? useAssetById(buyAsset) : undefined
@@ -134,55 +311,26 @@ export const Status = () => {
         <Text color='text.subtle'>Channel ID:</Text>
         <Text>{swapData.channelId?.toString() || 'Loading...'}</Text>
       </CardHeader>
-      <Collapse in={activeStep === 0}>
-        <CardBody display='flex' flexDir='row-reverse' gap={6} px={4}>
-          <Flex flexDir='column' gap={4}>
-            <Box bg='white' p={4} borderRadius='xl'>
-              <QRCode
-                content={swapData.address || ''}
-                width={150}
-                icon={<Avatar size='xs' src={fromAsset?.icon} />}
-              />
-            </Box>
-            <Tag colorScheme='green' size='sm' justifyContent='center'>
-              Time remaining 06:23
-            </Tag>
-          </Flex>
-          <Stack spacing={4} flex={1}>
-            <Stack>
-              <Text fontWeight='bold'>Send</Text>
-              <Flex alignItems='center' gap={2}>
-                <Avatar size='sm' src={fromAsset?.icon || BTCImage} />
-                <Amount.Crypto value={sellAmountCryptoPrecision} symbol={fromAsset?.symbol || 'BTC'} />
-              </Flex>
-            </Stack>
-            <Stack>
-              <Text fontWeight='bold'>To</Text>
-              <InputGroup>
-                <Input isReadOnly value={swapData.address || ''} />
-                <InputRightElement>
-                  <IconButton
-                    borderRadius='lg'
-                    size='sm'
-                    variant='ghost'
-                    icon={isToAddressCopied ? CheckIcon : CopyIcon}
-                    aria-label='Copy address'
-                    onClick={handleCopyToAddress}
-                  />
-                </InputRightElement>
-              </InputGroup>
-            </Stack>
-            <Divider borderColor='border.base' />
-            <Stack>
-              <Text fontWeight='bold'>You will receive</Text>
-              <Flex gap={2} alignItems='center'>
-                <Avatar size='xs' src={toAsset?.icon || ETHImage} />
-                <Amount.Crypto value={buyAmountCryptoPrecision || '0'} symbol={toAsset?.symbol || 'ETH'} />
-              </Flex>
-            </Stack>
-          </Stack>
-        </CardBody>
-      </Collapse>
+      <Box position='relative' minH='150px'>
+        <SlideFade in={!shouldDisplayPendingSwapBody} unmountOnExit>
+          <IdleSwapCardBody
+            swapData={swapData}
+            fromAsset={fromAsset}
+            toAsset={toAsset}
+            sellAmountCryptoPrecision={sellAmountCryptoPrecision}
+            buyAmountCryptoPrecision={buyAmountCryptoPrecision}
+            handleCopyToAddress={handleCopyToAddress}
+            isToAddressCopied={isToAddressCopied}
+          />
+        </SlideFade>
+        <SlideFade
+          in={shouldDisplayPendingSwapBody}
+          unmountOnExit
+          style={{ position: 'absolute', top: 0, left: 0, right: 0 }}
+        >
+          <PendingSwapCardBody swapStatus={swapStatus} />
+        </SlideFade>
+      </Box>
       <StatusStepper steps={SWAP_STEPS} activeStep={activeStep} />
       <CardFooter
         flexDir='column'
@@ -198,7 +346,10 @@ export const Status = () => {
               <Avatar size='xs' src={fromAsset?.icon || BTCImage} />
               <Text>Deposit</Text>
             </Flex>
-            <Amount.Crypto value={sellAmountCryptoPrecision || '0'} symbol={fromAsset?.symbol || 'BTC'} />
+            <Amount.Crypto
+              value={sellAmountCryptoPrecision || '0'}
+              symbol={fromAsset?.symbol || 'BTC'}
+            />
           </Flex>
           <Flex alignItems='center' gap={2}>
             <Text>{swapData.address || ''}</Text>
@@ -217,7 +368,10 @@ export const Status = () => {
               <Avatar size='xs' src={toAsset?.icon || ETHImage} />
               <Text>Receive</Text>
             </Flex>
-            <Amount.Crypto value={buyAmountCryptoPrecision || '0'} symbol={toAsset?.symbol || 'ETH'} />
+            <Amount.Crypto
+              value={buyAmountCryptoPrecision || '0'}
+              symbol={toAsset?.symbol || 'ETH'}
+            />
           </Flex>
           <Flex alignItems='center' gap={2}>
             <Text>{destinationAddress || 'No destination address'}</Text>
@@ -229,7 +383,10 @@ export const Status = () => {
             <Text>Estimated Rate</Text>
             <Flex gap={1}>
               <Amount.Crypto value='1' symbol={fromAsset?.symbol || 'BTC'} suffix='=' />
-              <Amount.Crypto value={quote?.estimatedPrice.toString() || '0'} symbol={toAsset?.symbol || 'ETH'} />
+              <Amount.Crypto
+                value={quote?.estimatedPrice.toString() || '0'}
+                symbol={toAsset?.symbol || 'ETH'}
+              />
             </Flex>
           </Flex>
           <Flex alignItems='center' justifyContent='space-between'>
