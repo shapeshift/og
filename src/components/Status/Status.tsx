@@ -143,6 +143,12 @@ const PendingSwapCardBody = ({
 }) => {
   const getStatusConfig = (state?: string, swapEgress?: { transactionReference?: string }) => {
     switch (state) {
+      case 'waiting':
+        return {
+          icon: FaClock,
+          message: 'Waiting for deposit...',
+          color: 'green.200',
+        }
       case 'receiving':
         return {
           icon: FaArrowDown,
@@ -180,12 +186,6 @@ const PendingSwapCardBody = ({
           icon: FaCheck,
           message: 'Swap failed',
           color: 'red.500',
-        }
-      case 'waiting':
-        return {
-          icon: FaClock,
-          message: 'Waiting for deposit...',
-          color: 'green.200',
         }
       default:
         return {
