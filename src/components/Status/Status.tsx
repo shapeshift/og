@@ -206,7 +206,12 @@ const PendingSwapCardBody = ({
 
   const config = getStatusConfig(swapStatus?.status.state, swapStatus?.status.swapEgress)
   const StatusIcon = config.icon
+  // const isCompleted = swapStatus?.status.state === 'completed'
   const isCompleted = true // TODO(gomes): revert
+
+  const handleLaunchApp = useCallback(() => {
+    window.open('https://app.shapeshift.com', '_blank')
+  }, [])
 
   return (
     <CardBody height='full' display='flex' alignItems='center' justifyContent='center'>
@@ -214,7 +219,7 @@ const PendingSwapCardBody = ({
         <Circle size='36px' bg={config.color} mb={3}>
           <StatusIcon size={18} color='black' />
         </Circle>
-        <Text fontSize='lg' fontWeight='medium' mb={isCompleted ? 3 : 0}>
+        <Text fontSize='lg' fontWeight='medium'>
           {config.message}
         </Text>
         {isCompleted && (
@@ -222,7 +227,7 @@ const PendingSwapCardBody = ({
             <Text fontSize='md' color='gray.500'>
               Do more with the ShapeShift platform
             </Text>
-            <Button colorScheme='blue' size='md'>
+            <Button colorScheme='blue' size='md' onClick={handleLaunchApp}>
               Launch Shapeshift App
             </Button>
           </VStack>
