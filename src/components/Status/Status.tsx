@@ -157,7 +157,7 @@ export const Status = () => {
             <Stack>
               <Text fontWeight='bold'>You will receive</Text>
               <Flex gap={2} alignItems='center'>
-                <Avatar size='xs' src={ETHImage} />
+                <Avatar size='xs' src={toAsset?.icon || ETHImage} />
                 <Amount.Crypto value={buyAmountCryptoPrecision || '0'} symbol={toAsset?.symbol || 'ETH'} />
               </Flex>
             </Stack>
@@ -195,7 +195,7 @@ export const Status = () => {
         <Stack>
           <Flex width='full' justifyContent='space-between'>
             <Flex alignItems='center' gap={2}>
-              <Avatar size='xs' src={ETHImage} />
+              <Avatar size='xs' src={toAsset?.icon || ETHImage} />
               <Text>Receive</Text>
             </Flex>
             <Amount.Crypto value={buyAmountCryptoPrecision || '0'} symbol={toAsset?.symbol || 'ETH'} />
@@ -210,7 +210,7 @@ export const Status = () => {
             <Text>Estimated Rate</Text>
             <Flex gap={1}>
               <Amount.Crypto value='1' symbol={fromAsset?.symbol || 'BTC'} suffix='=' />
-              <Amount.Crypto value='12.90126' symbol='ETH' />
+              <Amount.Crypto value={quote?.estimatedPrice.toString() || '0'} symbol={toAsset?.symbol || 'ETH'} />
             </Flex>
           </Flex>
           <Flex alignItems='center' justifyContent='space-between'>
