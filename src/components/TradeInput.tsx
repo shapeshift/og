@@ -16,6 +16,7 @@ import {
   StatNumber,
   Text,
 } from '@chakra-ui/react'
+import { fromAssetId } from '@shapeshiftoss/caip'
 import { getChainflipAssetId } from 'queries/chainflip/assets'
 import { useChainflipQuoteQuery } from 'queries/chainflip/quote'
 import { useMarketDataByAssetIdQuery } from 'queries/marketData'
@@ -28,23 +29,30 @@ import { bnOrZero } from 'lib/bignumber/bignumber'
 import { fromBaseUnit, toBaseUnit } from 'lib/bignumber/conversion'
 import { BTCImage, ETHImage } from 'lib/const'
 import { mixpanel, MixPanelEvent } from 'lib/mixpanel'
-import type { SwapFormData } from 'types/form'
 import { validateAddress } from 'lib/validation'
-import { fromAssetId } from '@shapeshiftoss/caip'
+import type { SwapFormData } from 'types/form'
 
 import { Amount } from './Amount/Amount'
 
 export const TradeInput = () => {
   const navigate = useNavigate()
-  const { register, watch, setValue, handleSubmit: hookFormSubmit, formState: { errors, isValid } } = useFormContext<SwapFormData>()
+  const {
+    register,
+    watch,
+    setValue,
+    formState: { errors, isValid },
+  } = useFormContext<SwapFormData>()
   const { sellAmountCryptoBaseUnit, destinationAddress, refundAddress, sellAsset, buyAsset } =
     watch()
 
   // Always call hooks unconditionally at the top level
   const fromAssetData = useAssetById(sellAsset || '')
   const toAssetData = useAssetById(buyAsset || '')
-  const fromAsset = useMemo(() => sellAsset ? fromAssetData : undefined, [sellAsset, fromAssetData])
-  const toAsset = useMemo(() => buyAsset ? toAssetData : undefined, [buyAsset, toAssetData])
+  const fromAsset = useMemo(
+    () => (sellAsset ? fromAssetData : undefined),
+    [sellAsset, fromAssetData],
+  )
+  const toAsset = useMemo(() => (buyAsset ? toAssetData : undefined), [buyAsset, toAssetData])
 
   // Market data queries for fallback rates
   const { data: fromMarketData } = useMarketDataByAssetIdQuery(fromAsset?.assetId || '')
@@ -131,7 +139,7 @@ export const TradeInput = () => {
     })
     navigate({
       pathname: '/status',
-      search: searchParams.toString()
+      search: searchParams.toString(),
     })
   }, [navigate, watch])
 
@@ -207,50 +215,62 @@ export const TradeInput = () => {
   )
 
   // Validation functions at top level
-  const validateDestinationAddress = useCallback(async (value: string) => {
-    if (!value || !buyAsset) return true
-    const { chainId } = fromAssetId(buyAsset)
-    // If the value hasn't changed and was previously valid, return true immediately
-    if (destinationAddress === value && !errors.destinationAddress) {
-      return true
-    }
-    const isValid = await validateAddress(value, chainId)
-    return isValid || 'Invalid address format'
-  }, [buyAsset, destinationAddress, errors.destinationAddress])
+  const validateDestinationAddress = useCallback(
+    async (value: string) => {
+      if (!value || !buyAsset) return true
+      const { chainId } = fromAssetId(buyAsset)
+      // If the value hasn't changed and was previously valid, return true immediately
+      if (destinationAddress === value && !errors.destinationAddress) {
+        return true
+      }
+      const isValid = await validateAddress(value, chainId)
+      return isValid || 'Invalid address format'
+    },
+    [buyAsset, destinationAddress, errors.destinationAddress],
+  )
 
-  const validateRefundAddress = useCallback(async (value: string) => {
-    if (!value || !sellAsset) return true
-    const { chainId } = fromAssetId(sellAsset)
-    // If the value hasn't changed and was previously valid, return true immediately
-    if (refundAddress === value && !errors.refundAddress) {
-      return true
-    }
-    const isValid = await validateAddress(value, chainId)
-    return isValid || 'Invalid address format'
-  }, [sellAsset, refundAddress, errors.refundAddress])
+  const validateRefundAddress = useCallback(
+    async (value: string) => {
+      if (!value || !sellAsset) return true
+      const { chainId } = fromAssetId(sellAsset)
+      // If the value hasn't changed and was previously valid, return true immediately
+      if (refundAddress === value && !errors.refundAddress) {
+        return true
+      }
+      const isValid = await validateAddress(value, chainId)
+      return isValid || 'Invalid address format'
+    },
+    [sellAsset, refundAddress, errors.refundAddress],
+  )
 
   // Validation rules using the memoized validation functions
   const destinationAddressRules = useMemo(
     () => ({
       required: true,
-      validate: validateDestinationAddress
+      validate: validateDestinationAddress,
     }),
-    [validateDestinationAddress]
+    [validateDestinationAddress],
   )
 
   const refundAddressRules = useMemo(
     () => ({
       required: true,
-      validate: validateRefundAddress
+      validate: validateRefundAddress,
     }),
-    [validateRefundAddress]
+    [validateRefundAddress],
   )
 
   return (
-    <Card width='full' maxWidth='450px' overflow='hidden' as='form' onSubmit={(e) => {
-      e.preventDefault()
-      if (isValid) onSubmit()
-    }}>
+    <Card
+      width='full'
+      maxWidth='450px'
+      overflow='hidden'
+      as='form'
+      onSubmit={e => {
+        e.preventDefault()
+        if (isValid) onSubmit()
+      }}
+    >
       <CardHeader px={0} py={0} bg='background.surface.raised.base'>
         <Flex
           fontSize='sm'
@@ -285,12 +305,6 @@ export const TradeInput = () => {
               ) : (
                 <Amount.Crypto value={buyAmountCryptoPrecision} symbol={toAsset?.symbol || 'ETH'} />
               )}
-            </StatNumber>
-          </Stat>
-          <Stat size='sm' textAlign='center' py={4}>
-            <StatLabel color='text.subtle'>Miner Fee</StatLabel>
-            <StatNumber>
-              <Amount.Fiat value='10' />
             </StatNumber>
           </Stat>
         </HStack>
@@ -336,7 +350,7 @@ export const TradeInput = () => {
                 variant='filled'
                 placeholder={`0.0 ${toAsset?.symbol || 'ETH'}`}
                 isReadOnly
-                value=""
+                value=''
                 bg='background.surface.raised.base'
                 _hover={{ bg: 'background.surface.raised.base' }}
                 _focus={{ bg: 'background.surface.raised.base' }}
@@ -364,7 +378,7 @@ export const TradeInput = () => {
             placeholder={`Enter ${toAsset?.symbol || ''} address`}
             isInvalid={!!errors.destinationAddress}
             required
-            title="Please enter a valid destination address"
+            title='Please enter a valid destination address'
           />
           {errors.destinationAddress && (
             <Text fontSize='sm' color='red.500'>
@@ -381,7 +395,7 @@ export const TradeInput = () => {
             placeholder={`Enter ${fromAsset?.symbol || ''} address`}
             isInvalid={!!errors.refundAddress}
             required
-            title="Please enter a valid refund address"
+            title='Please enter a valid refund address'
           />
           {errors.refundAddress && (
             <Text fontSize='sm' color='red.500'>
@@ -392,11 +406,13 @@ export const TradeInput = () => {
       </CardBody>
       <CardFooter>
         <Button
-          type="submit"
+          type='submit'
           colorScheme='blue'
           size='lg'
           width='full'
-          isDisabled={!sellAmountCryptoBaseUnit || !destinationAddress || !refundAddress || !isValid}
+          isDisabled={
+            !sellAmountCryptoBaseUnit || !destinationAddress || !refundAddress || !isValid
+          }
         >
           Start Transaction
         </Button>
