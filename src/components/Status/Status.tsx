@@ -143,6 +143,13 @@ const PendingSwapCardBody = ({
   }
 }) => {
   const getStatusConfig = (state?: string, swapEgress?: { transactionReference?: string }) => {
+    // TODO(gomes): revert
+    return {
+      icon: FaCheck,
+      message: 'Swap Complete',
+      color: 'green.200',
+    }
+
     switch (state) {
       case 'waiting':
         return {
@@ -199,31 +206,28 @@ const PendingSwapCardBody = ({
 
   const config = getStatusConfig(swapStatus?.status.state, swapStatus?.status.swapEgress)
   const StatusIcon = config.icon
-  // const isCompleted = swapStatus?.status.state === 'completed'
   const isCompleted = true // TODO(gomes): revert
 
   return (
-    <CardBody py={2} height='160px' display='flex' alignItems='center' justifyContent='center'>
-      <VStack spacing={isCompleted ? 4 : 1}>
-        <Circle size='36px' bg={config.color}>
+    <CardBody height='full' display='flex' alignItems='center' justifyContent='center'>
+      <Flex direction='column' alignItems='center' py={8}>
+        <Circle size='36px' bg={config.color} mb={3}>
           <StatusIcon size={18} color='black' />
         </Circle>
-        <VStack spacing={2}>
-          <Text fontSize='lg' fontWeight='medium'>
-            {config.message}
-          </Text>
-          {isCompleted && (
-            <>
-              <Text fontSize='md' color='gray.500'>
-                Do more with the ShapeShift platform
-              </Text>
-              <Button colorScheme='blue' size='md'>
-                Launch Shapeshift App
-              </Button>
-            </>
-          )}
-        </VStack>
-      </VStack>
+        <Text fontSize='lg' fontWeight='medium' mb={isCompleted ? 3 : 0}>
+          {config.message}
+        </Text>
+        {isCompleted && (
+          <VStack spacing={4} mt={2}>
+            <Text fontSize='md' color='gray.500'>
+              Do more with the ShapeShift platform
+            </Text>
+            <Button colorScheme='blue' size='md'>
+              Launch Shapeshift App
+            </Button>
+          </VStack>
+        )}
+      </Flex>
     </CardBody>
   )
 }
