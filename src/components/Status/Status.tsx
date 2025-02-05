@@ -198,6 +198,7 @@ const PendingSwapCardBody = ({
   }
 
   const config = getStatusConfig(swapStatus?.status.state, swapStatus?.status.swapEgress)
+  console.log({ config, swapStatus })
   const StatusIcon = config.icon
   const isCompleted = swapStatus?.status.state === 'completed'
 
@@ -241,13 +242,23 @@ export const Status = () => {
   const isCompleted = swapStatus?.status.state === 'completed'
   const shouldDisplayPendingSwapBody = useMemo(
     () => swapStatus?.status && swapStatus?.status.state !== 'waiting',
-    [],
+    [swapStatus],
   )
 
-  const { activeStep } = useSteps({
+  const { activeStep, setActiveStep } = useSteps({
     index: 0,
     count: SWAP_STEPS.length,
   })
+
+  useEffect(() => {
+    if (swapStatus?.status.state === 'completed') {
+      return setActiveStep(2)
+    }
+    if (shouldDisplayPendingSwapBody) {
+      return setActiveStep(1)
+    }
+  }, [shouldDisplayPendingSwapBody, setActiveStep])
+
   const { watch } = useFormContext<SwapFormData>()
   const { sellAmountCryptoBaseUnit, destinationAddress, refundAddress, sellAsset, buyAsset } =
     watch()

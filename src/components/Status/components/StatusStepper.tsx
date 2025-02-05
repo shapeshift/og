@@ -28,7 +28,11 @@ const getProgressPercent = (activeStep: number): number => {
   return Math.min((activeStep + 1) * (100 / 6), 100)
 }
 
-export const StatusStepper: React.FC<StatusStepperProps> = ({ steps, activeStep, colorScheme = 'green' }) => {
+export const StatusStepper: React.FC<StatusStepperProps> = ({
+  steps,
+  activeStep,
+  colorScheme = 'green',
+}) => {
   const CheckIcon = useMemo(() => <FaCheck />, [])
   const LoadingIcon = useMemo(
     () => <CircularProgress trackColor='background.surface.raised.base' size={5} isIndeterminate />,
