@@ -143,13 +143,6 @@ const PendingSwapCardBody = ({
   }
 }) => {
   const getStatusConfig = (state?: string, swapEgress?: { transactionReference?: string }) => {
-    // TODO(gomes): revert
-    return {
-      icon: FaCheck,
-      message: 'Swap Complete',
-      color: 'green.200',
-    }
-
     switch (state) {
       case 'waiting':
         return {
@@ -206,8 +199,7 @@ const PendingSwapCardBody = ({
 
   const config = getStatusConfig(swapStatus?.status.state, swapStatus?.status.swapEgress)
   const StatusIcon = config.icon
-  // const isCompleted = swapStatus?.status.state === 'completed'
-  const isCompleted = true // TODO(gomes): revert
+  const isCompleted = swapStatus?.status.state === 'completed'
 
   const handleLaunchApp = useCallback(() => {
     window.open('https://app.shapeshift.com', '_blank')
@@ -239,8 +231,6 @@ const PendingSwapCardBody = ({
 
 export const Status = () => {
   const [searchParams] = useSearchParams()
-  // TODO: This is temporary for testing only. Replace with actual waiting state heuristics
-  const [shouldDisplayPendingSwapBody, setShouldDisplayPendingSwapBody] = useState(false)
 
   const swapId = searchParams.get('swapId')
   const { data: swapStatus } = useChainflipStatusQuery({
@@ -248,16 +238,11 @@ export const Status = () => {
     enabled: Boolean(swapId),
   })
 
-  // const isCompleted = swapStatus?.status.state === 'completed'
-  const isCompleted = true // TODO(gomes): revert
-
-  useEffect(() => {
-    // TODO(gomes): temp, use actual 'waiting' state discrimination to make this proper work
-    const timer = setTimeout(() => {
-      setShouldDisplayPendingSwapBody(true)
-    }, 2000)
-    return () => clearTimeout(timer)
-  }, [])
+  const isCompleted = swapStatus?.status.state === 'completed'
+  const shouldDisplayPendingSwapBody = useMemo(
+    () => swapStatus?.status && swapStatus?.status.state !== 'waiting',
+    [],
+  )
 
   const { activeStep } = useSteps({
     index: 0,
