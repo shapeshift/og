@@ -58,7 +58,7 @@ export const reactQueries = createQueryKeyStore({
       queryKey: [swapId],
       queryFn: async () => {
         const { data } = await axios.get<ChainflipStatusResponse>(
-          `${CHAINFLIP_API_URL}/swap/${swapId}`,
+          `${CHAINFLIP_API_URL}/status-by-id/${swapId}`,
           {
             params: {
               apiKey: CHAINFLIP_API_KEY,
