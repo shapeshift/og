@@ -20,17 +20,22 @@ export type StepProps = {
 type StatusStepperProps = {
   steps: StepProps[]
   activeStep: number
+  colorScheme?: string
 }
 
-export const StatusStepper: React.FC<StatusStepperProps> = ({ steps, activeStep }) => {
+const getProgressPercent = (activeStep: number): number => {
+  // 6 states total, so each state is worth 16.67% (100/6)
+  return Math.min((activeStep + 1) * (100 / 6), 100)
+}
+
+export const StatusStepper: React.FC<StatusStepperProps> = ({ steps, activeStep, colorScheme = 'green' }) => {
   const CheckIcon = useMemo(() => <FaCheck />, [])
   const LoadingIcon = useMemo(
     () => <CircularProgress trackColor='background.surface.raised.base' size={5} isIndeterminate />,
     [],
   )
 
-  const max = steps.length - 1
-  const progressPercent = (activeStep / max) * 100
+  const progressPercent = getProgressPercent(activeStep)
 
   const renderSteps = useMemo(() => {
     return steps.map((step, index) => {
@@ -59,7 +64,7 @@ export const StatusStepper: React.FC<StatusStepperProps> = ({ steps, activeStep 
       </Stepper>
       <Flex px={4}>
         <Progress
-          colorScheme='green'
+          colorScheme={colorScheme}
           borderRadius='full'
           height='5px'
           width='full'
