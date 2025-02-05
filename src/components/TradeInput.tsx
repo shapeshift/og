@@ -63,30 +63,13 @@ export const TradeInput = () => {
     },
   )
 
-  // Calculate buy amount using either quote or market data
+  // Calculate buy amount from quote only
   const buyAmountCryptoPrecision = useMemo(() => {
-    // If we have a quote, use it
     if (quote?.egressAmountNative && toAsset?.precision) {
       return fromBaseUnit(quote.egressAmountNative, toAsset.precision)
     }
-
-    // Otherwise use market data as fallback
-    if (fromMarketData?.price && toMarketData?.price && sellAmountCryptoPrecision) {
-      const fromPrice = bnOrZero(fromMarketData.price)
-      const toPrice = bnOrZero(toMarketData.price)
-      if (toPrice.isZero()) return '0'
-
-      return bnOrZero(sellAmountCryptoPrecision).times(fromPrice).div(toPrice).toString()
-    }
-
-    return '0'
-  }, [
-    quote?.egressAmountNative,
-    toAsset?.precision,
-    fromMarketData?.price,
-    toMarketData?.price,
-    sellAmountCryptoPrecision,
-  ])
+    return undefined // Return undefined instead of null to indicate loading state
+  }, [quote?.egressAmountNative, toAsset?.precision])
 
   // Calculate rate using either quote or market data
   const rate = useMemo(() => {
@@ -238,9 +221,11 @@ export const TradeInput = () => {
           <Stat size='sm' textAlign='center' py={4}>
             <StatLabel color='text.subtle'>To Get This</StatLabel>
             <StatNumber>
-              <Skeleton isLoaded={!isLoading}>
+              {!buyAmountCryptoPrecision ? (
+                <Skeleton height='24px' width='100px' />
+              ) : (
                 <Amount.Crypto value={buyAmountCryptoPrecision} symbol={toAsset?.symbol || 'ETH'} />
-              </Skeleton>
+              )}
             </StatNumber>
           </Stat>
           <Stat size='sm' textAlign='center' py={4}>
@@ -280,20 +265,36 @@ export const TradeInput = () => {
         </Flex>
         <Flex gap={6}>
           <Input
+            flex={1}
             variant='filled'
             placeholder={`0.0 ${fromAsset?.symbol || 'BTC'}`}
             value={sellAmountCryptoPrecision}
             onChange={handleSellAmountChange}
           />
-          <Input
-            variant='filled'
-            placeholder={`0.0 ${toAsset?.symbol || 'ETH'}`}
-            isReadOnly
-            value={buyAmountCryptoPrecision}
-            bg='background.surface.raised.base'
-            _hover={{ bg: 'background.surface.raised.base' }}
-            _focus={{ bg: 'background.surface.raised.base' }}
-          />
+          {!buyAmountCryptoPrecision ? (
+            <Skeleton height='40px' width='full' flex={1}>
+              <Input
+                variant='filled'
+                placeholder={`0.0 ${toAsset?.symbol || 'ETH'}`}
+                isReadOnly
+                value=""
+                bg='background.surface.raised.base'
+                _hover={{ bg: 'background.surface.raised.base' }}
+                _focus={{ bg: 'background.surface.raised.base' }}
+              />
+            </Skeleton>
+          ) : (
+            <Input
+              flex={1}
+              variant='filled'
+              placeholder={`0.0 ${toAsset?.symbol || 'ETH'}`}
+              isReadOnly
+              value={buyAmountCryptoPrecision}
+              bg='background.surface.raised.base'
+              _hover={{ bg: 'background.surface.raised.base' }}
+              _focus={{ bg: 'background.surface.raised.base' }}
+            />
+          )}
         </Flex>
         <Input
           placeholder={`Destination address (${toAsset?.symbol || 'ETH'})`}
