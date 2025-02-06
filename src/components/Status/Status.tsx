@@ -9,6 +9,7 @@ import {
   Circle,
   Divider,
   Flex,
+  HStack,
   IconButton,
   Input,
   InputGroup,
@@ -22,10 +23,12 @@ import {
   VStack,
 } from '@chakra-ui/react'
 import type { AssetId } from '@shapeshiftoss/caip'
-import { getChainflipAssetId } from 'queries/chainflip/assets'
+import { useQueries } from '@tanstack/react-query'
+import { chainflipToAssetId, getChainflipAssetId } from 'queries/chainflip/assets'
 import { useChainflipQuoteQuery } from 'queries/chainflip/quote'
 import { useChainflipStatusQuery } from 'queries/chainflip/status'
-import type { ChainflipSwapStatus } from 'queries/chainflip/types'
+import type { ChainflipQuote, ChainflipSwapStatus } from 'queries/chainflip/types'
+import { reactQueries } from 'queries/react-queries'
 import { useCallback, useEffect, useMemo } from 'react'
 import { useFormContext, useWatch } from 'react-hook-form'
 import {
@@ -42,14 +45,13 @@ import { useAssetById } from 'store/assets'
 import { Amount } from 'components/Amount/Amount'
 import { QRCode } from 'components/QRCode/QRCode'
 import { useCopyToClipboard } from 'hooks/useCopyToClipboard'
+import { bnOrZero } from 'lib/bignumber/bignumber'
 import { fromBaseUnit } from 'lib/bignumber/conversion'
 import type { SwapFormData } from 'types/form'
 
+import { CHAINFLIP_COMMISSION_BPS } from '../../lib/const'
 import type { StepProps } from './components/StatusStepper'
 import { StatusStepper } from './components/StatusStepper'
-
-const MOCK_SHAPESHIFT_FEE = 4.0
-const MOCK_PROTOCOL_FEE = '0.000'
 
 const pendingSlideFadeSx = { position: 'absolute', top: 0, left: 0, right: 0 } as const
 const linkHoverSx = { color: 'blue.600' }
@@ -275,6 +277,12 @@ const PendingSwapCardBody = ({
   )
 }
 
+const calculateShapeshiftFee = (quote: ChainflipQuote | undefined) => {
+  if (!quote) return '0'
+  const ingressAmountUsd = bnOrZero(quote.ingressAmount).times(quote.estimatedPrice)
+  return ingressAmountUsd.times(CHAINFLIP_COMMISSION_BPS).div(10000).toString()
+}
+
 export const Status = () => {
   const [searchParams] = useSearchParams()
 
@@ -391,6 +399,45 @@ export const Status = () => {
     [],
   )
 
+  // Collect feeAssetIds
+  const feeAssetIds = useMemo(() => {
+    if (!quote?.includedFees) return []
+    return [
+      ...new Set(
+        quote.includedFees
+          .filter(fee => fee.type !== 'broker')
+          .map(fee => chainflipToAssetId[fee.asset])
+          .filter(Boolean),
+      ),
+    ]
+  }, [quote?.includedFees])
+
+  // Ensure we have market-data for all fee assets so we can sum em up
+  const feeMarketData = useQueries({
+    queries: feeAssetIds.map(assetId => ({
+      ...reactQueries.marketData.byAssetId(assetId),
+    })),
+  })
+
+  // And finally, do sum em up
+  const protocolFeesFiat = useMemo(() => {
+    if (!quote?.includedFees) return '0'
+
+    return quote.includedFees
+      .filter(fee => fee.type !== 'broker')
+      .reduce((total, fee) => {
+        const assetId = chainflipToAssetId[fee.asset]
+        if (!assetId) return total
+
+        const marketData = feeMarketData[feeAssetIds.indexOf(assetId)]?.data
+        if (marketData?.price) {
+          return total.plus(bnOrZero(fee.amount).times(marketData.price))
+        }
+        return total
+      }, bnOrZero(0))
+      .toString()
+  }, [quote?.includedFees, feeMarketData, feeAssetIds])
+
   if (!(sellAssetId && buyAssetId)) return null
   if (!(sellAsset && buyAsset)) return null
 
@@ -485,14 +532,14 @@ export const Status = () => {
               />
             </Flex>
           </Flex>
-          <Flex alignItems='center' justifyContent='space-between'>
+          <HStack justify='space-between'>
             <Text>ShapeShift Fee</Text>
-            <Amount.Fiat value={MOCK_SHAPESHIFT_FEE.toString()} prefix='$' />
-          </Flex>
-          <Flex alignItems='center' justifyContent='space-between'>
+            <Amount.Fiat value={calculateShapeshiftFee(quote)} />
+          </HStack>
+          <HStack justify='space-between'>
             <Text>Protocol Fee</Text>
-            <Amount.Crypto value={MOCK_PROTOCOL_FEE} symbol={sellAsset?.symbol || 'BTC'} />
-          </Flex>
+            <Amount.Fiat value={protocolFeesFiat} />
+          </HStack>
         </Stack>
       </CardFooter>
     </Card>
