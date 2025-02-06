@@ -9,7 +9,6 @@ import {
   Circle,
   Divider,
   Flex,
-  HStack,
   IconButton,
   Input,
   InputGroup,
@@ -22,15 +21,10 @@ import {
   VStack,
 } from '@chakra-ui/react'
 import type { AssetId } from '@shapeshiftoss/caip'
-import { useQueries } from '@tanstack/react-query'
-import dayjs from 'dayjs'
-import duration from 'dayjs/plugin/duration'
-import relativeTime from 'dayjs/plugin/relativeTime'
-import { chainflipToAssetId, getChainflipAssetId } from 'queries/chainflip/assets'
+import { getChainflipAssetId } from 'queries/chainflip/assets'
 import { useChainflipQuoteQuery } from 'queries/chainflip/quote'
 import { useChainflipStatusQuery } from 'queries/chainflip/status'
-import type { ChainflipQuote, ChainflipSwapStatus } from 'queries/chainflip/types'
-import { reactQueries } from 'queries/react-queries'
+import type { ChainflipSwapStatus } from 'queries/chainflip/types'
 import { useCallback, useEffect, useMemo } from 'react'
 import { useFormContext, useWatch } from 'react-hook-form'
 import { FaArrowDown, FaArrowRightArrowLeft, FaCheck, FaClock, FaRegCopy } from 'react-icons/fa6'
@@ -39,16 +33,14 @@ import { useAssetById } from 'store/assets'
 import { Amount } from 'components/Amount/Amount'
 import { QRCode } from 'components/QRCode/QRCode'
 import { useCopyToClipboard } from 'hooks/useCopyToClipboard'
-import { bnOrZero } from 'lib/bignumber/bignumber'
 import { fromBaseUnit } from 'lib/bignumber/conversion'
 import type { SwapFormData } from 'types/form'
 
-import { CHAINFLIP_COMMISSION_BPS } from '../../lib/const'
 import type { StepProps } from './components/StatusStepper'
 import { StatusStepper } from './components/StatusStepper'
 
-dayjs.extend(duration)
-dayjs.extend(relativeTime)
+const MOCK_SHAPESHIFT_FEE = 4.0
+const MOCK_PROTOCOL_FEE = '0.000'
 
 const pendingSlideFadeSx = { position: 'absolute', top: 0, left: 0, right: 0 } as const
 
@@ -74,9 +66,6 @@ const IdleSwapCardBody = ({
   buyAmountCryptoPrecision,
   handleCopyToAddress,
   isToAddressCopied,
-  estimatedExpiryTime,
-  isStatusLoading,
-  isExpired,
 }: {
   swapData: { address: string; channelId?: number }
   sellAssetId: AssetId
@@ -85,33 +74,21 @@ const IdleSwapCardBody = ({
   buyAmountCryptoPrecision: string
   handleCopyToAddress: () => void
   isToAddressCopied: boolean
-  estimatedExpiryTime?: string
-  isStatusLoading: boolean
-  isExpired?: boolean
 }) => {
   const sellAsset = useAssetById(sellAssetId)
   const buyAsset = useAssetById(buyAssetId)
   const qrCodeIcon = useMemo(() => <Avatar size='xs' src={sellAsset?.icon} />, [sellAsset?.icon])
-
-  const timeToExpiry = useMemo(() => {
-    if (isStatusLoading) return 'N/A'
-    if (!estimatedExpiryTime) return 'N/A'
-    if (isExpired) return null
-    return dayjs.duration(dayjs(estimatedExpiryTime).diff(dayjs())).humanize()
-  }, [estimatedExpiryTime, isExpired, isStatusLoading])
 
   if (!(sellAsset && buyAsset)) return null
 
   return (
     <CardBody display='flex' flexDir='row-reverse' gap={6} px={4}>
       <Flex flexDir='column' gap={4}>
-        {!isExpired && (
-          <Box bg='white' p={4} borderRadius='xl'>
-            <QRCode content={swapData.address || ''} width={150} icon={qrCodeIcon} />
-          </Box>
-        )}
-        <Tag colorScheme={isExpired ? 'red' : 'yellow'} size='sm' justifyContent='center'>
-          {isExpired ? 'Expired' : `Expires in: ${timeToExpiry}`}
+        <Box bg='white' p={4} borderRadius='xl'>
+          <QRCode content={swapData.address || ''} width={150} icon={qrCodeIcon} />
+        </Box>
+        <Tag colorScheme='green' size='sm' justifyContent='center'>
+          Time remaining 06:23
         </Tag>
       </Flex>
       <Stack spacing={4} flex={1}>
@@ -122,24 +99,22 @@ const IdleSwapCardBody = ({
             <Amount.Crypto value={sellAmountCryptoPrecision} symbol={sellAsset.symbol} />
           </Flex>
         </Stack>
-        {!isExpired && (
-          <Stack>
-            <Text fontWeight='bold'>To</Text>
-            <InputGroup>
-              <Input isReadOnly value={swapData.address || ''} />
-              <InputRightElement>
-                <IconButton
-                  borderRadius='lg'
-                  size='sm'
-                  variant='ghost'
-                  icon={isToAddressCopied ? checkIcon : copyIcon}
-                  aria-label='Copy address'
-                  onClick={handleCopyToAddress}
-                />
-              </InputRightElement>
-            </InputGroup>
-          </Stack>
-        )}
+        <Stack>
+          <Text fontWeight='bold'>To</Text>
+          <InputGroup>
+            <Input isReadOnly value={swapData.address || ''} />
+            <InputRightElement>
+              <IconButton
+                borderRadius='lg'
+                size='sm'
+                variant='ghost'
+                icon={isToAddressCopied ? checkIcon : copyIcon}
+                aria-label='Copy address'
+                onClick={handleCopyToAddress}
+              />
+            </InputRightElement>
+          </InputGroup>
+        </Stack>
         <Divider borderColor='border.base' />
         <Stack>
           <Text fontWeight='bold'>You will receive</Text>
@@ -216,6 +191,7 @@ const PendingSwapCardBody = ({
   }
 
   const config = getStatusConfig(swapStatus?.status.state, swapStatus?.status.swapEgress)
+  console.log({ config, swapStatus })
   const StatusIcon = config.icon
   const isCompleted = swapStatus?.status.state === 'completed'
 
@@ -247,17 +223,11 @@ const PendingSwapCardBody = ({
   )
 }
 
-const calculateShapeshiftFee = (quote: ChainflipQuote | undefined) => {
-  if (!quote) return '0'
-  const ingressAmountUsd = bnOrZero(quote.ingressAmount).times(quote.estimatedPrice)
-  return ingressAmountUsd.times(CHAINFLIP_COMMISSION_BPS).div(10000).toString()
-}
-
 export const Status = () => {
   const [searchParams] = useSearchParams()
 
   const swapId = searchParams.get('swapId')
-  const { data: swapStatus, isLoading: isStatusLoading } = useChainflipStatusQuery({
+  const { data: swapStatus } = useChainflipStatusQuery({
     swapId: Number(swapId),
     enabled: Boolean(swapId),
   })
@@ -286,6 +256,7 @@ export const Status = () => {
 
   const sellAmountCryptoBaseUnit = useWatch({ control, name: 'sellAmountCryptoBaseUnit' })
   const destinationAddress = useWatch({ control, name: 'destinationAddress' })
+  const refundAddress = useWatch({ control, name: 'refundAddress' })
   const sellAssetId = useWatch({ control, name: 'sellAssetId' })
   const buyAssetId = useWatch({ control, name: 'buyAssetId' })
 
@@ -325,20 +296,30 @@ export const Status = () => {
   const { copyToClipboard: copyToAddress, isCopied: isToAddressCopied } = useCopyToClipboard({
     timeout: 3000,
   })
-  const { copyToClipboard: copyDepositAddress, isCopied: isDepositAddressCopied } =
+  const { copyToClipboard: copyReceiveAddress, isCopied: isReceiveAddressCopied } =
     useCopyToClipboard({ timeout: 3000 })
+  const { copyToClipboard: copyRefundAddress, isCopied: isRefundAddressCopied } =
+    useCopyToClipboard({
+      timeout: 3000,
+    })
 
   const handleCopyToAddress = useCallback(() => {
-    if (swapData.address) {
-      copyToAddress(swapData.address)
+    if (destinationAddress) {
+      copyToAddress(destinationAddress)
     }
-  }, [copyToAddress, swapData.address])
+  }, [copyToAddress, destinationAddress])
 
-  const handleCopyDepositAddress = useCallback(() => {
-    if (swapData.address) {
-      copyDepositAddress(swapData.address)
+  const handleCopyReceiveAddress = useCallback(() => {
+    if (destinationAddress) {
+      copyReceiveAddress(destinationAddress)
     }
-  }, [copyDepositAddress, swapData.address])
+  }, [copyToAddress, destinationAddress])
+
+  const handleCopyRefundAddress = useCallback(() => {
+    if (refundAddress) {
+      copyRefundAddress(refundAddress)
+    }
+  }, [copyRefundAddress, refundAddress])
 
   const cardHeaderStyle = useMemo(
     () => ({
@@ -352,45 +333,6 @@ export const Status = () => {
     }),
     [],
   )
-
-  // Collect feeAssetIds
-  const feeAssetIds = useMemo(() => {
-    if (!quote?.includedFees) return []
-    return [
-      ...new Set(
-        quote.includedFees
-          .filter(fee => fee.type !== 'broker')
-          .map(fee => chainflipToAssetId[fee.asset])
-          .filter(Boolean),
-      ),
-    ]
-  }, [quote?.includedFees])
-
-  // Ensure we have market-data for all fee assets so we can sum em up
-  const feeMarketData = useQueries({
-    queries: feeAssetIds.map(assetId => ({
-      ...reactQueries.marketData.byAssetId(assetId),
-    })),
-  })
-
-  // And finally, do sum em up
-  const protocolFeesFiat = useMemo(() => {
-    if (!quote?.includedFees) return '0'
-
-    return quote.includedFees
-      .filter(fee => fee.type !== 'broker')
-      .reduce((total, fee) => {
-        const assetId = chainflipToAssetId[fee.asset]
-        if (!assetId) return total
-
-        const marketData = feeMarketData[feeAssetIds.indexOf(assetId)]?.data
-        if (marketData?.price) {
-          return total.plus(bnOrZero(fee.amount).times(marketData.price))
-        }
-        return total
-      }, bnOrZero(0))
-      .toString()
-  }, [quote?.includedFees, feeMarketData, feeAssetIds])
 
   if (!(sellAssetId && buyAssetId)) return null
   if (!(sellAsset && buyAsset)) return null
@@ -411,9 +353,6 @@ export const Status = () => {
             buyAmountCryptoPrecision={buyAmountCryptoPrecision}
             handleCopyToAddress={handleCopyToAddress}
             isToAddressCopied={isToAddressCopied}
-            estimatedExpiryTime={swapStatus?.status.depositChannel?.estimatedExpiryTime}
-            isStatusLoading={isStatusLoading}
-            isExpired={swapStatus?.status.depositChannel?.isExpired}
           />
         </SlideFade>
         <SlideFade in={shouldDisplayPendingSwapBody} unmountOnExit style={pendingSlideFadeSx}>
@@ -433,21 +372,17 @@ export const Status = () => {
           <Flex width='full' justifyContent='space-between'>
             <Flex alignItems='center' gap={2}>
               <Avatar size='xs' src={sellAsset.icon} />
-              <Text>Deposit</Text>
+              <Text>Refund Address</Text>
             </Flex>
-            <Amount.Crypto
-              value={sellAmountCryptoPrecision || '0'}
-              symbol={sellAsset?.symbol || 'BTC'}
-            />
           </Flex>
           <Flex alignItems='center' gap={2}>
-            <Text>{swapData.address || ''}</Text>
+            <Text>{refundAddress || ''}</Text>
             <IconButton
               size='sm'
               variant='ghost'
-              icon={isDepositAddressCopied ? checkIcon : copyIcon}
-              aria-label='Copy deposit address'
-              onClick={handleCopyDepositAddress}
+              icon={isRefundAddressCopied ? checkIcon : copyIcon}
+              aria-label='Copy refund address'
+              onClick={handleCopyRefundAddress}
             />
           </Flex>
         </Stack>
@@ -455,27 +390,22 @@ export const Status = () => {
           <Flex width='full' justifyContent='space-between'>
             <Flex alignItems='center' gap={2}>
               <Avatar size='xs' src={buyAsset.icon} />
-              <Text>Receive</Text>
+              <Text>Receive Address</Text>
             </Flex>
-            <Amount.Crypto
-              value={buyAmountCryptoPrecision || '0'}
-              symbol={buyAsset?.symbol || 'ETH'}
-            />
           </Flex>
           <Flex alignItems='center' gap={2}>
-            <Text>{destinationAddress || 'No destination address'}</Text>
+            <Text>{destinationAddress || ''}</Text>
+            <IconButton
+              size='sm'
+              variant='ghost'
+              icon={isReceiveAddressCopied ? checkIcon : copyIcon}
+              aria-label='Copy receive address'
+              onClick={handleCopyReceiveAddress}
+            />
           </Flex>
         </Stack>
         <Divider borderColor='border.base' />
         <Stack spacing={2}>
-          <Flex alignItems='center' justifyContent='space-between'>
-            <Text>Estimated Time</Text>
-            <Text>
-              {quote?.estimatedDurationSeconds
-                ? dayjs.duration(quote.estimatedDurationSeconds, 'seconds').humanize()
-                : 'N/A'}
-            </Text>
-          </Flex>
           <Flex alignItems='center' justifyContent='space-between'>
             <Text>Estimated Rate</Text>
             <Flex gap={1}>
@@ -486,14 +416,14 @@ export const Status = () => {
               />
             </Flex>
           </Flex>
-          <HStack justify='space-between'>
+          <Flex alignItems='center' justifyContent='space-between'>
             <Text>ShapeShift Fee</Text>
-            <Amount.Fiat value={calculateShapeshiftFee(quote)} />
-          </HStack>
-          <HStack justify='space-between'>
+            <Amount.Fiat value={MOCK_SHAPESHIFT_FEE.toString()} prefix='$' />
+          </Flex>
+          <Flex alignItems='center' justifyContent='space-between'>
             <Text>Protocol Fee</Text>
-            <Amount.Fiat value={protocolFeesFiat} />
-          </HStack>
+            <Amount.Crypto value={MOCK_PROTOCOL_FEE} symbol={sellAsset?.symbol || 'BTC'} />
+          </Flex>
         </Stack>
       </CardFooter>
     </Card>
