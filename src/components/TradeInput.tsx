@@ -59,7 +59,7 @@ export const TradeInput = () => {
     if (!sellAsset) return
 
     return fromBaseUnit(sellAmountCryptoBaseUnit, sellAsset.precision)
-  }, [sellAsset?.precision, sellAmountCryptoBaseUnit])
+  }, [sellAsset, sellAmountCryptoBaseUnit])
 
   const { data: quote, isFetching: isQuoteFetching } = useChainflipQuoteQuery({
     sourceAsset: sellAsset ? getChainflipAssetId(sellAsset.assetId) : '',
@@ -71,7 +71,7 @@ export const TradeInput = () => {
     if (!(quote?.egressAmountNative && buyAsset)) return
 
     return fromBaseUnit(quote.egressAmountNative, buyAsset.precision)
-  }, [quote?.egressAmountNative, buyAsset?.precision])
+  }, [quote?.egressAmountNative, buyAsset])
 
   const rate = useMemo(() => {
     if (quote && sellAmountCryptoPrecision)
@@ -185,12 +185,10 @@ export const TradeInput = () => {
     setValue('sellAssetId', currentBuyAsset.assetId)
     setValue('buyAssetId', currentSellAsset.assetId)
   }, [
-    sellAssetId,
-    buyAssetId,
     sellAsset,
     buyAsset,
-    sellAssetMarketData?.price,
-    buyAssetMarketData?.price,
+    sellAssetMarketData,
+    buyAssetMarketData,
     sellAmountCryptoBaseUnit,
     setValue,
   ])
