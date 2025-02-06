@@ -68,6 +68,8 @@ export const StatusStepper: React.FC<StatusStepperProps> = ({
       </Stepper>
       <Flex px={4}>
         <Progress
+          isAnimated
+          hasStripe
           colorScheme={colorScheme}
           borderRadius='full'
           height='5px'
