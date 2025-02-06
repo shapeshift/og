@@ -23,12 +23,15 @@ import {
 } from '@chakra-ui/react'
 import type { AssetId } from '@shapeshiftoss/caip'
 import { useQueries } from '@tanstack/react-query'
+import dayjs from 'dayjs'
+import duration from 'dayjs/plugin/duration'
+import relativeTime from 'dayjs/plugin/relativeTime'
 import { chainflipToAssetId, getChainflipAssetId } from 'queries/chainflip/assets'
 import { useChainflipQuoteQuery } from 'queries/chainflip/quote'
 import { useChainflipStatusQuery } from 'queries/chainflip/status'
 import type { ChainflipQuote, ChainflipSwapStatus } from 'queries/chainflip/types'
 import { reactQueries } from 'queries/react-queries'
-import { useCallback, useEffect, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useFormContext, useWatch } from 'react-hook-form'
 import { FaArrowDown, FaArrowRightArrowLeft, FaCheck, FaClock, FaRegCopy } from 'react-icons/fa6'
 import { useSearchParams } from 'react-router'
@@ -43,6 +46,9 @@ import type { SwapFormData } from 'types/form'
 import { CHAINFLIP_COMMISSION_BPS } from '../../lib/const'
 import type { StepProps } from './components/StatusStepper'
 import { StatusStepper } from './components/StatusStepper'
+
+dayjs.extend(duration)
+dayjs.extend(relativeTime)
 
 const pendingSlideFadeSx = { position: 'absolute', top: 0, left: 0, right: 0 } as const
 
@@ -443,6 +449,14 @@ export const Status = () => {
         </Stack>
         <Divider borderColor='border.base' />
         <Stack spacing={2}>
+          <Flex alignItems='center' justifyContent='space-between'>
+            <Text>Estimated Time</Text>
+            <Text>
+              {quote?.estimatedDurationSeconds
+                ? dayjs.duration(quote.estimatedDurationSeconds, 'seconds').humanize()
+                : 'N/A'}
+            </Text>
+          </Flex>
           <Flex alignItems='center' justifyContent='space-between'>
             <Text>Estimated Rate</Text>
             <Flex gap={1}>
