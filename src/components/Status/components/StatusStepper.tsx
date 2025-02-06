@@ -21,15 +21,11 @@ type StatusStepperProps = {
   steps: StepProps[]
   activeStep: number
   colorScheme?: string
-  swapStatus?: {
-    status: {
-      state: 'waiting' | 'receiving' | 'swapping' | 'sending' | 'sent' | 'completed' | 'failed'
-    }
-  }
 }
 
 const getProgressPercent = (activeStep: number): number => {
-  return activeStep === 0 ? 50 : 100
+  // 6 states total, so each state is worth 16.67% (100/6)
+  return Math.min((activeStep + 1) * (100 / 6), 100)
 }
 
 export const StatusStepper: React.FC<StatusStepperProps> = ({

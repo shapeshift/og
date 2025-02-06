@@ -6,7 +6,9 @@ import {
   CardBody,
   CardFooter,
   CardHeader,
+  Center,
   Circle,
+  Collapse,
   Divider,
   Flex,
   IconButton,
@@ -23,7 +25,7 @@ import {
 import { getChainflipAssetId } from 'queries/chainflip/assets'
 import { useChainflipQuoteQuery } from 'queries/chainflip/quote'
 import { useChainflipStatusQuery } from 'queries/chainflip/status'
-import { useCallback, useEffect, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useFormContext } from 'react-hook-form'
 import { FaArrowDown, FaArrowRightArrowLeft, FaCheck, FaClock, FaRegCopy } from 'react-icons/fa6'
 import { useSearchParams } from 'react-router'
@@ -38,9 +40,8 @@ import type { SwapFormData } from 'types/form'
 import type { StepProps } from './components/StatusStepper'
 import { StatusStepper } from './components/StatusStepper'
 
-const pendingSlideFadeSx = { position: 'absolute' as const, top: 0, left: 0, right: 0 }
-
 // Mock values - will come from API later
+const MOCK_CHANNEL_ID = '0xa5567...8c'
 const MOCK_SHAPESHIFT_FEE = 4.0
 const MOCK_PROTOCOL_FEE = '0.000'
 
@@ -75,13 +76,15 @@ const IdleSwapCardBody = ({
   const CopyIcon = useMemo(() => <FaRegCopy />, [])
   const CheckIcon = useMemo(() => <FaCheck />, [])
 
-  const avatar = useMemo(() => <Avatar size='xs' src={fromAsset?.icon} />, [fromAsset?.icon])
-
   return (
     <CardBody display='flex' flexDir='row-reverse' gap={6} px={4}>
       <Flex flexDir='column' gap={4}>
         <Box bg='white' p={4} borderRadius='xl'>
-          <QRCode content={swapData.address || ''} width={150} icon={avatar} />
+          <QRCode
+            content={swapData.address || ''}
+            width={150}
+            icon={<Avatar size='xs' src={fromAsset?.icon} />}
+          />
         </Box>
         <Tag colorScheme='green' size='sm' justifyContent='center'>
           Time remaining 06:23
@@ -254,13 +257,14 @@ export const Status = () => {
     if (shouldDisplayPendingSwapBody) {
       return setActiveStep(1)
     }
-  }, [swapStatus?.status.state, shouldDisplayPendingSwapBody, setActiveStep])
+  }, [shouldDisplayPendingSwapBody, setActiveStep])
 
   const { watch } = useFormContext<SwapFormData>()
-  const { sellAmountCryptoBaseUnit, destinationAddress, sellAsset, buyAsset } = watch()
+  const { sellAmountCryptoBaseUnit, destinationAddress, refundAddress, sellAsset, buyAsset } =
+    watch()
 
-  const fromAsset = useAssetById(sellAsset)
-  const toAsset = useAssetById(buyAsset)
+  const fromAsset = sellAsset ? useAssetById(sellAsset) : undefined
+  const toAsset = buyAsset ? useAssetById(buyAsset) : undefined
 
   // Get quote for buy amount
   const { data: quote } = useChainflipQuoteQuery(
@@ -304,9 +308,6 @@ export const Status = () => {
   const { copyToClipboard: copyDepositAddress, isCopied: isDepositAddressCopied } =
     useCopyToClipboard({ timeout: 3000 })
 
-  const { copyToClipboard: copyReceiveAddress, isCopied: isReceiveAddressCopied } =
-    useCopyToClipboard({ timeout: 3000 })
-
   const handleCopyToAddress = useCallback(() => {
     if (swapData.address) {
       copyToAddress(swapData.address)
@@ -318,12 +319,6 @@ export const Status = () => {
       copyDepositAddress(swapData.address)
     }
   }, [copyDepositAddress, swapData.address])
-
-  const handleCopyReceiveAddress = useCallback(() => {
-    if (destinationAddress) {
-      copyReceiveAddress(destinationAddress)
-    }
-  }, [copyToAddress, destinationAddress])
 
   return (
     <Card width='full' maxW='465px'>
@@ -351,11 +346,15 @@ export const Status = () => {
             isToAddressCopied={isToAddressCopied}
           />
         </SlideFade>
-        <SlideFade in={shouldDisplayPendingSwapBody} unmountOnExit style={pendingSlideFadeSx}>
+        <SlideFade
+          in={shouldDisplayPendingSwapBody}
+          unmountOnExit
+          style={{ position: 'absolute', top: 0, left: 0, right: 0 }}
+        >
           <PendingSwapCardBody swapStatus={swapStatus} />
         </SlideFade>
       </Box>
-      <StatusStepper steps={SWAP_STEPS} activeStep={activeStep} swapStatus={swapStatus} />
+      <StatusStepper steps={SWAP_STEPS} activeStep={activeStep} />
       <CardFooter
         flexDir='column'
         gap={4}
@@ -377,6 +376,13 @@ export const Status = () => {
           </Flex>
           <Flex alignItems='center' gap={2}>
             <Text>{swapData.address || ''}</Text>
+            <IconButton
+              size='sm'
+              variant='ghost'
+              icon={isDepositAddressCopied ? CheckIcon : CopyIcon}
+              aria-label='Copy deposit address'
+              onClick={handleCopyDepositAddress}
+            />
           </Flex>
         </Stack>
         <Stack>
@@ -392,13 +398,6 @@ export const Status = () => {
           </Flex>
           <Flex alignItems='center' gap={2}>
             <Text>{destinationAddress || 'No destination address'}</Text>
-            <IconButton
-              size='sm'
-              variant='ghost'
-              icon={isReceiveAddressCopied ? CheckIcon : CopyIcon}
-              aria-label='Copy receive address'
-              onClick={handleCopyReceiveAddress}
-            />
           </Flex>
         </Stack>
         <Divider borderColor='border.base' />

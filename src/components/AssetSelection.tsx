@@ -14,7 +14,7 @@ export const AssetSelection = memo(function AssetSelection({
   onClick,
   assetId,
 }: AssetSelectionProps) {
-  const asset = useAssetById(assetId)
+  const asset = assetId ? useAssetById(assetId) : undefined
 
   return (
     <Button flexDir='column' height='auto' py={4} gap={4} flex={1} onClick={onClick}>

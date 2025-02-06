@@ -14,10 +14,6 @@ import type { SwapFormData } from 'types/form'
 
 import { queryClient } from './config/react-query'
 
-const selectPair = <SelectPair />
-const tradeInput = <TradeInput />
-const status = <Status />
-
 const slideVariants = {
   initial: { opacity: 0, x: 20 },
   animate: { opacity: 1, x: 0 },
@@ -87,7 +83,7 @@ function AppContent() {
     })
 
     setSearchParams(params, { replace: true })
-  }, [searchParams, formValues, setSearchParams])
+  }, [formValues, setSearchParams])
 
   // Handle external URL changes
   useEffect(() => {
@@ -125,9 +121,9 @@ function AppContent() {
             }}
           >
             <Routes location={location}>
-              <Route path='/' element={selectPair} />
-              <Route path='/input' element={tradeInput} />
-              <Route path='/status' element={status} />
+              <Route path='/' element={<SelectPair />} />
+              <Route path='/input' element={<TradeInput />} />
+              <Route path='/status' element={<Status />} />
             </Routes>
           </motion.div>
         </AnimatePresence>

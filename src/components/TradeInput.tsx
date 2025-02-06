@@ -17,6 +17,7 @@ import {
   Text,
 } from '@chakra-ui/react'
 import { fromAssetId } from '@shapeshiftoss/caip'
+import { NumericFormat } from 'react-number-format'
 import { getChainflipAssetId } from 'queries/chainflip/assets'
 import { useChainflipQuoteQuery } from 'queries/chainflip/quote'
 import { useChainflipSwapMutation } from 'queries/chainflip/swap'
@@ -226,12 +227,9 @@ export const TradeInput = () => {
 
   // Handle input change to convert to base units
   const handleSellAmountChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const cryptoPrecisionAmount = e.target.value
+    (values: { value: string }) => {
       if (!fromAsset?.precision) return
-
-      const baseUnitAmount = toBaseUnit(cryptoPrecisionAmount || '0', fromAsset.precision)
-      setValue('sellAmountCryptoBaseUnit', baseUnitAmount)
+      setValue('sellAmountCryptoBaseUnit', toBaseUnit(values.value, fromAsset.precision))
     },
     [fromAsset?.precision, setValue],
   )
@@ -288,7 +286,6 @@ export const TradeInput = () => {
       maxWidth='450px'
       overflow='hidden'
       as='form'
-      // eslint-disable-next-line react-memo/require-usememo
       onSubmit={e => {
         e.preventDefault()
         if (isValid) onSubmit()
@@ -360,12 +357,23 @@ export const TradeInput = () => {
           </Flex>
         </Flex>
         <Flex gap={6}>
-          <Input
+          <NumericFormat
+            customInput={Input}
             flex={1}
             variant='filled'
-            placeholder={`0.0 ${fromAsset?.symbol || 'BTC'}`}
-            value={sellAmountCryptoPrecision}
-            onChange={handleSellAmountChange}
+            placeholder={`Enter ${fromAsset?.symbol || 'BTC'} amount`}
+            value={sellAmountCryptoPrecision || ''}
+            onValueChange={handleSellAmountChange}
+            allowNegative={false}
+            decimalScale={fromAsset?.precision}
+            thousandSeparator=','
+            allowLeadingZeros={false}
+            isAllowed={({ value }) => {
+              if (!value) return true
+              if (!fromAsset?.precision) return true
+              const [, decimals] = value.split('.')
+              return !decimals || decimals.length <= fromAsset.precision
+            }}
           />
           {!buyAmountCryptoPrecision ? (
             <Skeleton height='40px' width='full' flex={1}>
@@ -375,6 +383,8 @@ export const TradeInput = () => {
                 isReadOnly
                 value=''
                 bg='background.surface.raised.base'
+                _hover={{ bg: 'background.surface.raised.base' }}
+                _focus={{ bg: 'background.surface.raised.base' }}
               />
             </Skeleton>
           ) : (
@@ -385,6 +395,8 @@ export const TradeInput = () => {
               isReadOnly
               value={buyAmountCryptoPrecision}
               bg='background.surface.raised.base'
+              _hover={{ bg: 'background.surface.raised.base' }}
+              _focus={{ bg: 'background.surface.raised.base' }}
             />
           )}
         </Flex>
