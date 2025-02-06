@@ -21,7 +21,7 @@ import { getChainflipAssetId } from 'queries/chainflip/assets'
 import { useChainflipQuoteQuery } from 'queries/chainflip/quote'
 import { useChainflipSwapMutation } from 'queries/chainflip/swap'
 import { useMarketDataByAssetIdQuery } from 'queries/marketData'
-import { useCallback, useMemo } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { useFormContext, useWatch } from 'react-hook-form'
 import { FaArrowRightArrowLeft } from 'react-icons/fa6'
 import { NumericFormat } from 'react-number-format'
@@ -43,6 +43,8 @@ export const TradeInput = () => {
     register,
     watch,
     setValue,
+    setError,
+    clearErrors,
     formState: { errors, isValid },
     control,
   } = useFormContext<SwapFormData>()
@@ -64,7 +66,11 @@ export const TradeInput = () => {
     return fromBaseUnit(sellAmountCryptoBaseUnit, sellAsset.precision)
   }, [sellAsset, sellAmountCryptoBaseUnit])
 
-  const { data: quote, isFetching: isQuoteFetching } = useChainflipQuoteQuery({
+  const {
+    data: quote,
+    isFetching: isQuoteFetching,
+    error: quoteError,
+  } = useChainflipQuoteQuery({
     sourceAsset: sellAsset ? getChainflipAssetId(sellAsset.assetId) : '',
     destinationAsset: buyAsset ? getChainflipAssetId(buyAsset.assetId) : '',
     amount: sellAmountCryptoBaseUnit,
@@ -276,6 +282,19 @@ export const TradeInput = () => {
     [buyAmountCryptoPrecision, buyAsset?.symbol],
   )
 
+  useEffect(() => {
+    const minAmountCryptoBaseUnit = quoteError?.response?.data.errors?.minimalAmountNative?.[0]
+    if (quoteError?.response?.data.errors && minAmountCryptoBaseUnit && sellAsset?.precision) {
+      const minAmountCryptoPrecision = fromBaseUnit(minAmountCryptoBaseUnit, sellAsset.precision)
+      setError('sellAmountCryptoBaseUnit', {
+        type: 'amountTooLow',
+        message: `Minimum Amount: ${minAmountCryptoPrecision} ${sellAsset.symbol}`,
+      })
+    } else {
+      clearErrors('sellAmountCryptoBaseUnit')
+    }
+  }, [quoteError, setError, clearErrors, sellAsset])
+
   if (!(sellAsset && buyAsset)) return null
 
   return (
@@ -343,16 +362,23 @@ export const TradeInput = () => {
           </Flex>
         </Flex>
         <Flex gap={6}>
-          <NumericFormat
-            customInput={Input}
-            flex={1}
-            variant='filled'
-            placeholder={`Enter ${sellAsset.symbol} amount`}
-            value={sellAmountCryptoPrecision}
-            onValueChange={handleSellAmountChange}
-            allowNegative={false}
-            decimalScale={sellAsset.precision}
-          />
+          <Flex direction='column' flex={1}>
+            <NumericFormat
+              customInput={Input}
+              variant='filled'
+              placeholder={`Enter ${sellAsset.symbol} amount`}
+              value={sellAmountCryptoPrecision}
+              onValueChange={handleSellAmountChange}
+              allowNegative={false}
+              decimalScale={sellAsset.precision}
+              isInvalid={!!errors.sellAmountCryptoBaseUnit}
+            />
+            {errors.sellAmountCryptoBaseUnit && (
+              <Text fontSize='sm' color='red.500' mt={1}>
+                {errors.sellAmountCryptoBaseUnit.message}
+              </Text>
+            )}
+          </Flex>
           {!buyAmountCryptoPrecision ? (
             <Skeleton height='40px' width='full' flex={1}>
               <Input

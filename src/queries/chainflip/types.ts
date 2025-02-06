@@ -62,6 +62,15 @@ export type ChainflipQuote = {
   boostQuote?: ChainflipQuote
 }
 
+export type ChainflipQuoteError = {
+  errors?: {
+    minimalAmount?: string[]
+    minimalAmountNative?: string[]
+  }
+  detail?: string
+  status?: number
+}
+
 export type ChainflipQuoteParams = {
   sourceAsset: string | undefined
   destinationAsset: string | undefined
