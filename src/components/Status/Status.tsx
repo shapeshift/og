@@ -74,16 +74,16 @@ const IdleSwapCardBody = ({
   buyAssetId,
   sellAmountCryptoPrecision,
   buyAmountCryptoPrecision,
-  handleCopyToAddress,
-  isToAddressCopied,
+  handleCopyDepositAddress,
+  isDepositAddressCopied,
 }: {
   swapData: { address: string; channelId?: number }
   sellAssetId: AssetId
   buyAssetId: AssetId
   sellAmountCryptoPrecision: string
   buyAmountCryptoPrecision: string
-  handleCopyToAddress: () => void
-  isToAddressCopied: boolean
+  handleCopyDepositAddress: () => void
+  isDepositAddressCopied: boolean
 }) => {
   const sellAsset = useAssetById(sellAssetId)
   const buyAsset = useAssetById(buyAssetId)
@@ -118,9 +118,9 @@ const IdleSwapCardBody = ({
                 borderRadius='lg'
                 size='sm'
                 variant='ghost'
-                icon={isToAddressCopied ? checkIcon : copyIcon}
+                icon={isDepositAddressCopied ? checkIcon : copyIcon}
                 aria-label='Copy address'
-                onClick={handleCopyToAddress}
+                onClick={handleCopyDepositAddress}
               />
             </InputRightElement>
           </InputGroup>
@@ -347,9 +347,10 @@ export const Status = () => {
     return fromBaseUnit(quote.egressAmountNative, buyAsset.precision)
   }, [quote?.egressAmountNative, buyAsset?.precision])
 
-  const { copyToClipboard: copyToAddress, isCopied: isToAddressCopied } = useCopyToClipboard({
-    timeout: 3000,
-  })
+  const { copyToClipboard: copyDepositAddress, isCopied: isDepositAddressCopied } =
+    useCopyToClipboard({
+      timeout: 3000,
+    })
   const { copyToClipboard: copyReceiveAddress, isCopied: isReceiveAddressCopied } =
     useCopyToClipboard({ timeout: 3000 })
   const { copyToClipboard: copyRefundAddress, isCopied: isRefundAddressCopied } =
@@ -357,11 +358,13 @@ export const Status = () => {
       timeout: 3000,
     })
 
-  const handleCopyToAddress = useCallback(() => {
-    if (destinationAddress) {
-      copyToAddress(destinationAddress)
+  const handleCopyDepositAddress = useCallback(() => {
+    const depositAddress = searchParams.get('depositAddress')
+
+    if (depositAddress) {
+      copyDepositAddress(depositAddress)
     }
-  }, [copyToAddress, destinationAddress])
+  }, [copyDepositAddress, destinationAddress])
 
   const handleCopyReceiveAddress = useCallback(() => {
     if (destinationAddress) {
@@ -417,8 +420,8 @@ export const Status = () => {
             swapData={swapData}
             sellAmountCryptoPrecision={sellAmountCryptoPrecision}
             buyAmountCryptoPrecision={buyAmountCryptoPrecision}
-            handleCopyToAddress={handleCopyToAddress}
-            isToAddressCopied={isToAddressCopied}
+            handleCopyDepositAddress={handleCopyDepositAddress}
+            isDepositAddressCopied={isDepositAddressCopied}
           />
         </SlideFade>
         <SlideFade in={shouldDisplayPendingSwapBody} unmountOnExit style={pendingSlideFadeSx}>

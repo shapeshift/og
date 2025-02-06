@@ -27,7 +27,7 @@ import { FaArrowRightArrowLeft } from 'react-icons/fa6'
 import { NumericFormat } from 'react-number-format'
 import { useNavigate } from 'react-router'
 import { useAssetById } from 'store/assets'
-import { bnOrZero } from 'lib/bignumber/bignumber'
+import { bn, bnOrZero } from 'lib/bignumber/bignumber'
 import { fromBaseUnit, toBaseUnit } from 'lib/bignumber/conversion'
 import { mixpanel, MixPanelEvent } from 'lib/mixpanel'
 import { validateAddress } from 'lib/validation'
@@ -127,12 +127,24 @@ export const TradeInput = () => {
   const handleSubmit = useCallback(() => {
     if (!(quote && sellAsset && buyAsset)) return
 
+    const slippageTolerancePercentageDecimal = bnOrZero(
+      quote.recommendedSlippageTolerancePercent,
+    ).div(100)
+
+    // Calculate the rate first (buyAmount/sellAmount)
+    const estimatedRate = bnOrZero(quote.egressAmountNative).div(quote.ingressAmountNative)
+
+    // This is called minimumPrice upstream but this really is a rate, let's not honour confusing terminology
+    const minimumRate = estimatedRate
+      .times(bn(1).minus(slippageTolerancePercentageDecimal))
+      .toFixed(buyAsset.precision)
+
     const createSwapPayload = {
       sourceAsset: getChainflipAssetId(sellAsset.assetId),
       destinationAsset: getChainflipAssetId(buyAsset.assetId),
       destinationAddress: destinationAddress || '',
       refundAddress: refundAddress || '',
-      minimumPrice: quote.egressAmountNative,
+      minimumPrice: minimumRate,
     }
 
     mixpanel?.track(MixPanelEvent.StartTransaction, createSwapPayload)
