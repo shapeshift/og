@@ -7,6 +7,7 @@ import { ChatwootButton } from 'components/Chatwoot'
 import { SelectPair } from 'components/SelectPair'
 import { Status } from 'components/Status/Status'
 import { TradeInput } from 'components/TradeInput'
+import { btcAssetId, ethAssetId } from 'constants/caip'
 import type { SwapFormData } from 'types/form'
 
 const selectPair = <SelectPair />
@@ -50,8 +51,8 @@ export const AppRouter = () => {
 
   const defaultValues = useMemo(
     () => ({
-      sellAssetId: searchParams.get('sellAssetId') || undefined,
-      buyAssetId: searchParams.get('buyAssetId') || undefined,
+      sellAssetId: searchParams.get('sellAssetId') || ethAssetId,
+      buyAssetId: searchParams.get('buyAssetId') || btcAssetId,
       sellAmountCryptoBaseUnit: searchParams.get('sellAmountCryptoBaseUnit') || undefined,
       destinationAddress: searchParams.get('destinationAddress') || undefined,
       refundAddress: searchParams.get('refundAddress') || undefined,
