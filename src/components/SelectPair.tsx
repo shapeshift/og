@@ -1,8 +1,9 @@
 import { Button, Card, CardBody, Flex, Heading, IconButton, useDisclosure } from '@chakra-ui/react'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useFormContext } from 'react-hook-form'
 import { FaArrowRightArrowLeft } from 'react-icons/fa6'
 import { useNavigate } from 'react-router'
+import { useAssetById } from 'store/assets'
 import { mixpanel, MixPanelEvent } from 'lib/mixpanel'
 import type { Asset } from 'types/Asset'
 import type { SwapFormData } from 'types/form'
@@ -11,6 +12,8 @@ import { AssetSelection } from './AssetSelection'
 import { AssetSelectModal } from './AssetSelectModal/AssetSelectModal'
 import { AssetType } from './AssetSelectModal/types'
 
+const switchIcon = <FaArrowRightArrowLeft />
+
 export const SelectPair = () => {
   const { isOpen, onClose, onOpen } = useDisclosure()
   const [assetSelectType, setAssetSelectType] = useState<AssetType>(AssetType.BUY)
@@ -18,22 +21,26 @@ export const SelectPair = () => {
   const { setValue, watch } = useFormContext<SwapFormData>()
   const { sellAssetId, buyAssetId } = watch()
 
-  const switchIcon = useMemo(() => <FaArrowRightArrowLeft />, [])
+  const sellAsset = useAssetById(sellAssetId || '')
+  const buyAsset = useAssetById(buyAssetId || '')
 
   const handleSubmit = useCallback(() => {
+    if (!(sellAsset && buyAsset)) return
+
     mixpanel?.track(MixPanelEvent.PairSelected, {
-      'some key': 'some val',
+      sellAsset,
+      buyAsset,
     })
 
     navigate('/input')
   }, [navigate])
 
-  const handleFromAssetClick = useCallback(() => {
+  const handleSellAssetClick = useCallback(() => {
     setAssetSelectType(AssetType.SELL)
     onOpen()
   }, [onOpen])
 
-  const handleToAssetClick = useCallback(() => {
+  const handleBuyAssetClick = useCallback(() => {
     setAssetSelectType(AssetType.BUY)
     onOpen()
   }, [onOpen])
@@ -41,21 +48,21 @@ export const SelectPair = () => {
   const handleAssetSelect = useCallback(
     (asset: Asset) => {
       if (assetSelectType === AssetType.BUY) {
-        setValue('buyAssetId', asset.assetId, { shouldValidate: true })
+        setValue('buyAssetId', asset.assetId)
       }
       if (assetSelectType === AssetType.SELL) {
-        setValue('sellAssetId', asset.assetId, { shouldValidate: true })
+        setValue('sellAssetId', asset.assetId)
       }
     },
     [assetSelectType, setValue],
   )
 
   const handleSwitchAssets = useCallback(() => {
-    const currentSellAsset = sellAssetId
-    const currentBuyAsset = buyAssetId
+    const currentSellAssetId = sellAssetId
+    const currentBuyAssetId = buyAssetId
 
-    setValue('sellAssetId', currentBuyAsset)
-    setValue('buyAssetId', currentSellAsset)
+    setValue('sellAssetId', currentBuyAssetId)
+    setValue('buyAssetId', currentSellAssetId)
   }, [sellAssetId, buyAssetId, setValue])
 
   return (
@@ -65,14 +72,14 @@ export const SelectPair = () => {
           Choose which assets to trade
         </Heading>
         <Flex alignItems='center' gap={4} color='text.subtle' width='full'>
-          <AssetSelection label='Deposit' onClick={handleFromAssetClick} assetId={sellAssetId} />
+          <AssetSelection label='Deposit' onClick={handleSellAssetClick} assetId={sellAssetId} />
           <IconButton
             variant='ghost'
             icon={switchIcon}
             aria-label='Switch assets'
             onClick={handleSwitchAssets}
           />
-          <AssetSelection label='Receive' onClick={handleToAssetClick} assetId={buyAssetId} />
+          <AssetSelection label='Receive' onClick={handleBuyAssetClick} assetId={buyAssetId} />
         </Flex>
         <Button
           size='lg'
