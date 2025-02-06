@@ -268,20 +268,6 @@ export const TradeInput = () => {
     [],
   )
 
-  const readOnlyInputStyles = useMemo(
-    () => ({
-      flex: 1,
-      variant: 'filled',
-      placeholder: `0.0 ${buyAsset?.symbol || 'ETH'}`,
-      isReadOnly: true,
-      value: buyAmountCryptoPrecision,
-      bg: 'background.surface.raised.base',
-      _hover: { bg: 'background.surface.raised.base' },
-      _focus: { bg: 'background.surface.raised.base' },
-    }),
-    [buyAmountCryptoPrecision, buyAsset?.symbol],
-  )
-
   useEffect(() => {
     const minAmountCryptoBaseUnit = quoteError?.response?.data.errors?.minimalAmountNative?.[0]
     if (quoteError?.response?.data.errors && minAmountCryptoBaseUnit && sellAsset?.precision) {
@@ -391,7 +377,7 @@ export const TradeInput = () => {
                 />
               </Skeleton>
             ) : (
-              <Input 
+              <Input
                 variant='filled'
                 placeholder={`0.0 ${buyAsset.symbol}`}
                 isReadOnly

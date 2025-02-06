@@ -1,4 +1,5 @@
 import { Center } from '@chakra-ui/react'
+import { btcAssetId, ethAssetId } from 'constants/caip'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useMemo } from 'react'
 import { FormProvider, useForm, useWatch } from 'react-hook-form'
@@ -7,7 +8,6 @@ import { ChatwootButton } from 'components/Chatwoot'
 import { SelectPair } from 'components/SelectPair'
 import { Status } from 'components/Status/Status'
 import { TradeInput } from 'components/TradeInput'
-import { btcAssetId, ethAssetId } from 'constants/caip'
 import type { SwapFormData } from 'types/form'
 
 const selectPair = <SelectPair />

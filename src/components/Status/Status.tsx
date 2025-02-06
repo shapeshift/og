@@ -13,6 +13,7 @@ import {
   Input,
   InputGroup,
   InputRightElement,
+  Link,
   SlideFade,
   Stack,
   Tag,
@@ -27,7 +28,15 @@ import { useChainflipStatusQuery } from 'queries/chainflip/status'
 import type { ChainflipSwapStatus } from 'queries/chainflip/types'
 import { useCallback, useEffect, useMemo } from 'react'
 import { useFormContext, useWatch } from 'react-hook-form'
-import { FaArrowDown, FaArrowRightArrowLeft, FaCheck, FaClock, FaRegCopy } from 'react-icons/fa6'
+import {
+  FaArrowDown,
+  FaArrowRightArrowLeft,
+  FaArrowUpRightFromSquare,
+  FaCheck,
+  FaClock,
+  FaRegCopy,
+  FaRotate,
+} from 'react-icons/fa6'
 import { useSearchParams } from 'react-router'
 import { useAssetById } from 'store/assets'
 import { Amount } from 'components/Amount/Amount'
@@ -43,6 +52,7 @@ const MOCK_SHAPESHIFT_FEE = 4.0
 const MOCK_PROTOCOL_FEE = '0.000'
 
 const pendingSlideFadeSx = { position: 'absolute', top: 0, left: 0, right: 0 } as const
+const linkHoverSx = { color: 'blue.600' }
 
 const copyIcon = <FaRegCopy />
 const checkIcon = <FaCheck />
@@ -136,6 +146,17 @@ const PendingSwapCardBody = ({
   }
 }) => {
   const getStatusConfig = (state?: string, swapEgress?: { transactionReference?: string }) => {
+    const retryCount = swapStatus?.status.swap?.regular?.retryCount ?? 0
+    const isRetrying = state === 'swapping' && retryCount > 0
+
+    if (isRetrying) {
+      return {
+        icon: FaRotate,
+        message: 'Retrying Swap...',
+        color: 'green.200',
+      }
+    }
+
     switch (state) {
       case 'waiting':
         return {
@@ -205,9 +226,21 @@ const PendingSwapCardBody = ({
         <Circle size='36px' bg={config.color} mb={3}>
           <StatusIcon size={18} color='black' />
         </Circle>
-        <Text fontSize='lg' fontWeight='medium'>
-          {config.message}
-        </Text>
+        <Flex gap={2} alignItems='center'>
+          <Text fontSize='lg' fontWeight='medium'>
+            {config.message}
+          </Text>
+          {swapStatus?.status.state !== 'waiting' && (
+            <Link
+              href={`https://scan.chainflip.io/swaps/${swapStatus?.status.swapId}`}
+              isExternal
+              color='blue.500'
+              _hover={linkHoverSx}
+            >
+              <FaArrowUpRightFromSquare size={14} />
+            </Link>
+          )}
+        </Flex>
         {isCompleted && (
           <VStack spacing={4} mt={2}>
             <Text fontSize='md' color='gray.500'>
@@ -313,7 +346,7 @@ export const Status = () => {
     if (destinationAddress) {
       copyReceiveAddress(destinationAddress)
     }
-  }, [copyToAddress, destinationAddress])
+  }, [destinationAddress, copyReceiveAddress])
 
   const handleCopyRefundAddress = useCallback(() => {
     if (refundAddress) {
@@ -341,7 +374,19 @@ export const Status = () => {
     <Card width='full' maxW='465px'>
       <CardHeader {...cardHeaderStyle}>
         <Text color='text.subtle'>Channel ID:</Text>
-        <Text>{swapData.channelId?.toString() || 'Loading...'}</Text>
+        <Flex gap={2} alignItems='center'>
+          <Text>{swapData.channelId?.toString() || 'Loading...'}</Text>
+          {swapData.channelId && (
+            <Link
+              href={`https://scan.chainflip.io/channels/${swapStatus?.status.depositChannel?.id}`}
+              isExternal
+              color='blue.500'
+              _hover={linkHoverSx}
+            >
+              <FaArrowUpRightFromSquare size={12} />
+            </Link>
+          )}
+        </Flex>
       </CardHeader>
       <Box position='relative' minH={isCompleted ? '250px' : '150px'}>
         <SlideFade in={!shouldDisplayPendingSwapBody} unmountOnExit>

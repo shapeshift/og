@@ -109,8 +109,10 @@ export type ChainflipSwapEgress = {
 
 export type ChainflipSwapStatus = {
   state: 'waiting' | 'receiving' | 'swapping' | 'sending' | 'sent' | 'completed' | 'failed'
+  swapId?: string
   swapEgress?: ChainflipSwapEgress
   depositChannel?: {
+    id: string
     estimatedExpiryTime: string
     isExpired: boolean
   }
@@ -119,6 +121,16 @@ export type ChainflipSwapStatus = {
   destinationAddress: string
   estimatedDurationSeconds: number
   fees: any[]
+  swap?: {
+    regular?: {
+      retryCount: number
+      inputAmount: number
+      inputAmountNative: string
+      scheduledAt: number
+      scheduledAtDate: string
+      scheduledBlockIndex: string
+    }
+  }
 }
 
 export type ChainflipStatusResponse = {
