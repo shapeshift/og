@@ -93,14 +93,8 @@ export const TradeInput = () => {
     buyAssetMarketData?.price,
   ])
 
-  const SellAssetIcon = useMemo(
-    () => <Avatar size='sm' src={sellAsset?.icon} />,
-    [sellAsset?.icon],
-  )
-  const BuyAssetIcon = useMemo(
-    () => <Avatar size='sm' src={buyAsset?.icon} />,
-    [buyAsset?.icon],
-  )
+  const SellAssetIcon = useMemo(() => <Avatar size='sm' src={sellAsset?.icon} />, [sellAsset?.icon])
+  const BuyAssetIcon = useMemo(() => <Avatar size='sm' src={buyAsset?.icon} />, [buyAsset?.icon])
   const SwitchIcon = useMemo(() => <FaArrowRightArrowLeft />, [])
 
   const { mutate: createSwap, isPending: isSwapPending } = useChainflipSwapMutation({
@@ -124,7 +118,7 @@ export const TradeInput = () => {
     },
   })
 
-  const onSubmit = useCallback(() => {
+  const handleSubmit = useCallback(() => {
     if (!(quote && sellAsset && buyAsset)) return
 
     const createSwapPayload = {
@@ -139,6 +133,14 @@ export const TradeInput = () => {
 
     createSwap(createSwapPayload)
   }, [quote, sellAsset, buyAsset, destinationAddress, refundAddress, createSwap])
+
+  const handleCardSubmit = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault()
+      if (isValid) handleSubmit()
+    },
+    [isValid, handleSubmit],
+  )
 
   const handleSellAssetClick = useCallback(() => {
     console.info('asset click')
@@ -277,19 +279,7 @@ export const TradeInput = () => {
   if (!(sellAsset && buyAsset)) return null
 
   return (
-    <Card
-      width='full'
-      maxWidth='450px'
-      overflow='hidden'
-      as='form'
-      onSubmit={useCallback(
-        (e: React.FormEvent) => {
-          e.preventDefault()
-          if (isValid) onSubmit()
-        },
-        [isValid, onSubmit],
-      )}
-    >
+    <Card width='full' maxWidth='450px' overflow='hidden' as='form' onSubmit={handleCardSubmit}>
       <CardHeader px={0} py={0} bg='background.surface.raised.base'>
         <Flex
           fontSize='sm'
@@ -358,21 +348,10 @@ export const TradeInput = () => {
             flex={1}
             variant='filled'
             placeholder={`Enter ${sellAsset.symbol} amount`}
-            value={sellAmountCryptoPrecision || ''}
+            value={sellAmountCryptoPrecision}
             onValueChange={handleSellAmountChange}
             allowNegative={false}
             decimalScale={sellAsset.precision}
-            thousandSeparator=','
-            allowLeadingZeros={false}
-            isAllowed={useCallback(
-              ({ value }: { value: string }) => {
-                if (!value) return true
-                if (!sellAsset.precision) return true
-                const [, decimals] = value.split('.')
-                return !decimals || decimals.length <= sellAsset.precision
-              },
-              [sellAsset.precision],
-            )}
           />
           {!buyAmountCryptoPrecision ? (
             <Skeleton height='40px' width='full' flex={1}>

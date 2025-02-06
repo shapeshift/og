@@ -42,6 +42,8 @@ import { StatusStepper } from './components/StatusStepper'
 const MOCK_SHAPESHIFT_FEE = 4.0
 const MOCK_PROTOCOL_FEE = '0.000'
 
+const pendingSlideFadeSx = { position: 'absolute', top: 0, left: 0, right: 0 } as const
+
 const copyIcon = <FaRegCopy />
 const checkIcon = <FaCheck />
 
@@ -75,7 +77,6 @@ const IdleSwapCardBody = ({
 }) => {
   const sellAsset = useAssetById(sellAssetId)
   const buyAsset = useAssetById(buyAssetId)
-
   const qrCodeIcon = useMemo(() => <Avatar size='xs' src={sellAsset?.icon} />, [sellAsset?.icon])
 
   if (!(sellAsset && buyAsset)) return null
@@ -343,11 +344,7 @@ export const Status = () => {
             isToAddressCopied={isToAddressCopied}
           />
         </SlideFade>
-        <SlideFade
-          in={shouldDisplayPendingSwapBody}
-          unmountOnExit
-          style={useMemo(() => ({ position: 'absolute', top: 0, left: 0, right: 0 }), [])}
-        >
+        <SlideFade in={shouldDisplayPendingSwapBody} unmountOnExit style={pendingSlideFadeSx}>
           <PendingSwapCardBody swapStatus={swapStatus} />
         </SlideFade>
       </Box>
