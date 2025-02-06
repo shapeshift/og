@@ -434,9 +434,7 @@ export const TradeInput = () => {
           colorScheme='blue'
           size='lg'
           width='full'
-          isDisabled={
-            !sellAmountCryptoBaseUnit || !destinationAddress || !refundAddress || !isValid
-          }
+          isDisabled={!quote}
           isLoading={isSwapPending}
           loadingText='Creating Swap'
         >
