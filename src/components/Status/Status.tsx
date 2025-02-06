@@ -38,7 +38,6 @@ import type { SwapFormData } from 'types/form'
 import type { StepProps } from './components/StatusStepper'
 import { StatusStepper } from './components/StatusStepper'
 
-// Mock values - will come from API later
 const MOCK_SHAPESHIFT_FEE = 4.0
 const MOCK_PROTOCOL_FEE = '0.000'
 
@@ -256,7 +255,6 @@ export const Status = () => {
   const { watch } = useFormContext<SwapFormData>()
   const { sellAmountCryptoBaseUnit, destinationAddress, sellAsset, buyAsset } = watch()
 
-  // Always call hooks unconditionally at the top level
   const fromAssetData = useAssetById(sellAsset || '')
   const toAssetData = useAssetById(buyAsset || '')
   const fromAsset = useMemo(
@@ -265,7 +263,6 @@ export const Status = () => {
   )
   const toAsset = useMemo(() => (buyAsset ? toAssetData : undefined), [buyAsset, toAssetData])
 
-  // Get quote for buy amount
   const quoteParams = useMemo(
     () => ({
       sourceAsset: fromAsset ? getChainflipAssetId(fromAsset.assetId) : '',
@@ -279,7 +276,6 @@ export const Status = () => {
     enabled: Boolean(fromAsset && toAsset && sellAmountCryptoBaseUnit),
   })
 
-  // Get swap data from URL params
   const swapData = useMemo(() => {
     const channelId = searchParams.get('channelId')
     const depositAddress = searchParams.get('depositAddress')
@@ -289,13 +285,11 @@ export const Status = () => {
     }
   }, [searchParams])
 
-  // Convert base units to crypto precision for display
   const sellAmountCryptoPrecision = useMemo(() => {
     if (!fromAsset?.precision || !sellAmountCryptoBaseUnit) return '0'
     return fromBaseUnit(sellAmountCryptoBaseUnit, fromAsset.precision)
   }, [fromAsset?.precision, sellAmountCryptoBaseUnit])
 
-  // Calculate buy amount from quote
   const buyAmountCryptoPrecision = useMemo(() => {
     if (!quote?.egressAmountNative || !toAsset?.precision) return '0'
     return fromBaseUnit(quote.egressAmountNative, toAsset.precision)
@@ -321,7 +315,6 @@ export const Status = () => {
     }
   }, [copyDepositAddress, swapData.address])
 
-  // Memoize style objects
   const cardHeaderStyle = useMemo(
     () => ({
       bg: 'background.surface.raised.base',

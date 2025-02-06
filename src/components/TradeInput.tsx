@@ -83,7 +83,7 @@ export const TradeInput = () => {
     if (quote?.egressAmountNative && toAsset?.precision) {
       return fromBaseUnit(quote.egressAmountNative, toAsset.precision)
     }
-    return undefined // Return undefined instead of null to indicate loading state
+    return undefined
   }, [quote?.egressAmountNative, toAsset?.precision])
 
   // Calculate rate using either quote or market data
@@ -91,12 +91,10 @@ export const TradeInput = () => {
     const sellBn = bnOrZero(sellAmountCryptoPrecision)
     if (sellBn.isZero()) return '0'
 
-    // If we have a quote, calculate rate from the quote amounts
     if (quote) {
       return bnOrZero(buyAmountCryptoPrecision).div(sellBn).toString()
     }
 
-    // Otherwise use market data as fallback
     if (fromMarketData?.price && toMarketData?.price) {
       const fromPrice = bnOrZero(fromMarketData.price)
       const toPrice = bnOrZero(toMarketData.price)
@@ -129,7 +127,6 @@ export const TradeInput = () => {
 
   const { mutate: createSwap, isPending: isSwapPending } = useChainflipSwapMutation({
     onSuccess: swapData => {
-      // Push form state into queryParams
       const formValues = watch()
       const searchParams = new URLSearchParams()
       Object.entries(formValues).forEach(([key, value]) => {
@@ -138,7 +135,6 @@ export const TradeInput = () => {
         }
       })
 
-      // And also push additional ones (i.e the ones not part of the form state)
       searchParams.set('swapId', swapData.id.toString())
       searchParams.set('channelId', swapData.channelId.toString())
       searchParams.set('depositAddress', swapData.address)

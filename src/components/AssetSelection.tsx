@@ -14,7 +14,6 @@ export const AssetSelection = memo(function AssetSelection({
   onClick,
   assetId,
 }: AssetSelectionProps) {
-  // Always call hooks unconditionally at the top level
   const assetData = useAssetById(assetId || '')
   const asset = useMemo(() => (assetId ? assetData : undefined), [assetId, assetData])
 

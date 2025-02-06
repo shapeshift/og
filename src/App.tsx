@@ -28,11 +28,10 @@ const fadeUpVariants = {
 
 const transition = {
   type: 'tween',
-  ease: [0.25, 0.1, 0.25, 1], // Using a custom easing curve
+  ease: [0.25, 0.1, 0.25, 1],
   duration: 0.3,
 }
 
-// Get variants based on the route change
 const getVariants = (pathname: string) => {
   if (pathname === '/status') return fadeUpVariants
   return slideVariants
@@ -43,7 +42,6 @@ function AppContent() {
   const location = useLocation()
   const isInitialMount = useRef(true)
 
-  // Initialize form with values from URL
   const defaultValues = useMemo(
     () => ({
       sellAsset: searchParams.get('sellAsset') || undefined,
@@ -61,10 +59,8 @@ function AppContent() {
     defaultValues,
   })
 
-  // Watch form changes and update URL regardless of validation state
   const formValues = useWatch({ control: methods.control })
 
-  // Sync form values to URL
   useEffect(() => {
     if (isInitialMount.current) {
       isInitialMount.current = false
@@ -73,7 +69,6 @@ function AppContent() {
 
     const params = new URLSearchParams(searchParams)
 
-    // Update URL with all form values, even if invalid
     Object.entries(formValues || {}).forEach(([key, value]) => {
       if (value) {
         params.set(key, String(value))
@@ -85,9 +80,7 @@ function AppContent() {
     setSearchParams(params, { replace: true })
   }, [formValues, setSearchParams, searchParams])
 
-  // Handle external URL changes
   useEffect(() => {
-    // Skip if it's just a route change without param changes
     const currentParams = Object.fromEntries(searchParams.entries())
     const hasParams = Object.keys(currentParams).length > 0
 
@@ -102,7 +95,6 @@ function AppContent() {
     }
   }, [searchParams, methods, defaultValues])
 
-  // Memoize route components
   const selectPairComponent = useMemo(() => <SelectPair />, [])
   const tradeInputComponent = useMemo(() => <TradeInput />, [])
   const statusComponent = useMemo(() => <Status />, [])
