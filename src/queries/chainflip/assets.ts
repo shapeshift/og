@@ -10,22 +10,10 @@ import {
   usdcOnSolanaAssetId,
   usdtAssetId,
 } from 'constants/caip'
+import mirror from 'lodash/invert'
 
 import { reactQueries } from '../react-queries'
 import type { ChainflipAssetsResponse } from './types'
-
-// Map Chainflip internal asset IDs to CAIPs
-const chainflipToAssetId: Record<string, string> = {
-  'btc.btc': btcAssetId,
-  'eth.arb': arbitrumAssetId,
-  'eth.eth': ethAssetId,
-  'flip.eth': flipAssetId,
-  'sol.sol': solAssetId,
-  'usdc.arb': usdcOnArbitrumOneAssetId,
-  'usdc.eth': usdcAssetId,
-  'usdc.sol': usdcOnSolanaAssetId,
-  'usdt.eth': usdtAssetId,
-}
 
 // Map CAIPs to Chainflip internal asset IDs
 const assetIdToChainflip: Record<string, string> = {
@@ -39,6 +27,9 @@ const assetIdToChainflip: Record<string, string> = {
   [usdcOnSolanaAssetId]: 'usdc.sol',
   [usdtAssetId]: 'usdt.eth',
 }
+
+// Map Chainflip internal asset IDs to CAIPs
+export const chainflipToAssetId = mirror(assetIdToChainflip)
 
 export const transformChainflipAssets = (data: ChainflipAssetsResponse) => {
   return data.assets.map(asset => chainflipToAssetId[asset.id]).filter(Boolean)
