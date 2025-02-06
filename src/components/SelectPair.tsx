@@ -33,7 +33,7 @@ export const SelectPair = () => {
     })
 
     navigate('/input')
-  }, [navigate])
+  }, [navigate, sellAsset, buyAsset])
 
   const handleSellAssetClick = useCallback(() => {
     setAssetSelectType(AssetType.SELL)
