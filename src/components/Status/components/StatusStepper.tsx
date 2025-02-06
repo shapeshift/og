@@ -1,82 +1,69 @@
-import {
-  Center,
-  CircularProgress,
-  Flex,
-  Progress,
-  Step,
-  Stepper,
-  StepStatus,
-  Text,
-} from '@chakra-ui/react'
+import { Box, Flex, Progress } from '@chakra-ui/react'
 import { useMemo } from 'react'
 import type { IconType } from 'react-icons'
-import { FaCheck } from 'react-icons/fa6'
 
 export type StepProps = {
   title: string
   icon: IconType
 }
 
-type StatusStepperProps = {
-  steps: StepProps[]
-  activeStep: number
-  colorScheme?: string
+const getProgressPercentage = (state?: string, isRefunded?: boolean, isFailed?: boolean) => {
+  if (isFailed) return 100 // Will be colored red
+  if (isRefunded) return 100 // Will be colored red
+
+  // Map states to progress percentages
+  switch (state) {
+    case 'waiting':
+      return 1
+    case 'receiving':
+      return 20
+    case 'swapping':
+      return 40
+    case 'sending':
+      return 60
+    case 'sent':
+      return 80
+    case 'completed':
+      return 100
+  }
 }
 
-const getProgressPercent = (activeStep: number): number => {
-  // 6 states total, so each state is worth 16.67% (100/6)
-  return Math.min((activeStep + 1) * (100 / 6), 100)
-}
-
-export const StatusStepper: React.FC<StatusStepperProps> = ({
-  steps,
-  activeStep,
-  colorScheme = 'green',
+export const StatusStepper = ({
+  state,
+  isRefunded,
+  isFailed,
+}: {
+  state?: string
+  isRefunded?: boolean
+  isFailed?: boolean
 }) => {
-  const CheckIcon = useMemo(() => <FaCheck />, [])
-  const LoadingIcon = useMemo(
-    () => <CircularProgress trackColor='background.surface.raised.base' size={5} isIndeterminate />,
-    [],
-  )
+  const progress = getProgressPercentage(state, isRefunded, isFailed)
 
-  const progressPercent = getProgressPercent(activeStep)
-
-  const renderSteps = useMemo(() => {
-    return steps.map((step, index) => {
-      return (
-        <Step key={index}>
-          <Center boxSize={5}>
-            <StepStatus complete={CheckIcon} incomplete={step.icon} active={LoadingIcon} />
-          </Center>
-          <Text fontSize='sm'>{step.title}</Text>
-        </Step>
-      )
-    })
-  }, [CheckIcon, LoadingIcon, steps])
+  const colorScheme = useMemo(() => {
+    if (isFailed || isRefunded) return 'red'
+    if (state === 'completed') return 'green'
+  }, [isFailed, isRefunded, state])
 
   return (
     <Flex
       bg='background.surface.raised.base'
-      py={4}
+      px={4}
       flexDir='column'
       gap={4}
       borderBottomWidth={1}
       borderColor='border.base'
     >
-      <Stepper size='lg' index={activeStep} variant='vert' gap={0}>
-        {renderSteps}
-      </Stepper>
-      <Flex px={4}>
-        <Progress
-          isAnimated
-          hasStripe
-          colorScheme={colorScheme}
-          borderRadius='full'
-          height='5px'
-          width='full'
-          value={progressPercent}
-        />
-      </Flex>
+      <Progress
+        isAnimated
+        hasStripe
+        value={progress}
+        size='sm'
+        colorScheme={colorScheme}
+        bg='gray.100'
+        borderRadius='full'
+        mb={4}
+      />
+      <Flex gap={4} justify='space-between'></Flex>
     </Flex>
   )
 }

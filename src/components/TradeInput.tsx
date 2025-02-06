@@ -45,7 +45,7 @@ export const TradeInput = () => {
     setValue,
     setError,
     clearErrors,
-    formState: { errors, isValid },
+    formState: { errors },
     control,
   } = useFormContext<SwapFormData>()
   const destinationAddress = useWatch({ control, name: 'destinationAddress' })
@@ -124,40 +124,37 @@ export const TradeInput = () => {
     },
   })
 
-  const handleSubmit = useCallback(() => {
-    if (!(quote && sellAsset && buyAsset)) return
-
-    const slippageTolerancePercentageDecimal = bnOrZero(
-      quote.recommendedSlippageTolerancePercent,
-    ).div(100)
-
-    // Calculate the rate first (buyAmount/sellAmount)
-    const estimatedRate = bnOrZero(quote.egressAmountNative).div(quote.ingressAmountNative)
-
-    // This is called minimumPrice upstream but this really is a rate, let's not honour confusing terminology
-    const minimumRate = estimatedRate
-      .times(bn(1).minus(slippageTolerancePercentageDecimal))
-      .toFixed(buyAsset.precision)
-
-    const createSwapPayload = {
-      sourceAsset: getChainflipAssetId(sellAsset.assetId),
-      destinationAsset: getChainflipAssetId(buyAsset.assetId),
-      destinationAddress: destinationAddress || '',
-      refundAddress: refundAddress || '',
-      minimumPrice: minimumRate,
-    }
-
-    mixpanel?.track(MixPanelEvent.StartTransaction, createSwapPayload)
-
-    createSwap(createSwapPayload)
-  }, [quote, sellAsset, buyAsset, destinationAddress, refundAddress, createSwap])
-
-  const handleCardSubmit = useCallback(
+  const handleSubmit = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault()
-      if (isValid) handleSubmit()
+
+      if (!(quote && sellAsset && buyAsset)) return
+
+      const slippageTolerancePercentageDecimal = bnOrZero(
+        quote.recommendedSlippageTolerancePercent,
+      ).div(100)
+
+      // Calculate the rate first (buyAmount/sellAmount)
+      const estimatedRate = bnOrZero(quote.egressAmountNative).div(quote.ingressAmountNative)
+
+      // This is called minimumPrice upstream but this really is a rate, let's not honour confusing terminology
+      const minimumRate = estimatedRate
+        .times(bn(1).minus(slippageTolerancePercentageDecimal))
+        .toFixed(buyAsset.precision)
+
+      const createSwapPayload = {
+        sourceAsset: getChainflipAssetId(sellAsset.assetId),
+        destinationAsset: getChainflipAssetId(buyAsset.assetId),
+        destinationAddress: destinationAddress || '',
+        refundAddress: refundAddress || '',
+        minimumPrice: minimumRate,
+      }
+
+      mixpanel?.track(MixPanelEvent.StartTransaction, createSwapPayload)
+
+      createSwap(createSwapPayload)
     },
-    [isValid, handleSubmit],
+    [quote, sellAsset, buyAsset, destinationAddress, refundAddress, createSwap],
   )
 
   const handleSellAssetClick = useCallback(() => {
@@ -296,7 +293,7 @@ export const TradeInput = () => {
   if (!(sellAsset && buyAsset)) return null
 
   return (
-    <Card width='full' maxWidth='450px' overflow='hidden' as='form' onSubmit={handleCardSubmit}>
+    <Card width='full' maxWidth='450px' overflow='hidden' as='form' onSubmit={handleSubmit}>
       <CardHeader px={0} py={0} bg='background.surface.raised.base'>
         <Flex
           fontSize='sm'

@@ -19,17 +19,19 @@ import {
   Stack,
   Tag,
   Text,
-  useSteps,
   VStack,
 } from '@chakra-ui/react'
 import type { AssetId } from '@shapeshiftoss/caip'
 import { useQueries } from '@tanstack/react-query'
+import dayjs from 'dayjs'
+import duration from 'dayjs/plugin/duration'
+import relativeTime from 'dayjs/plugin/relativeTime'
 import { chainflipToAssetId, getChainflipAssetId } from 'queries/chainflip/assets'
 import { useChainflipQuoteQuery } from 'queries/chainflip/quote'
 import { useChainflipStatusQuery } from 'queries/chainflip/status'
 import type { ChainflipQuote, ChainflipSwapStatus } from 'queries/chainflip/types'
 import { reactQueries } from 'queries/react-queries'
-import { useCallback, useEffect, useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
 import { useFormContext, useWatch } from 'react-hook-form'
 import {
   FaArrowDown,
@@ -50,25 +52,16 @@ import { fromBaseUnit } from 'lib/bignumber/conversion'
 import type { SwapFormData } from 'types/form'
 
 import { CHAINFLIP_COMMISSION_BPS } from '../../lib/const'
-import type { StepProps } from './components/StatusStepper'
 import { StatusStepper } from './components/StatusStepper'
+
+dayjs.extend(duration)
+dayjs.extend(relativeTime)
 
 const pendingSlideFadeSx = { position: 'absolute', top: 0, left: 0, right: 0 } as const
 const linkHoverSx = { color: 'blue.600' }
 
 const copyIcon = <FaRegCopy />
 const checkIcon = <FaCheck />
-
-const SWAP_STEPS: StepProps[] = [
-  {
-    title: 'Awaiting Deposit',
-    icon: FaArrowDown,
-  },
-  {
-    title: 'Awaiting Exchange',
-    icon: FaArrowRightArrowLeft,
-  },
-]
 
 const IdleSwapCardBody = ({
   swapData,
@@ -78,6 +71,9 @@ const IdleSwapCardBody = ({
   buyAmountCryptoPrecision,
   handleCopyDepositAddress,
   isDepositAddressCopied,
+  estimatedExpiryTime,
+  isStatusLoading,
+  isExpired,
 }: {
   swapData: { address: string; channelId?: number }
   sellAssetId: AssetId
@@ -86,21 +82,33 @@ const IdleSwapCardBody = ({
   buyAmountCryptoPrecision: string
   handleCopyDepositAddress: () => void
   isDepositAddressCopied: boolean
+  estimatedExpiryTime?: string
+  isStatusLoading: boolean
+  isExpired?: boolean
 }) => {
   const sellAsset = useAssetById(sellAssetId)
   const buyAsset = useAssetById(buyAssetId)
   const qrCodeIcon = useMemo(() => <Avatar size='xs' src={sellAsset?.icon} />, [sellAsset?.icon])
+
+  const timeToExpiry = useMemo(() => {
+    if (isStatusLoading) return 'N/A'
+    if (!estimatedExpiryTime) return 'N/A'
+    if (isExpired) return null
+    return dayjs.duration(dayjs(estimatedExpiryTime).diff(dayjs())).humanize()
+  }, [estimatedExpiryTime, isExpired, isStatusLoading])
 
   if (!(sellAsset && buyAsset)) return null
 
   return (
     <CardBody display='flex' flexDir='row-reverse' gap={6} px={4}>
       <Flex flexDir='column' gap={4}>
-        <Box bg='white' p={4} borderRadius='xl'>
-          <QRCode content={swapData.address || ''} width={150} icon={qrCodeIcon} />
-        </Box>
-        <Tag colorScheme='green' size='sm' justifyContent='center'>
-          Time remaining 06:23
+        {!isExpired && (
+          <Box bg='white' p={4} borderRadius='xl'>
+            <QRCode content={swapData.address || ''} width={150} icon={qrCodeIcon} />
+          </Box>
+        )}
+        <Tag colorScheme={isExpired ? 'red' : 'yellow'} size='sm' justifyContent='center'>
+          {isExpired ? 'Expired' : `Expires in: ${timeToExpiry}`}
         </Tag>
       </Flex>
       <Stack spacing={4} flex={1}>
@@ -111,22 +119,24 @@ const IdleSwapCardBody = ({
             <Amount.Crypto value={sellAmountCryptoPrecision} symbol={sellAsset.symbol} />
           </Flex>
         </Stack>
-        <Stack>
-          <Text fontWeight='bold'>To</Text>
-          <InputGroup>
-            <Input isReadOnly value={swapData.address || ''} />
-            <InputRightElement>
-              <IconButton
-                borderRadius='lg'
-                size='sm'
-                variant='ghost'
-                icon={isDepositAddressCopied ? checkIcon : copyIcon}
-                aria-label='Copy address'
-                onClick={handleCopyDepositAddress}
-              />
-            </InputRightElement>
-          </InputGroup>
-        </Stack>
+        {!isExpired && (
+          <Stack>
+            <Text fontWeight='bold'>To</Text>
+            <InputGroup>
+              <Input isReadOnly value={swapData.address || ''} />
+              <InputRightElement>
+                <IconButton
+                  borderRadius='lg'
+                  size='sm'
+                  variant='ghost'
+                  icon={isDepositAddressCopied ? checkIcon : copyIcon}
+                  aria-label='Copy address'
+                  onClick={handleCopyDepositAddress}
+                />
+              </InputRightElement>
+            </InputGroup>
+          </Stack>
+        )}
         <Divider borderColor='border.base' />
         <Stack>
           <Text fontWeight='bold'>You will receive</Text>
@@ -287,32 +297,16 @@ export const Status = () => {
   const [searchParams] = useSearchParams()
 
   const swapId = searchParams.get('swapId')
-  const { data: swapStatus } = useChainflipStatusQuery({
+  const { data: swapStatus, isLoading: isStatusLoading } = useChainflipStatusQuery({
     swapId: Number(swapId),
     enabled: Boolean(swapId),
   })
 
-  const isRefund = Boolean(swapStatus?.status.refundEgress)
-
-  const isCompleted = swapStatus?.status.state === 'completed' && !isRefund
+  const isCompleted = swapStatus?.status.state === 'completed'
   const shouldDisplayPendingSwapBody = useMemo(
     () => swapStatus?.status && swapStatus?.status.state !== 'waiting',
     [swapStatus?.status],
   )
-
-  const { activeStep, setActiveStep } = useSteps({
-    index: 0,
-    count: SWAP_STEPS.length,
-  })
-
-  useEffect(() => {
-    if (swapStatus?.status.state === 'completed') {
-      return setActiveStep(2)
-    }
-    if (shouldDisplayPendingSwapBody) {
-      return setActiveStep(1)
-    }
-  }, [shouldDisplayPendingSwapBody, setActiveStep, swapStatus?.status.state])
 
   const { control } = useFormContext<SwapFormData>()
 
@@ -355,30 +349,33 @@ export const Status = () => {
     return fromBaseUnit(quote.egressAmountNative, buyAsset.precision)
   }, [quote?.egressAmountNative, buyAsset?.precision])
 
+  const { copyToClipboard: copyToAddress, isCopied: isToAddressCopied } = useCopyToClipboard({
+    timeout: 3000,
+  })
   const { copyToClipboard: copyDepositAddress, isCopied: isDepositAddressCopied } =
-    useCopyToClipboard({
-      timeout: 3000,
-    })
+    useCopyToClipboard({ timeout: 3000 })
   const { copyToClipboard: copyReceiveAddress, isCopied: isReceiveAddressCopied } =
     useCopyToClipboard({ timeout: 3000 })
   const { copyToClipboard: copyRefundAddress, isCopied: isRefundAddressCopied } =
-    useCopyToClipboard({
-      timeout: 3000,
-    })
+    useCopyToClipboard({ timeout: 3000 })
+
+  const handleCopyToAddress = useCallback(() => {
+    if (swapData.address) {
+      copyToAddress(swapData.address)
+    }
+  }, [copyToAddress, swapData.address])
 
   const handleCopyDepositAddress = useCallback(() => {
-    const depositAddress = searchParams.get('depositAddress')
-
-    if (depositAddress) {
-      copyDepositAddress(depositAddress)
+    if (swapData.address) {
+      copyDepositAddress(swapData.address)
     }
-  }, [copyDepositAddress, destinationAddress])
+  }, [copyDepositAddress, swapData.address])
 
   const handleCopyReceiveAddress = useCallback(() => {
     if (destinationAddress) {
       copyReceiveAddress(destinationAddress)
     }
-  }, [destinationAddress, copyReceiveAddress])
+  }, [copyReceiveAddress, destinationAddress])
 
   const handleCopyRefundAddress = useCallback(() => {
     if (refundAddress) {
@@ -445,37 +442,34 @@ export const Status = () => {
     <Card width='full' maxW='465px'>
       <CardHeader {...cardHeaderStyle}>
         <Text color='text.subtle'>Channel ID:</Text>
-        <Flex gap={2} alignItems='center'>
-          <Text>{swapData.channelId?.toString() || 'Loading...'}</Text>
-          {swapData.channelId && (
-            <Link
-              href={`https://scan.chainflip.io/channels/${swapStatus?.status.depositChannel?.id}`}
-              isExternal
-              color='blue.500'
-              _hover={linkHoverSx}
-            >
-              <FaArrowUpRightFromSquare size={12} />
-            </Link>
-          )}
-        </Flex>
+        <Text>{swapData.channelId?.toString() || 'Loading...'}</Text>
       </CardHeader>
       <Box position='relative' minH={isCompleted ? '250px' : '150px'}>
         <SlideFade in={!shouldDisplayPendingSwapBody} unmountOnExit>
           <IdleSwapCardBody
+            swapData={swapData}
             sellAssetId={sellAssetId}
             buyAssetId={buyAssetId}
-            swapData={swapData}
             sellAmountCryptoPrecision={sellAmountCryptoPrecision}
             buyAmountCryptoPrecision={buyAmountCryptoPrecision}
             handleCopyDepositAddress={handleCopyDepositAddress}
             isDepositAddressCopied={isDepositAddressCopied}
+            estimatedExpiryTime={swapStatus?.status.depositChannel?.estimatedExpiryTime}
+            isStatusLoading={isStatusLoading}
+            isExpired={swapStatus?.status.depositChannel?.isExpired}
           />
         </SlideFade>
         <SlideFade in={shouldDisplayPendingSwapBody} unmountOnExit style={pendingSlideFadeSx}>
           <PendingSwapCardBody swapStatus={swapStatus} />
         </SlideFade>
       </Box>
-      <StatusStepper steps={SWAP_STEPS} activeStep={activeStep} />
+      <StatusStepper
+        state={swapStatus?.status.state}
+        isRefunded={
+          Boolean(swapStatus?.status.refundEgress) && swapStatus?.status.state === 'completed'
+        }
+        isFailed={swapStatus?.status.state === 'failed'}
+      />
       <CardFooter
         flexDir='column'
         gap={4}
@@ -522,6 +516,14 @@ export const Status = () => {
         </Stack>
         <Divider borderColor='border.base' />
         <Stack spacing={2}>
+          <Flex alignItems='center' justifyContent='space-between'>
+            <Text>Estimated Time</Text>
+            <Text>
+              {quote?.estimatedDurationSeconds
+                ? dayjs.duration(quote.estimatedDurationSeconds, 'seconds').humanize()
+                : 'N/A'}
+            </Text>
+          </Flex>
           <Flex alignItems='center' justifyContent='space-between'>
             <Text>Estimated Rate</Text>
             <Flex gap={1}>
