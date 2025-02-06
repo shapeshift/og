@@ -44,17 +44,17 @@ export const TradeInput = () => {
     setValue,
     formState: { errors, isValid },
   } = useFormContext<SwapFormData>()
-  const { sellAmountCryptoBaseUnit, destinationAddress, refundAddress, sellAsset, buyAsset } =
+  const { sellAmountCryptoBaseUnit, destinationAddress, refundAddress, sellAssetId, buyAssetId } =
     watch()
 
   // Always call hooks unconditionally at the top level
-  const fromAssetData = useAssetById(sellAsset || '')
-  const toAssetData = useAssetById(buyAsset || '')
+  const fromAssetData = useAssetById(sellAssetId || '')
+  const toAssetData = useAssetById(buyAssetId || '')
   const fromAsset = useMemo(
-    () => (sellAsset ? fromAssetData : undefined),
-    [sellAsset, fromAssetData],
+    () => (sellAssetId ? fromAssetData : undefined),
+    [sellAssetId, fromAssetData],
   )
-  const toAsset = useMemo(() => (buyAsset ? toAssetData : undefined), [buyAsset, toAssetData])
+  const toAsset = useMemo(() => (buyAssetId ? toAssetData : undefined), [buyAssetId, toAssetData])
 
   // Market data queries for fallback rates
   const { data: fromMarketData } = useMarketDataByAssetIdQuery(fromAsset?.assetId || '')
@@ -171,8 +171,8 @@ export const TradeInput = () => {
   }, [])
 
   const handleSwitchAssets = useCallback(() => {
-    const currentSellAsset = sellAsset
-    const currentBuyAsset = buyAsset
+    const currentSellAsset = sellAssetId
+    const currentBuyAsset = buyAssetId
     const currentFromAsset = fromAsset
     const currentToAsset = toAsset
 
@@ -208,11 +208,11 @@ export const TradeInput = () => {
       setValue('sellAmountCryptoBaseUnit', '')
     }
 
-    setValue('sellAsset', currentBuyAsset)
-    setValue('buyAsset', currentSellAsset)
+    setValue('sellAssetId', currentBuyAsset)
+    setValue('buyAssetId', currentSellAsset)
   }, [
-    sellAsset,
-    buyAsset,
+    sellAssetId,
+    buyAssetId,
     fromAsset,
     toAsset,
     fromMarketData?.price,
@@ -233,8 +233,8 @@ export const TradeInput = () => {
   // Validation functions at top level
   const validateDestinationAddress = useCallback(
     async (value: string) => {
-      if (!value || !buyAsset) return true
-      const { chainId } = fromAssetId(buyAsset)
+      if (!value || !buyAssetId) return true
+      const { chainId } = fromAssetId(buyAssetId)
       // If the value hasn't changed and was previously valid, return true immediately
       if (destinationAddress === value && !errors.destinationAddress) {
         return true
@@ -242,13 +242,13 @@ export const TradeInput = () => {
       const isValid = await validateAddress(value, chainId)
       return isValid || 'Invalid address format'
     },
-    [buyAsset, destinationAddress, errors.destinationAddress],
+    [buyAssetId, destinationAddress, errors.destinationAddress],
   )
 
   const validateRefundAddress = useCallback(
     async (value: string) => {
-      if (!value || !sellAsset) return true
-      const { chainId } = fromAssetId(sellAsset)
+      if (!value || !sellAssetId) return true
+      const { chainId } = fromAssetId(sellAssetId)
       // If the value hasn't changed and was previously valid, return true immediately
       if (refundAddress === value && !errors.refundAddress) {
         return true
@@ -256,7 +256,7 @@ export const TradeInput = () => {
       const isValid = await validateAddress(value, chainId)
       return isValid || 'Invalid address format'
     },
-    [sellAsset, refundAddress, errors.refundAddress],
+    [sellAssetId, refundAddress, errors.refundAddress],
   )
 
   // Validation rules using the memoized validation functions

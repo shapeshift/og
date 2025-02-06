@@ -253,15 +253,15 @@ export const Status = () => {
   }, [shouldDisplayPendingSwapBody, setActiveStep, swapStatus?.status.state])
 
   const { watch } = useFormContext<SwapFormData>()
-  const { sellAmountCryptoBaseUnit, destinationAddress, sellAsset, buyAsset } = watch()
+  const { sellAmountCryptoBaseUnit, destinationAddress, sellAssetId, buyAssetId } = watch()
 
-  const fromAssetData = useAssetById(sellAsset || '')
-  const toAssetData = useAssetById(buyAsset || '')
+  const fromAssetData = useAssetById(sellAssetId || '')
+  const toAssetData = useAssetById(buyAssetId || '')
   const fromAsset = useMemo(
-    () => (sellAsset ? fromAssetData : undefined),
-    [sellAsset, fromAssetData],
+    () => (sellAssetId ? fromAssetData : undefined),
+    [sellAssetId, fromAssetData],
   )
-  const toAsset = useMemo(() => (buyAsset ? toAssetData : undefined), [buyAsset, toAssetData])
+  const toAsset = useMemo(() => (buyAssetId ? toAssetData : undefined), [buyAssetId, toAssetData])
 
   const quoteParams = useMemo(
     () => ({

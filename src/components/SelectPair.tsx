@@ -16,7 +16,7 @@ export const SelectPair = () => {
   const [assetSelectType, setAssetSelectType] = useState<AssetType>(AssetType.BUY)
   const navigate = useNavigate()
   const { setValue, watch } = useFormContext<SwapFormData>()
-  const { sellAsset, buyAsset } = watch()
+  const { sellAssetId, buyAssetId } = watch()
 
   const switchIcon = useMemo(() => <FaArrowRightArrowLeft />, [])
 
@@ -41,22 +41,22 @@ export const SelectPair = () => {
   const handleAssetSelect = useCallback(
     (asset: Asset) => {
       if (assetSelectType === AssetType.BUY) {
-        setValue('buyAsset', asset.assetId, { shouldValidate: true })
+        setValue('buyAssetId', asset.assetId, { shouldValidate: true })
       }
       if (assetSelectType === AssetType.SELL) {
-        setValue('sellAsset', asset.assetId, { shouldValidate: true })
+        setValue('sellAssetId', asset.assetId, { shouldValidate: true })
       }
     },
     [assetSelectType, setValue],
   )
 
   const handleSwitchAssets = useCallback(() => {
-    const currentSellAsset = sellAsset
-    const currentBuyAsset = buyAsset
+    const currentSellAsset = sellAssetId
+    const currentBuyAsset = buyAssetId
 
-    setValue('sellAsset', currentBuyAsset)
-    setValue('buyAsset', currentSellAsset)
-  }, [sellAsset, buyAsset, setValue])
+    setValue('sellAssetId', currentBuyAsset)
+    setValue('buyAssetId', currentSellAsset)
+  }, [sellAssetId, buyAssetId, setValue])
 
   return (
     <Card width='full' maxWidth='450px'>
@@ -65,20 +65,20 @@ export const SelectPair = () => {
           Choose which assets to trade
         </Heading>
         <Flex alignItems='center' gap={4} color='text.subtle' width='full'>
-          <AssetSelection label='Deposit' onClick={handleFromAssetClick} assetId={sellAsset} />
+          <AssetSelection label='Deposit' onClick={handleFromAssetClick} assetId={sellAssetId} />
           <IconButton
             variant='ghost'
             icon={switchIcon}
             aria-label='Switch assets'
             onClick={handleSwitchAssets}
           />
-          <AssetSelection label='Receive' onClick={handleToAssetClick} assetId={buyAsset} />
+          <AssetSelection label='Receive' onClick={handleToAssetClick} assetId={buyAssetId} />
         </Flex>
         <Button
           size='lg'
           colorScheme='blue'
           onClick={handleSubmit}
-          isDisabled={!sellAsset || !buyAsset}
+          isDisabled={!sellAssetId || !buyAssetId}
         >
           Continue
         </Button>

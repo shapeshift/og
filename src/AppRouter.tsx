@@ -50,8 +50,8 @@ export const AppRouter = () => {
 
   const defaultValues = useMemo(
     () => ({
-      sellAsset: searchParams.get('sellAsset') || undefined,
-      buyAsset: searchParams.get('buyAsset') || undefined,
+      sellAssetId: searchParams.get('sellAssetId') || undefined,
+      buyAssetId: searchParams.get('buyAssetId') || undefined,
       sellAmountCryptoBaseUnit: searchParams.get('sellAmountCryptoBaseUnit') || undefined,
       destinationAddress: searchParams.get('destinationAddress') || undefined,
       refundAddress: searchParams.get('refundAddress') || undefined,
