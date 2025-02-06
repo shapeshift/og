@@ -31,7 +31,7 @@ import { useChainflipQuoteQuery } from 'queries/chainflip/quote'
 import { useChainflipStatusQuery } from 'queries/chainflip/status'
 import type { ChainflipQuote, ChainflipSwapStatus } from 'queries/chainflip/types'
 import { reactQueries } from 'queries/react-queries'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { useFormContext, useWatch } from 'react-hook-form'
 import { FaArrowDown, FaArrowRightArrowLeft, FaCheck, FaClock, FaRegCopy } from 'react-icons/fa6'
 import { useSearchParams } from 'react-router'
@@ -74,6 +74,9 @@ const IdleSwapCardBody = ({
   buyAmountCryptoPrecision,
   handleCopyToAddress,
   isToAddressCopied,
+  estimatedExpiryTime,
+  isStatusLoading,
+  isExpired,
 }: {
   swapData: { address: string; channelId?: number }
   sellAssetId: AssetId
@@ -82,21 +85,33 @@ const IdleSwapCardBody = ({
   buyAmountCryptoPrecision: string
   handleCopyToAddress: () => void
   isToAddressCopied: boolean
+  estimatedExpiryTime?: string
+  isStatusLoading: boolean
+  isExpired?: boolean
 }) => {
   const sellAsset = useAssetById(sellAssetId)
   const buyAsset = useAssetById(buyAssetId)
   const qrCodeIcon = useMemo(() => <Avatar size='xs' src={sellAsset?.icon} />, [sellAsset?.icon])
+
+  const timeToExpiry = useMemo(() => {
+    if (isStatusLoading) return 'N/A'
+    if (!estimatedExpiryTime) return 'N/A'
+    if (isExpired) return null
+    return dayjs.duration(dayjs(estimatedExpiryTime).diff(dayjs())).humanize()
+  }, [estimatedExpiryTime, isExpired, isStatusLoading])
 
   if (!(sellAsset && buyAsset)) return null
 
   return (
     <CardBody display='flex' flexDir='row-reverse' gap={6} px={4}>
       <Flex flexDir='column' gap={4}>
-        <Box bg='white' p={4} borderRadius='xl'>
-          <QRCode content={swapData.address || ''} width={150} icon={qrCodeIcon} />
-        </Box>
-        <Tag colorScheme='green' size='sm' justifyContent='center'>
-          Time remaining 06:23
+        {!isExpired && (
+          <Box bg='white' p={4} borderRadius='xl'>
+            <QRCode content={swapData.address || ''} width={150} icon={qrCodeIcon} />
+          </Box>
+        )}
+        <Tag colorScheme={isExpired ? 'red' : 'yellow'} size='sm' justifyContent='center'>
+          {isExpired ? 'Expired' : `Expires in: ${timeToExpiry}`}
         </Tag>
       </Flex>
       <Stack spacing={4} flex={1}>
@@ -107,22 +122,24 @@ const IdleSwapCardBody = ({
             <Amount.Crypto value={sellAmountCryptoPrecision} symbol={sellAsset.symbol} />
           </Flex>
         </Stack>
-        <Stack>
-          <Text fontWeight='bold'>To</Text>
-          <InputGroup>
-            <Input isReadOnly value={swapData.address || ''} />
-            <InputRightElement>
-              <IconButton
-                borderRadius='lg'
-                size='sm'
-                variant='ghost'
-                icon={isToAddressCopied ? checkIcon : copyIcon}
-                aria-label='Copy address'
-                onClick={handleCopyToAddress}
-              />
-            </InputRightElement>
-          </InputGroup>
-        </Stack>
+        {!isExpired && (
+          <Stack>
+            <Text fontWeight='bold'>To</Text>
+            <InputGroup>
+              <Input isReadOnly value={swapData.address || ''} />
+              <InputRightElement>
+                <IconButton
+                  borderRadius='lg'
+                  size='sm'
+                  variant='ghost'
+                  icon={isToAddressCopied ? checkIcon : copyIcon}
+                  aria-label='Copy address'
+                  onClick={handleCopyToAddress}
+                />
+              </InputRightElement>
+            </InputGroup>
+          </Stack>
+        )}
         <Divider borderColor='border.base' />
         <Stack>
           <Text fontWeight='bold'>You will receive</Text>
@@ -199,7 +216,6 @@ const PendingSwapCardBody = ({
   }
 
   const config = getStatusConfig(swapStatus?.status.state, swapStatus?.status.swapEgress)
-  console.log({ config, swapStatus })
   const StatusIcon = config.icon
   const isCompleted = swapStatus?.status.state === 'completed'
 
@@ -241,7 +257,7 @@ export const Status = () => {
   const [searchParams] = useSearchParams()
 
   const swapId = searchParams.get('swapId')
-  const { data: swapStatus } = useChainflipStatusQuery({
+  const { data: swapStatus, isLoading: isStatusLoading } = useChainflipStatusQuery({
     swapId: Number(swapId),
     enabled: Boolean(swapId),
   })
@@ -395,6 +411,9 @@ export const Status = () => {
             buyAmountCryptoPrecision={buyAmountCryptoPrecision}
             handleCopyToAddress={handleCopyToAddress}
             isToAddressCopied={isToAddressCopied}
+            estimatedExpiryTime={swapStatus?.status.depositChannel?.estimatedExpiryTime}
+            isStatusLoading={isStatusLoading}
+            isExpired={swapStatus?.status.depositChannel?.isExpired}
           />
         </SlideFade>
         <SlideFade in={shouldDisplayPendingSwapBody} unmountOnExit style={pendingSlideFadeSx}>

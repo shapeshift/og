@@ -2,6 +2,7 @@ import type { inferQueryKeyStore } from '@lukemorales/query-key-factory'
 import { createMutationKeys, createQueryKeyStore } from '@lukemorales/query-key-factory'
 import axios from 'axios'
 
+import { CHAINFLIP_COMMISSION_BPS } from '../lib/const'
 import type {
   ChainflipAssetsResponse,
   ChainflipQuote,
@@ -11,7 +12,6 @@ import type {
   ChainflipSwapResponse,
 } from './chainflip/types'
 import { findByAssetId } from './marketData'
-import { CHAINFLIP_COMMISSION_BPS } from '../lib/const'
 
 const CHAINFLIP_API_URL = import.meta.env.VITE_CHAINFLIP_API_URL
 const CHAINFLIP_API_KEY = import.meta.env.VITE_CHAINFLIP_API_KEY
