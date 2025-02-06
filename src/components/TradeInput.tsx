@@ -375,8 +375,6 @@ export const TradeInput = () => {
                 isReadOnly
                 value=''
                 bg='background.surface.raised.base'
-                _hover={{ bg: 'background.surface.raised.base' }}
-                _focus={{ bg: 'background.surface.raised.base' }}
               />
             </Skeleton>
           ) : (
@@ -387,8 +385,6 @@ export const TradeInput = () => {
               isReadOnly
               value={buyAmountCryptoPrecision}
               bg='background.surface.raised.base'
-              _hover={{ bg: 'background.surface.raised.base' }}
-              _focus={{ bg: 'background.surface.raised.base' }}
             />
           )}
         </Flex>
