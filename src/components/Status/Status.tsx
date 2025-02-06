@@ -349,21 +349,12 @@ export const Status = () => {
     return fromBaseUnit(quote.egressAmountNative, buyAsset.precision)
   }, [quote?.egressAmountNative, buyAsset?.precision])
 
-  const { copyToClipboard: copyToAddress, isCopied: isToAddressCopied } = useCopyToClipboard({
-    timeout: 3000,
-  })
   const { copyToClipboard: copyDepositAddress, isCopied: isDepositAddressCopied } =
     useCopyToClipboard({ timeout: 3000 })
   const { copyToClipboard: copyReceiveAddress, isCopied: isReceiveAddressCopied } =
     useCopyToClipboard({ timeout: 3000 })
   const { copyToClipboard: copyRefundAddress, isCopied: isRefundAddressCopied } =
     useCopyToClipboard({ timeout: 3000 })
-
-  const handleCopyToAddress = useCallback(() => {
-    if (swapData.address) {
-      copyToAddress(swapData.address)
-    }
-  }, [copyToAddress, swapData.address])
 
   const handleCopyDepositAddress = useCallback(() => {
     if (swapData.address) {

@@ -1,4 +1,4 @@
-import { Box, Flex, Progress } from '@chakra-ui/react'
+import { Flex, Progress } from '@chakra-ui/react'
 import { useMemo } from 'react'
 import type { IconType } from 'react-icons'
 
@@ -25,6 +25,8 @@ const getProgressPercentage = (state?: string, isRefunded?: boolean, isFailed?: 
       return 80
     case 'completed':
       return 100
+    default:
+      return 0
   }
 }
 

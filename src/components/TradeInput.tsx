@@ -154,7 +154,16 @@ export const TradeInput = () => {
 
       createSwap(createSwapPayload)
     },
-    [quote, sellAsset, buyAsset, destinationAddress, refundAddress, createSwap],
+    [
+      quote,
+      sellAsset,
+      buyAsset,
+      destinationAddress,
+      refundAddress,
+      createSwap,
+      buyAmountCryptoPrecision,
+      sellAmountCryptoPrecision,
+    ],
   )
 
   const handleSellAssetClick = useCallback(() => {
