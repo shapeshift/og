@@ -362,7 +362,7 @@ export const TradeInput = () => {
           </Flex>
         </Flex>
         <Flex gap={6}>
-          <Flex direction='column' flex={1}>
+          <Flex direction='column' width='50%'>
             <NumericFormat
               customInput={Input}
               variant='filled'
@@ -379,19 +379,27 @@ export const TradeInput = () => {
               </Text>
             )}
           </Flex>
-          {!buyAmountCryptoPrecision ? (
-            <Skeleton height='40px' width='full' flex={1}>
-              <Input
+          <Flex width='50%'>
+            {isQuoteFetching ? (
+              <Skeleton height='40px' width='full'>
+                <Input
+                  variant='filled'
+                  placeholder={`0.0 ${buyAsset.symbol}`}
+                  isReadOnly
+                  value=''
+                  {...skeletonInputStyles}
+                />
+              </Skeleton>
+            ) : (
+              <Input 
                 variant='filled'
                 placeholder={`0.0 ${buyAsset.symbol}`}
                 isReadOnly
-                value=''
+                value={buyAmountCryptoPrecision || 'N/A'}
                 {...skeletonInputStyles}
               />
-            </Skeleton>
-          ) : (
-            <Input {...readOnlyInputStyles} />
-          )}
+            )}
+          </Flex>
         </Flex>
         <Flex direction='column' gap={2}>
           <Text fontSize='sm' color='text.subtle'>
