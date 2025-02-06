@@ -11,6 +11,7 @@ import type {
   ChainflipSwapResponse,
 } from './chainflip/types'
 import { findByAssetId } from './marketData'
+import { CHAINFLIP_COMMISSION_BPS } from '../lib/const'
 
 const CHAINFLIP_API_URL = import.meta.env.VITE_CHAINFLIP_API_URL
 const CHAINFLIP_API_KEY = import.meta.env.VITE_CHAINFLIP_API_KEY
@@ -22,6 +23,7 @@ const createSwap = async (params: ChainflipSwapParams): Promise<ChainflipSwapRes
       ...params,
       boostFee: params.maxBoostFee ?? 0,
       retryDurationInBlocks: params.retryDurationInBlocks ?? 150,
+      commissionBps: CHAINFLIP_COMMISSION_BPS,
     },
   })
   return data
@@ -56,7 +58,7 @@ export const reactQueries = createQueryKeyStore({
             sourceAsset: params.sourceAsset,
             destinationAsset: params.destinationAsset,
             amount: params.amount,
-            ...(params.commissionBps && { commissionBps: params.commissionBps }),
+            commissionBps: CHAINFLIP_COMMISSION_BPS,
           },
         })
         return data[0]
