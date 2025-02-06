@@ -8,19 +8,19 @@ import type { Asset } from '../types/assets'
 interface AssetsState {
   byId: Record<AssetId, Asset>
   ids: AssetId[]
-  getAssetById: (assetId: AssetId) => Asset
+  getAssetById: <T extends AssetId | undefined>(assetId: T) => T extends AssetId ? Asset : undefined
   getAllAssets: () => Asset[]
 }
 
 export const useAssetsStore = create<AssetsState>((_set, get) => ({
   byId: initialAssetsById,
   ids: Object.keys(initialAssetsById),
-  getAssetById: (assetId: AssetId) => get().byId[assetId],
+  getAssetById: ((assetId: AssetId | undefined) => assetId ? get().byId[assetId] : undefined) as AssetsState['getAssetById'],
   getAllAssets: () => get().ids.map(id => get().byId[id]),
 }))
 
-export const useAssetById = (assetId: AssetId | undefined) => {
-  return useAssetsStore(state => state.byId[assetId ?? ''])
+export const useAssetById = <T extends AssetId | undefined>(assetId: T): T extends AssetId ? Asset : undefined => {
+  return useAssetsStore(state => state.getAssetById(assetId)) as T extends AssetId ? Asset : undefined
 }
 
 export const useAllAssets = () => {
