@@ -83,7 +83,7 @@ function AppContent() {
     })
 
     setSearchParams(params, { replace: true })
-  }, [formValues, setSearchParams])
+  }, [formValues, setSearchParams, searchParams])
 
   // Handle external URL changes
   useEffect(() => {
@@ -102,6 +102,11 @@ function AppContent() {
     }
   }, [searchParams, methods, defaultValues])
 
+  // Memoize route components
+  const selectPairComponent = useMemo(() => <SelectPair />, [])
+  const tradeInputComponent = useMemo(() => <TradeInput />, [])
+  const statusComponent = useMemo(() => <Status />, [])
+
   return (
     <FormProvider {...methods}>
       <Center width='full' height='100vh' flexDir='column'>
@@ -115,15 +120,15 @@ function AppContent() {
             transition={transition}
             style={{
               width: '100%',
-              maxWidth: '450px', // Match the TradeInput max width
+              maxWidth: '450px',
               display: 'flex',
               justifyContent: 'center',
             }}
           >
             <Routes location={location}>
-              <Route path='/' element={<SelectPair />} />
-              <Route path='/input' element={<TradeInput />} />
-              <Route path='/status' element={<Status />} />
+              <Route path='/' element={selectPairComponent} />
+              <Route path='/input' element={tradeInputComponent} />
+              <Route path='/status' element={statusComponent} />
             </Routes>
           </motion.div>
         </AnimatePresence>

@@ -17,7 +17,6 @@ import {
   Text,
 } from '@chakra-ui/react'
 import { fromAssetId } from '@shapeshiftoss/caip'
-import { NumericFormat } from 'react-number-format'
 import { getChainflipAssetId } from 'queries/chainflip/assets'
 import { useChainflipQuoteQuery } from 'queries/chainflip/quote'
 import { useChainflipSwapMutation } from 'queries/chainflip/swap'
@@ -25,6 +24,7 @@ import { useMarketDataByAssetIdQuery } from 'queries/marketData'
 import { useCallback, useMemo } from 'react'
 import { useFormContext } from 'react-hook-form'
 import { FaArrowRightArrowLeft } from 'react-icons/fa6'
+import { NumericFormat } from 'react-number-format'
 import { useNavigate } from 'react-router'
 import { useAssetById } from 'store/assets'
 import { bnOrZero } from 'lib/bignumber/bignumber'
@@ -280,16 +280,43 @@ export const TradeInput = () => {
     [validateRefundAddress],
   )
 
+  // Memoize style objects
+  const skeletonInputStyles = useMemo(
+    () => ({
+      bg: 'background.surface.raised.base',
+      _hover: { bg: 'background.surface.raised.base' },
+      _focus: { bg: 'background.surface.raised.base' },
+    }),
+    [],
+  )
+
+  const readOnlyInputStyles = useMemo(
+    () => ({
+      flex: 1,
+      variant: 'filled',
+      placeholder: `0.0 ${toAsset?.symbol || 'ETH'}`,
+      isReadOnly: true,
+      value: buyAmountCryptoPrecision,
+      bg: 'background.surface.raised.base',
+      _hover: { bg: 'background.surface.raised.base' },
+      _focus: { bg: 'background.surface.raised.base' },
+    }),
+    [buyAmountCryptoPrecision, toAsset?.symbol],
+  )
+
   return (
     <Card
       width='full'
       maxWidth='450px'
       overflow='hidden'
       as='form'
-      onSubmit={e => {
-        e.preventDefault()
-        if (isValid) onSubmit()
-      }}
+      onSubmit={useCallback(
+        (e: React.FormEvent) => {
+          e.preventDefault()
+          if (isValid) onSubmit()
+        },
+        [isValid, onSubmit],
+      )}
     >
       <CardHeader px={0} py={0} bg='background.surface.raised.base'>
         <Flex
@@ -368,12 +395,15 @@ export const TradeInput = () => {
             decimalScale={fromAsset?.precision}
             thousandSeparator=','
             allowLeadingZeros={false}
-            isAllowed={({ value }) => {
-              if (!value) return true
-              if (!fromAsset?.precision) return true
-              const [, decimals] = value.split('.')
-              return !decimals || decimals.length <= fromAsset.precision
-            }}
+            isAllowed={useCallback(
+              ({ value }: { value: string }) => {
+                if (!value) return true
+                if (!fromAsset?.precision) return true
+                const [, decimals] = value.split('.')
+                return !decimals || decimals.length <= fromAsset.precision
+              },
+              [fromAsset?.precision],
+            )}
           />
           {!buyAmountCryptoPrecision ? (
             <Skeleton height='40px' width='full' flex={1}>
@@ -382,22 +412,11 @@ export const TradeInput = () => {
                 placeholder={`0.0 ${toAsset?.symbol || 'ETH'}`}
                 isReadOnly
                 value=''
-                bg='background.surface.raised.base'
-                _hover={{ bg: 'background.surface.raised.base' }}
-                _focus={{ bg: 'background.surface.raised.base' }}
+                {...skeletonInputStyles}
               />
             </Skeleton>
           ) : (
-            <Input
-              flex={1}
-              variant='filled'
-              placeholder={`0.0 ${toAsset?.symbol || 'ETH'}`}
-              isReadOnly
-              value={buyAmountCryptoPrecision}
-              bg='background.surface.raised.base'
-              _hover={{ bg: 'background.surface.raised.base' }}
-              _focus={{ bg: 'background.surface.raised.base' }}
-            />
+            <Input {...readOnlyInputStyles} />
           )}
         </Flex>
         <Flex direction='column' gap={2}>

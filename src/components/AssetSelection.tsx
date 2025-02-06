@@ -1,6 +1,6 @@
 import { Avatar, Button, Text } from '@chakra-ui/react'
 import type { AssetId } from '@shapeshiftoss/caip'
-import { memo } from 'react'
+import { memo, useMemo } from 'react'
 import { useAssetById } from 'store/assets'
 
 type AssetSelectionProps = {
@@ -14,7 +14,9 @@ export const AssetSelection = memo(function AssetSelection({
   onClick,
   assetId,
 }: AssetSelectionProps) {
-  const asset = assetId ? useAssetById(assetId) : undefined
+  // Always call hooks unconditionally at the top level
+  const assetData = useAssetById(assetId || '')
+  const asset = useMemo(() => (assetId ? assetData : undefined), [assetId, assetData])
 
   return (
     <Button flexDir='column' height='auto' py={4} gap={4} flex={1} onClick={onClick}>

@@ -6,9 +6,7 @@ import {
   CardBody,
   CardFooter,
   CardHeader,
-  Center,
   Circle,
-  Collapse,
   Divider,
   Flex,
   IconButton,
@@ -25,7 +23,7 @@ import {
 import { getChainflipAssetId } from 'queries/chainflip/assets'
 import { useChainflipQuoteQuery } from 'queries/chainflip/quote'
 import { useChainflipStatusQuery } from 'queries/chainflip/status'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { useFormContext } from 'react-hook-form'
 import { FaArrowDown, FaArrowRightArrowLeft, FaCheck, FaClock, FaRegCopy } from 'react-icons/fa6'
 import { useSearchParams } from 'react-router'
@@ -41,7 +39,6 @@ import type { StepProps } from './components/StatusStepper'
 import { StatusStepper } from './components/StatusStepper'
 
 // Mock values - will come from API later
-const MOCK_CHANNEL_ID = '0xa5567...8c'
 const MOCK_SHAPESHIFT_FEE = 4.0
 const MOCK_PROTOCOL_FEE = '0.000'
 
@@ -75,16 +72,13 @@ const IdleSwapCardBody = ({
 }) => {
   const CopyIcon = useMemo(() => <FaRegCopy />, [])
   const CheckIcon = useMemo(() => <FaCheck />, [])
+  const qrCodeIcon = useMemo(() => <Avatar size='xs' src={fromAsset?.icon} />, [fromAsset?.icon])
 
   return (
     <CardBody display='flex' flexDir='row-reverse' gap={6} px={4}>
       <Flex flexDir='column' gap={4}>
         <Box bg='white' p={4} borderRadius='xl'>
-          <QRCode
-            content={swapData.address || ''}
-            width={150}
-            icon={<Avatar size='xs' src={fromAsset?.icon} />}
-          />
+          <QRCode content={swapData.address || ''} width={150} icon={qrCodeIcon} />
         </Box>
         <Tag colorScheme='green' size='sm' justifyContent='center'>
           Time remaining 06:23
@@ -242,7 +236,7 @@ export const Status = () => {
   const isCompleted = swapStatus?.status.state === 'completed'
   const shouldDisplayPendingSwapBody = useMemo(
     () => swapStatus?.status && swapStatus?.status.state !== 'waiting',
-    [swapStatus],
+    [swapStatus?.status],
   )
 
   const { activeStep, setActiveStep } = useSteps({
@@ -257,26 +251,33 @@ export const Status = () => {
     if (shouldDisplayPendingSwapBody) {
       return setActiveStep(1)
     }
-  }, [shouldDisplayPendingSwapBody, setActiveStep])
+  }, [shouldDisplayPendingSwapBody, setActiveStep, swapStatus?.status.state])
 
   const { watch } = useFormContext<SwapFormData>()
-  const { sellAmountCryptoBaseUnit, destinationAddress, refundAddress, sellAsset, buyAsset } =
-    watch()
+  const { sellAmountCryptoBaseUnit, destinationAddress, sellAsset, buyAsset } = watch()
 
-  const fromAsset = sellAsset ? useAssetById(sellAsset) : undefined
-  const toAsset = buyAsset ? useAssetById(buyAsset) : undefined
+  // Always call hooks unconditionally at the top level
+  const fromAssetData = useAssetById(sellAsset || '')
+  const toAssetData = useAssetById(buyAsset || '')
+  const fromAsset = useMemo(
+    () => (sellAsset ? fromAssetData : undefined),
+    [sellAsset, fromAssetData],
+  )
+  const toAsset = useMemo(() => (buyAsset ? toAssetData : undefined), [buyAsset, toAssetData])
 
   // Get quote for buy amount
-  const { data: quote } = useChainflipQuoteQuery(
-    {
+  const quoteParams = useMemo(
+    () => ({
       sourceAsset: fromAsset ? getChainflipAssetId(fromAsset.assetId) : '',
       destinationAsset: toAsset ? getChainflipAssetId(toAsset.assetId) : '',
       amount: sellAmountCryptoBaseUnit,
-    },
-    {
-      enabled: Boolean(fromAsset && toAsset && sellAmountCryptoBaseUnit),
-    },
+    }),
+    [fromAsset, toAsset, sellAmountCryptoBaseUnit],
   )
+
+  const { data: quote } = useChainflipQuoteQuery(quoteParams, {
+    enabled: Boolean(fromAsset && toAsset && sellAmountCryptoBaseUnit),
+  })
 
   // Get swap data from URL params
   const swapData = useMemo(() => {
@@ -320,17 +321,23 @@ export const Status = () => {
     }
   }, [copyDepositAddress, swapData.address])
 
+  // Memoize style objects
+  const cardHeaderStyle = useMemo(
+    () => ({
+      bg: 'background.surface.raised.base',
+      display: 'flex',
+      justifyContent: 'center',
+      gap: 1,
+      borderTopRadius: 'xl',
+      fontSize: 'sm',
+      py: 2,
+    }),
+    [],
+  )
+
   return (
     <Card width='full' maxW='465px'>
-      <CardHeader
-        bg='background.surface.raised.base'
-        display='flex'
-        justifyContent='center'
-        gap={1}
-        borderTopRadius='xl'
-        fontSize='sm'
-        py={2}
-      >
+      <CardHeader {...cardHeaderStyle}>
         <Text color='text.subtle'>Channel ID:</Text>
         <Text>{swapData.channelId?.toString() || 'Loading...'}</Text>
       </CardHeader>
@@ -349,7 +356,7 @@ export const Status = () => {
         <SlideFade
           in={shouldDisplayPendingSwapBody}
           unmountOnExit
-          style={{ position: 'absolute', top: 0, left: 0, right: 0 }}
+          style={useMemo(() => ({ position: 'absolute', top: 0, left: 0, right: 0 }), [])}
         >
           <PendingSwapCardBody swapStatus={swapStatus} />
         </SlideFade>
