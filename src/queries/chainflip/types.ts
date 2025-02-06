@@ -131,6 +131,16 @@ export type ChainflipSwapStatus = {
       scheduledBlockIndex: string
     }
   }
+  refundEgress?: {
+    amountNative: string
+    amount: number
+    scheduledAt: number
+    scheduledAtDate: string
+    scheduledBlockIndex: string
+    transactionReference?: string
+    witnessedAt?: number
+    witnessedBlockIndex?: string
+  }
 }
 
 export type ChainflipStatusResponse = {

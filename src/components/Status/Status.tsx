@@ -148,6 +148,24 @@ const PendingSwapCardBody = ({
   const getStatusConfig = (state?: string, swapEgress?: { transactionReference?: string }) => {
     const retryCount = swapStatus?.status.swap?.regular?.retryCount ?? 0
     const isRetrying = state === 'swapping' && retryCount > 0
+    const isRefund = Boolean(swapStatus?.status.refundEgress)
+    const isRefunded = isRefund && state === 'completed'
+
+    if (isRefunded) {
+      return {
+        icon: FaCheck,
+        message: 'Refunded',
+        color: 'green.200',
+      }
+    }
+
+    if (isRefund) {
+      return {
+        icon: FaArrowDown,
+        message: 'Refunding...',
+        color: 'green.200',
+      }
+    }
 
     if (isRetrying) {
       return {
@@ -215,6 +233,7 @@ const PendingSwapCardBody = ({
   console.log({ config, swapStatus })
   const StatusIcon = config.icon
   const isCompleted = swapStatus?.status.state === 'completed'
+  const isRefunded = Boolean(swapStatus?.status.refundEgress) && isCompleted
 
   const handleLaunchApp = useCallback(() => {
     window.open('https://app.shapeshift.com', '_blank')
@@ -241,7 +260,7 @@ const PendingSwapCardBody = ({
             </Link>
           )}
         </Flex>
-        {isCompleted && (
+        {isCompleted && !isRefunded && (
           <VStack spacing={4} mt={2}>
             <Text fontSize='md' color='gray.500'>
               Do more with the ShapeShift platform
@@ -265,7 +284,9 @@ export const Status = () => {
     enabled: Boolean(swapId),
   })
 
-  const isCompleted = swapStatus?.status.state === 'completed'
+  const isRefund = Boolean(swapStatus?.status.refundEgress)
+
+  const isCompleted = swapStatus?.status.state === 'completed' && !isRefund
   const shouldDisplayPendingSwapBody = useMemo(
     () => swapStatus?.status && swapStatus?.status.state !== 'waiting',
     [swapStatus?.status],
