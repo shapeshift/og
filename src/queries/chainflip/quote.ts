@@ -22,5 +22,6 @@ export const useChainflipQuoteQuery = ({
   return useQuery<ChainflipQuote, Error, ChainflipQuote, QuoteQueryKey>({
     queryKey,
     queryFn: sourceAsset && destinationAsset && bnOrZero(amount).gt(0) ? queryFn : skipToken,
+    retry: false,
   })
 }

@@ -275,6 +275,8 @@ export const TradeInput = () => {
     [buyAmountCryptoPrecision, buyAsset?.symbol],
   )
 
+  if (!(sellAsset && buyAsset)) return null
+
   return (
     <Card
       width='full'
@@ -300,8 +302,8 @@ export const TradeInput = () => {
           <Text color='text.subtle'>Your rate</Text>
           <Skeleton isLoaded={!isQuoteFetching}>
             <Flex gap={1}>
-              <Amount.Crypto value='1' symbol={sellAsset?.symbol || 'BTC'} suffix='=' />
-              <Amount.Crypto value={rate} symbol={buyAsset?.symbol || 'ETH'} />
+              <Amount.Crypto value='1' symbol={sellAsset.symbol} suffix='=' />
+              <Amount.Crypto value={rate} symbol={buyAsset.symbol} />
             </Flex>
           </Skeleton>
         </Flex>
@@ -309,22 +311,16 @@ export const TradeInput = () => {
           <Stat size='sm' textAlign='center' py={4}>
             <StatLabel color='text.subtle'>Deposit This</StatLabel>
             <StatNumber>
-              <Amount.Crypto
-                value={sellAmountCryptoPrecision || '0'}
-                symbol={sellAsset?.symbol || 'BTC'}
-              />
+              <Amount.Crypto value={sellAmountCryptoPrecision || '0'} symbol={sellAsset.symbol} />
             </StatNumber>
           </Stat>
           <Stat size='sm' textAlign='center' py={4}>
             <StatLabel color='text.subtle'>To Get This</StatLabel>
             <StatNumber>
-              {!buyAmountCryptoPrecision ? (
+              {isQuoteFetching ? (
                 <Skeleton height='24px' width='100px' />
               ) : (
-                <Amount.Crypto
-                  value={buyAmountCryptoPrecision}
-                  symbol={buyAsset?.symbol || 'ETH'}
-                />
+                <Amount.Crypto value={buyAmountCryptoPrecision ?? '0'} symbol={buyAsset.symbol} />
               )}
             </StatNumber>
           </Stat>
@@ -362,28 +358,28 @@ export const TradeInput = () => {
             customInput={Input}
             flex={1}
             variant='filled'
-            placeholder={`Enter ${sellAsset?.symbol || 'BTC'} amount`}
+            placeholder={`Enter ${sellAsset.symbol} amount`}
             value={sellAmountCryptoPrecision || ''}
             onValueChange={handleSellAmountChange}
             allowNegative={false}
-            decimalScale={sellAsset?.precision}
+            decimalScale={sellAsset.precision}
             thousandSeparator=','
             allowLeadingZeros={false}
             isAllowed={useCallback(
               ({ value }: { value: string }) => {
                 if (!value) return true
-                if (!sellAsset?.precision) return true
+                if (!sellAsset.precision) return true
                 const [, decimals] = value.split('.')
                 return !decimals || decimals.length <= sellAsset.precision
               },
-              [sellAsset?.precision],
+              [sellAsset.precision],
             )}
           />
           {!buyAmountCryptoPrecision ? (
             <Skeleton height='40px' width='full' flex={1}>
               <Input
                 variant='filled'
-                placeholder={`0.0 ${buyAsset?.symbol || 'ETH'}`}
+                placeholder={`0.0 ${buyAsset.symbol}`}
                 isReadOnly
                 value=''
                 {...skeletonInputStyles}
@@ -399,7 +395,7 @@ export const TradeInput = () => {
           </Text>
           <Input
             {...register('destinationAddress', destinationAddressRules)}
-            placeholder={`Enter ${buyAsset?.symbol || ''} address`}
+            placeholder={`Enter ${buyAsset.symbol || ''} address`}
             isInvalid={!!errors.destinationAddress}
             required
             title='Please enter a valid destination address'
@@ -416,7 +412,7 @@ export const TradeInput = () => {
           </Text>
           <Input
             {...register('refundAddress', refundAddressRules)}
-            placeholder={`Enter ${sellAsset?.symbol || ''} address`}
+            placeholder={`Enter ${sellAsset.symbol || ''} address`}
             isInvalid={!!errors.refundAddress}
             required
             title='Please enter a valid refund address'
