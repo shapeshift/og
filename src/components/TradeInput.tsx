@@ -29,7 +29,6 @@ import { useNavigate } from 'react-router'
 import { useAssetById } from 'store/assets'
 import { bnOrZero } from 'lib/bignumber/bignumber'
 import { fromBaseUnit, toBaseUnit } from 'lib/bignumber/conversion'
-import { BTCImage, ETHImage } from 'lib/const'
 import { mixpanel, MixPanelEvent } from 'lib/mixpanel'
 import { validateAddress } from 'lib/validation'
 import type { SwapFormData } from 'types/form'
@@ -95,11 +94,11 @@ export const TradeInput = () => {
   ])
 
   const SellAssetIcon = useMemo(
-    () => <Avatar size='sm' src={sellAsset?.icon || BTCImage} />,
+    () => <Avatar size='sm' src={sellAsset?.icon} />,
     [sellAsset?.icon],
   )
   const BuyAssetIcon = useMemo(
-    () => <Avatar size='sm' src={buyAsset?.icon || ETHImage} />,
+    () => <Avatar size='sm' src={buyAsset?.icon} />,
     [buyAsset?.icon],
   )
   const SwitchIcon = useMemo(() => <FaArrowRightArrowLeft />, [])

@@ -20,11 +20,13 @@ import {
   useSteps,
   VStack,
 } from '@chakra-ui/react'
+import type { AssetId } from '@shapeshiftoss/caip'
 import { getChainflipAssetId } from 'queries/chainflip/assets'
 import { useChainflipQuoteQuery } from 'queries/chainflip/quote'
 import { useChainflipStatusQuery } from 'queries/chainflip/status'
+import type { ChainflipSwapStatus } from 'queries/chainflip/types'
 import { useCallback, useEffect, useMemo } from 'react'
-import { useFormContext } from 'react-hook-form'
+import { useFormContext, useWatch } from 'react-hook-form'
 import { FaArrowDown, FaArrowRightArrowLeft, FaCheck, FaClock, FaRegCopy } from 'react-icons/fa6'
 import { useSearchParams } from 'react-router'
 import { useAssetById } from 'store/assets'
@@ -32,7 +34,6 @@ import { Amount } from 'components/Amount/Amount'
 import { QRCode } from 'components/QRCode/QRCode'
 import { useCopyToClipboard } from 'hooks/useCopyToClipboard'
 import { fromBaseUnit } from 'lib/bignumber/conversion'
-import { BTCImage, ETHImage } from 'lib/const'
 import type { SwapFormData } from 'types/form'
 
 import type { StepProps } from './components/StatusStepper'
@@ -40,6 +41,9 @@ import { StatusStepper } from './components/StatusStepper'
 
 const MOCK_SHAPESHIFT_FEE = 4.0
 const MOCK_PROTOCOL_FEE = '0.000'
+
+const copyIcon = <FaRegCopy />
+const checkIcon = <FaCheck />
 
 const SWAP_STEPS: StepProps[] = [
   {
@@ -54,24 +58,27 @@ const SWAP_STEPS: StepProps[] = [
 
 const IdleSwapCardBody = ({
   swapData,
-  fromAsset,
-  toAsset,
+  sellAssetId,
+  buyAssetId,
   sellAmountCryptoPrecision,
   buyAmountCryptoPrecision,
   handleCopyToAddress,
   isToAddressCopied,
 }: {
   swapData: { address: string; channelId?: number }
-  fromAsset: any
-  toAsset: any
+  sellAssetId: AssetId
+  buyAssetId: AssetId
   sellAmountCryptoPrecision: string
   buyAmountCryptoPrecision: string
   handleCopyToAddress: () => void
   isToAddressCopied: boolean
 }) => {
-  const CopyIcon = useMemo(() => <FaRegCopy />, [])
-  const CheckIcon = useMemo(() => <FaCheck />, [])
-  const qrCodeIcon = useMemo(() => <Avatar size='xs' src={fromAsset?.icon} />, [fromAsset?.icon])
+  const sellAsset = useAssetById(sellAssetId)
+  const buyAsset = useAssetById(buyAssetId)
+
+  const qrCodeIcon = useMemo(() => <Avatar size='xs' src={sellAsset?.icon} />, [sellAsset?.icon])
+
+  if (!(sellAsset && buyAsset)) return null
 
   return (
     <CardBody display='flex' flexDir='row-reverse' gap={6} px={4}>
@@ -87,8 +94,8 @@ const IdleSwapCardBody = ({
         <Stack>
           <Text fontWeight='bold'>Send</Text>
           <Flex alignItems='center' gap={2}>
-            <Avatar size='sm' src={fromAsset?.icon || BTCImage} />
-            <Amount.Crypto value={sellAmountCryptoPrecision} symbol={fromAsset?.symbol || 'BTC'} />
+            <Avatar size='sm' src={sellAsset.icon} />
+            <Amount.Crypto value={sellAmountCryptoPrecision} symbol={sellAsset.symbol} />
           </Flex>
         </Stack>
         <Stack>
@@ -100,7 +107,7 @@ const IdleSwapCardBody = ({
                 borderRadius='lg'
                 size='sm'
                 variant='ghost'
-                icon={isToAddressCopied ? CheckIcon : CopyIcon}
+                icon={isToAddressCopied ? checkIcon : copyIcon}
                 aria-label='Copy address'
                 onClick={handleCopyToAddress}
               />
@@ -111,11 +118,8 @@ const IdleSwapCardBody = ({
         <Stack>
           <Text fontWeight='bold'>You will receive</Text>
           <Flex gap={2} alignItems='center'>
-            <Avatar size='xs' src={toAsset?.icon || ETHImage} />
-            <Amount.Crypto
-              value={buyAmountCryptoPrecision || '0'}
-              symbol={toAsset?.symbol || 'ETH'}
-            />
+            <Avatar size='xs' src={buyAsset.icon} />
+            <Amount.Crypto value={buyAmountCryptoPrecision || '0'} symbol={buyAsset.symbol} />
           </Flex>
         </Stack>
       </Stack>
@@ -127,12 +131,7 @@ const PendingSwapCardBody = ({
   swapStatus,
 }: {
   swapStatus?: {
-    status: {
-      state: 'waiting' | 'receiving' | 'swapping' | 'sending' | 'sent' | 'completed' | 'failed'
-      swapEgress?: {
-        transactionReference?: string
-      }
-    }
+    status: ChainflipSwapStatus
   }
 }) => {
   const getStatusConfig = (state?: string, swapEgress?: { transactionReference?: string }) => {
@@ -252,24 +251,23 @@ export const Status = () => {
     }
   }, [shouldDisplayPendingSwapBody, setActiveStep, swapStatus?.status.state])
 
-  const { watch } = useFormContext<SwapFormData>()
-  const { sellAmountCryptoBaseUnit, destinationAddress, sellAssetId, buyAssetId } = watch()
+  const { control } = useFormContext<SwapFormData>()
 
-  const fromAssetData = useAssetById(sellAssetId || '')
-  const toAssetData = useAssetById(buyAssetId || '')
-  const fromAsset = useMemo(
-    () => (sellAssetId ? fromAssetData : undefined),
-    [sellAssetId, fromAssetData],
-  )
-  const toAsset = useMemo(() => (buyAssetId ? toAssetData : undefined), [buyAssetId, toAssetData])
+  const sellAmountCryptoBaseUnit = useWatch({ control, name: 'sellAmountCryptoBaseUnit' })
+  const destinationAddress = useWatch({ control, name: 'destinationAddress' })
+  const sellAssetId = useWatch({ control, name: 'sellAssetId' })
+  const buyAssetId = useWatch({ control, name: 'buyAssetId' })
+
+  const sellAsset = useAssetById(sellAssetId)
+  const buyAsset = useAssetById(buyAssetId)
 
   const quoteParams = useMemo(
     () => ({
-      sourceAsset: fromAsset ? getChainflipAssetId(fromAsset.assetId) : undefined,
-      destinationAsset: toAsset ? getChainflipAssetId(toAsset.assetId) : undefined,
+      sourceAsset: sellAsset ? getChainflipAssetId(sellAsset.assetId) : undefined,
+      destinationAsset: buyAsset ? getChainflipAssetId(buyAsset.assetId) : undefined,
       amount: sellAmountCryptoBaseUnit,
     }),
-    [fromAsset, toAsset, sellAmountCryptoBaseUnit],
+    [sellAsset, buyAsset, sellAmountCryptoBaseUnit],
   )
 
   const { data: quote } = useChainflipQuoteQuery(quoteParams)
@@ -284,17 +282,15 @@ export const Status = () => {
   }, [searchParams])
 
   const sellAmountCryptoPrecision = useMemo(() => {
-    if (!fromAsset?.precision || !sellAmountCryptoBaseUnit) return '0'
-    return fromBaseUnit(sellAmountCryptoBaseUnit, fromAsset.precision)
-  }, [fromAsset?.precision, sellAmountCryptoBaseUnit])
+    if (!sellAsset?.precision || !sellAmountCryptoBaseUnit) return '0'
+    return fromBaseUnit(sellAmountCryptoBaseUnit, sellAsset.precision)
+  }, [sellAsset?.precision, sellAmountCryptoBaseUnit])
 
   const buyAmountCryptoPrecision = useMemo(() => {
-    if (!quote?.egressAmountNative || !toAsset?.precision) return '0'
-    return fromBaseUnit(quote.egressAmountNative, toAsset.precision)
-  }, [quote?.egressAmountNative, toAsset?.precision])
+    if (!quote?.egressAmountNative || !buyAsset?.precision) return '0'
+    return fromBaseUnit(quote.egressAmountNative, buyAsset.precision)
+  }, [quote?.egressAmountNative, buyAsset?.precision])
 
-  const CopyIcon = useMemo(() => <FaRegCopy />, [])
-  const CheckIcon = useMemo(() => <FaCheck />, [])
   const { copyToClipboard: copyToAddress, isCopied: isToAddressCopied } = useCopyToClipboard({
     timeout: 3000,
   })
@@ -326,6 +322,9 @@ export const Status = () => {
     [],
   )
 
+  if (!(sellAssetId && buyAssetId)) return null
+  if (!(sellAsset && buyAsset)) return null
+
   return (
     <Card width='full' maxW='465px'>
       <CardHeader {...cardHeaderStyle}>
@@ -335,9 +334,9 @@ export const Status = () => {
       <Box position='relative' minH={isCompleted ? '250px' : '150px'}>
         <SlideFade in={!shouldDisplayPendingSwapBody} unmountOnExit>
           <IdleSwapCardBody
+            sellAssetId={sellAssetId}
+            buyAssetId={buyAssetId}
             swapData={swapData}
-            fromAsset={fromAsset}
-            toAsset={toAsset}
             sellAmountCryptoPrecision={sellAmountCryptoPrecision}
             buyAmountCryptoPrecision={buyAmountCryptoPrecision}
             handleCopyToAddress={handleCopyToAddress}
@@ -364,12 +363,12 @@ export const Status = () => {
         <Stack>
           <Flex width='full' justifyContent='space-between'>
             <Flex alignItems='center' gap={2}>
-              <Avatar size='xs' src={fromAsset?.icon || BTCImage} />
+              <Avatar size='xs' src={sellAsset.icon} />
               <Text>Deposit</Text>
             </Flex>
             <Amount.Crypto
               value={sellAmountCryptoPrecision || '0'}
-              symbol={fromAsset?.symbol || 'BTC'}
+              symbol={sellAsset?.symbol || 'BTC'}
             />
           </Flex>
           <Flex alignItems='center' gap={2}>
@@ -377,7 +376,7 @@ export const Status = () => {
             <IconButton
               size='sm'
               variant='ghost'
-              icon={isDepositAddressCopied ? CheckIcon : CopyIcon}
+              icon={isDepositAddressCopied ? checkIcon : copyIcon}
               aria-label='Copy deposit address'
               onClick={handleCopyDepositAddress}
             />
@@ -386,12 +385,12 @@ export const Status = () => {
         <Stack>
           <Flex width='full' justifyContent='space-between'>
             <Flex alignItems='center' gap={2}>
-              <Avatar size='xs' src={toAsset?.icon || ETHImage} />
+              <Avatar size='xs' src={buyAsset.icon} />
               <Text>Receive</Text>
             </Flex>
             <Amount.Crypto
               value={buyAmountCryptoPrecision || '0'}
-              symbol={toAsset?.symbol || 'ETH'}
+              symbol={buyAsset?.symbol || 'ETH'}
             />
           </Flex>
           <Flex alignItems='center' gap={2}>
@@ -403,10 +402,10 @@ export const Status = () => {
           <Flex alignItems='center' justifyContent='space-between'>
             <Text>Estimated Rate</Text>
             <Flex gap={1}>
-              <Amount.Crypto value='1' symbol={fromAsset?.symbol || 'BTC'} suffix='=' />
+              <Amount.Crypto value='1' symbol={sellAsset.symbol} suffix='=' />
               <Amount.Crypto
                 value={quote?.estimatedPrice.toString() || '0'}
-                symbol={toAsset?.symbol || 'ETH'}
+                symbol={buyAsset.symbol}
               />
             </Flex>
           </Flex>
@@ -416,7 +415,7 @@ export const Status = () => {
           </Flex>
           <Flex alignItems='center' justifyContent='space-between'>
             <Text>Protocol Fee</Text>
-            <Amount.Crypto value={MOCK_PROTOCOL_FEE} symbol={fromAsset?.symbol || 'BTC'} />
+            <Amount.Crypto value={MOCK_PROTOCOL_FEE} symbol={sellAsset?.symbol || 'BTC'} />
           </Flex>
         </Stack>
       </CardFooter>
