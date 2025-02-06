@@ -265,16 +265,14 @@ export const Status = () => {
 
   const quoteParams = useMemo(
     () => ({
-      sourceAsset: fromAsset ? getChainflipAssetId(fromAsset.assetId) : '',
-      destinationAsset: toAsset ? getChainflipAssetId(toAsset.assetId) : '',
+      sourceAsset: fromAsset ? getChainflipAssetId(fromAsset.assetId) : undefined,
+      destinationAsset: toAsset ? getChainflipAssetId(toAsset.assetId) : undefined,
       amount: sellAmountCryptoBaseUnit,
     }),
     [fromAsset, toAsset, sellAmountCryptoBaseUnit],
   )
 
-  const { data: quote } = useChainflipQuoteQuery(quoteParams, {
-    enabled: Boolean(fromAsset && toAsset && sellAmountCryptoBaseUnit),
-  })
+  const { data: quote } = useChainflipQuoteQuery(quoteParams)
 
   const swapData = useMemo(() => {
     const channelId = searchParams.get('channelId')

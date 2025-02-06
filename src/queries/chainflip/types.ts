@@ -63,8 +63,8 @@ export type ChainflipQuote = {
 }
 
 export type ChainflipQuoteParams = {
-  sourceAsset: string
-  destinationAsset: string
+  sourceAsset: string | undefined
+  destinationAsset: string | undefined
   amount: string
   commissionBps?: number
 }

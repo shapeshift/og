@@ -36,6 +36,8 @@ import type { SwapFormData } from 'types/form'
 
 import { Amount } from './Amount/Amount'
 
+const divider = <StackDivider borderColor='border.base' />
+
 export const TradeInput = () => {
   const navigate = useNavigate()
   const {
@@ -47,81 +49,54 @@ export const TradeInput = () => {
   const { sellAmountCryptoBaseUnit, destinationAddress, refundAddress, sellAssetId, buyAssetId } =
     watch()
 
-  // Always call hooks unconditionally at the top level
-  const fromAssetData = useAssetById(sellAssetId || '')
-  const toAssetData = useAssetById(buyAssetId || '')
-  const fromAsset = useMemo(
-    () => (sellAssetId ? fromAssetData : undefined),
-    [sellAssetId, fromAssetData],
-  )
-  const toAsset = useMemo(() => (buyAssetId ? toAssetData : undefined), [buyAssetId, toAssetData])
+  const sellAsset = useAssetById(sellAssetId)
+  const buyAsset = useAssetById(buyAssetId)
 
-  // Market data queries for fallback rates
-  const { data: fromMarketData } = useMarketDataByAssetIdQuery(fromAsset?.assetId || '')
-  const { data: toMarketData } = useMarketDataByAssetIdQuery(toAsset?.assetId || '')
+  const { data: sellAssetMarketData } = useMarketDataByAssetIdQuery(sellAsset?.assetId || '')
+  const { data: buyAssetMarketData } = useMarketDataByAssetIdQuery(buyAsset?.assetId || '')
 
-  // Convert display amount to crypto precision for UI
   const sellAmountCryptoPrecision = useMemo(() => {
-    if (!fromAsset?.precision || !sellAmountCryptoBaseUnit) return ''
-    return fromBaseUnit(sellAmountCryptoBaseUnit, fromAsset.precision)
-  }, [fromAsset?.precision, sellAmountCryptoBaseUnit])
+    if (!sellAsset) return
 
-  // Quote query (already using base units)
-  const { data: quote, isFetching: isQuoteFetching } = useChainflipQuoteQuery(
-    {
-      sourceAsset: fromAsset ? getChainflipAssetId(fromAsset.assetId) : '',
-      destinationAsset: toAsset ? getChainflipAssetId(toAsset.assetId) : '',
-      amount: sellAmountCryptoBaseUnit,
-    },
-    {
-      enabled: Boolean(fromAsset && toAsset && sellAmountCryptoBaseUnit),
-    },
-  )
+    return fromBaseUnit(sellAmountCryptoBaseUnit, sellAsset.precision)
+  }, [sellAsset?.precision, sellAmountCryptoBaseUnit])
 
-  // Calculate buy amount from quote only
+  const { data: quote, isFetching: isQuoteFetching } = useChainflipQuoteQuery({
+    sourceAsset: sellAsset ? getChainflipAssetId(sellAsset.assetId) : '',
+    destinationAsset: buyAsset ? getChainflipAssetId(buyAsset.assetId) : '',
+    amount: sellAmountCryptoBaseUnit,
+  })
+
   const buyAmountCryptoPrecision = useMemo(() => {
-    if (quote?.egressAmountNative && toAsset?.precision) {
-      return fromBaseUnit(quote.egressAmountNative, toAsset.precision)
-    }
-    return undefined
-  }, [quote?.egressAmountNative, toAsset?.precision])
+    if (!(quote?.egressAmountNative && buyAsset)) return
 
-  // Calculate rate using either quote or market data
+    return fromBaseUnit(quote.egressAmountNative, buyAsset.precision)
+  }, [quote?.egressAmountNative, buyAsset?.precision])
+
   const rate = useMemo(() => {
-    const sellBn = bnOrZero(sellAmountCryptoPrecision)
-    if (sellBn.isZero()) return '0'
+    if (quote && sellAmountCryptoPrecision)
+      return bnOrZero(buyAmountCryptoPrecision).div(sellAmountCryptoPrecision).toString()
 
-    if (quote) {
-      return bnOrZero(buyAmountCryptoPrecision).div(sellBn).toString()
-    }
+    // Fallback to market-data if no quote
+    const sellAssetPrice = bnOrZero(sellAssetMarketData?.price)
+    const buyAssetPrice = bnOrZero(buyAssetMarketData?.price)
 
-    if (fromMarketData?.price && toMarketData?.price) {
-      const fromPrice = bnOrZero(fromMarketData.price)
-      const toPrice = bnOrZero(toMarketData.price)
-      if (toPrice.isZero()) return '0'
-
-      return fromPrice.div(toPrice).toString()
-    }
-
-    return '0'
+    return sellAssetPrice.div(buyAssetPrice).toString()
   }, [
     buyAmountCryptoPrecision,
     quote,
     sellAmountCryptoPrecision,
-    fromMarketData?.price,
-    toMarketData?.price,
+    sellAssetMarketData?.price,
+    buyAssetMarketData?.price,
   ])
 
-  const isLoading = isQuoteFetching
-
-  const Divider = useMemo(() => <StackDivider borderColor='border.base' />, [])
-  const FromAssetIcon = useMemo(
-    () => <Avatar size='sm' src={fromAsset?.icon || BTCImage} />,
-    [fromAsset?.icon],
+  const SellAssetIcon = useMemo(
+    () => <Avatar size='sm' src={sellAsset?.icon || BTCImage} />,
+    [sellAsset?.icon],
   )
-  const ToAssetIcon = useMemo(
-    () => <Avatar size='sm' src={toAsset?.icon || ETHImage} />,
-    [toAsset?.icon],
+  const BuyAssetIcon = useMemo(
+    () => <Avatar size='sm' src={buyAsset?.icon || ETHImage} />,
+    [buyAsset?.icon],
   )
   const SwitchIcon = useMemo(() => <FaArrowRightArrowLeft />, [])
 
@@ -147,11 +122,11 @@ export const TradeInput = () => {
   })
 
   const onSubmit = useCallback(() => {
-    if (!(quote && fromAsset && toAsset)) return
+    if (!(quote && sellAsset && buyAsset)) return
 
     const createSwapPayload = {
-      sourceAsset: getChainflipAssetId(fromAsset.assetId),
-      destinationAsset: getChainflipAssetId(toAsset.assetId),
+      sourceAsset: getChainflipAssetId(sellAsset.assetId),
+      destinationAsset: getChainflipAssetId(buyAsset.assetId),
       destinationAddress: destinationAddress || '',
       refundAddress: refundAddress || '',
       minimumPrice: quote.egressAmountNative,
@@ -160,74 +135,72 @@ export const TradeInput = () => {
     mixpanel?.track(MixPanelEvent.StartTransaction, createSwapPayload)
 
     createSwap(createSwapPayload)
-  }, [quote, fromAsset, toAsset, destinationAddress, refundAddress, createSwap])
+  }, [quote, sellAsset, buyAsset, destinationAddress, refundAddress, createSwap])
 
-  const handleFromAssetClick = useCallback(() => {
+  const handleSellAssetClick = useCallback(() => {
     console.info('asset click')
   }, [])
 
-  const handleToAssetClick = useCallback(() => {
+  const handleBuyAssetClick = useCallback(() => {
     console.info('to asset click')
   }, [])
 
   const handleSwitchAssets = useCallback(() => {
-    const currentSellAsset = sellAssetId
-    const currentBuyAsset = buyAssetId
-    const currentFromAsset = fromAsset
-    const currentToAsset = toAsset
+    const currentSellAsset = sellAsset
+    const currentBuyAsset = buyAsset
 
-    // Only prorate if we have market data and precision data
     if (
-      currentFromAsset?.precision &&
-      currentToAsset?.precision &&
-      fromMarketData?.price &&
-      toMarketData?.price &&
-      sellAmountCryptoBaseUnit
-    ) {
-      // Get current fiat value using market rates only
-      const currentSellAmountCryptoPrecision = fromBaseUnit(
-        sellAmountCryptoBaseUnit,
-        currentFromAsset.precision,
+      !(
+        currentSellAsset &&
+        currentBuyAsset &&
+        sellAssetMarketData &&
+        buyAssetMarketData &&
+        sellAmountCryptoBaseUnit
       )
-      const sellAmountUsd = bnOrZero(currentSellAmountCryptoPrecision).times(fromMarketData.price)
+    )
+      return
 
-      // Calculate new sell amount in crypto using market rates, avoiding division by zero
-      const newSellAmountCryptoPrecision = bnOrZero(toMarketData.price).isZero()
-        ? '0'
-        : sellAmountUsd.div(toMarketData.price).toString()
+    // Get current fiat value using market rates only
+    const currentSellAmountCryptoPrecision = fromBaseUnit(
+      sellAmountCryptoBaseUnit,
+      currentSellAsset.precision,
+    )
+    const sellAmountUsd = bnOrZero(currentSellAmountCryptoPrecision).times(
+      sellAssetMarketData.price,
+    )
 
-      // Convert to base units with new precision
-      const newSellAmountBaseUnit = toBaseUnit(
-        newSellAmountCryptoPrecision,
-        currentToAsset.precision,
-      )
+    // Calculate new sell amount in crypto using market rates, avoiding division by zero
+    const newSellAmountCryptoPrecision = bnOrZero(buyAssetMarketData.price).isZero()
+      ? '0'
+      : sellAmountUsd.div(buyAssetMarketData.price).toString()
 
-      setValue('sellAmountCryptoBaseUnit', newSellAmountBaseUnit)
-    } else {
-      // If we can't prorate (no market data), just clear the amount
-      setValue('sellAmountCryptoBaseUnit', '')
-    }
+    // Convert to base units with new precision
+    const newSellAmountBaseUnit = toBaseUnit(
+      newSellAmountCryptoPrecision,
+      currentBuyAsset.precision,
+    )
 
-    setValue('sellAssetId', currentBuyAsset)
-    setValue('buyAssetId', currentSellAsset)
+    setValue('sellAmountCryptoBaseUnit', newSellAmountBaseUnit)
+
+    setValue('sellAssetId', currentBuyAsset.assetId)
+    setValue('buyAssetId', currentSellAsset.assetId)
   }, [
     sellAssetId,
     buyAssetId,
-    fromAsset,
-    toAsset,
-    fromMarketData?.price,
-    toMarketData?.price,
+    sellAsset,
+    buyAsset,
+    sellAssetMarketData?.price,
+    buyAssetMarketData?.price,
     sellAmountCryptoBaseUnit,
     setValue,
   ])
 
-  // Handle input change to convert to base units
   const handleSellAmountChange = useCallback(
     (values: { value: string }) => {
-      if (!fromAsset?.precision) return
-      setValue('sellAmountCryptoBaseUnit', toBaseUnit(values.value, fromAsset.precision))
+      if (!sellAsset?.precision) return
+      setValue('sellAmountCryptoBaseUnit', toBaseUnit(values.value, sellAsset.precision))
     },
-    [fromAsset?.precision, setValue],
+    [sellAsset?.precision, setValue],
   )
 
   // Validation functions at top level
@@ -290,14 +263,14 @@ export const TradeInput = () => {
     () => ({
       flex: 1,
       variant: 'filled',
-      placeholder: `0.0 ${toAsset?.symbol || 'ETH'}`,
+      placeholder: `0.0 ${buyAsset?.symbol || 'ETH'}`,
       isReadOnly: true,
       value: buyAmountCryptoPrecision,
       bg: 'background.surface.raised.base',
       _hover: { bg: 'background.surface.raised.base' },
       _focus: { bg: 'background.surface.raised.base' },
     }),
-    [buyAmountCryptoPrecision, toAsset?.symbol],
+    [buyAmountCryptoPrecision, buyAsset?.symbol],
   )
 
   return (
@@ -323,20 +296,20 @@ export const TradeInput = () => {
           bg='background.surface.raised.base'
         >
           <Text color='text.subtle'>Your rate</Text>
-          <Skeleton isLoaded={!isLoading}>
+          <Skeleton isLoaded={!isQuoteFetching}>
             <Flex gap={1}>
-              <Amount.Crypto value='1' symbol={fromAsset?.symbol || 'BTC'} suffix='=' />
-              <Amount.Crypto value={rate} symbol={toAsset?.symbol || 'ETH'} />
+              <Amount.Crypto value='1' symbol={sellAsset?.symbol || 'BTC'} suffix='=' />
+              <Amount.Crypto value={rate} symbol={buyAsset?.symbol || 'ETH'} />
             </Flex>
           </Skeleton>
         </Flex>
-        <HStack divider={Divider} fontSize='sm'>
+        <HStack divider={divider} fontSize='sm'>
           <Stat size='sm' textAlign='center' py={4}>
             <StatLabel color='text.subtle'>Deposit This</StatLabel>
             <StatNumber>
               <Amount.Crypto
                 value={sellAmountCryptoPrecision || '0'}
-                symbol={fromAsset?.symbol || 'BTC'}
+                symbol={sellAsset?.symbol || 'BTC'}
               />
             </StatNumber>
           </Stat>
@@ -346,7 +319,10 @@ export const TradeInput = () => {
               {!buyAmountCryptoPrecision ? (
                 <Skeleton height='24px' width='100px' />
               ) : (
-                <Amount.Crypto value={buyAmountCryptoPrecision} symbol={toAsset?.symbol || 'ETH'} />
+                <Amount.Crypto
+                  value={buyAmountCryptoPrecision}
+                  symbol={buyAsset?.symbol || 'ETH'}
+                />
               )}
             </StatNumber>
           </Stat>
@@ -358,9 +334,9 @@ export const TradeInput = () => {
             <IconButton
               size='lg'
               variant='ghost'
-              icon={FromAssetIcon}
+              icon={SellAssetIcon}
               aria-label='From Asset'
-              onClick={handleFromAssetClick}
+              onClick={handleSellAssetClick}
             />
           </Flex>
           <IconButton
@@ -373,9 +349,9 @@ export const TradeInput = () => {
             <IconButton
               size='lg'
               variant='ghost'
-              icon={ToAssetIcon}
+              icon={BuyAssetIcon}
               aria-label='To Asset'
-              onClick={handleToAssetClick}
+              onClick={handleBuyAssetClick}
             />
           </Flex>
         </Flex>
@@ -384,28 +360,28 @@ export const TradeInput = () => {
             customInput={Input}
             flex={1}
             variant='filled'
-            placeholder={`Enter ${fromAsset?.symbol || 'BTC'} amount`}
+            placeholder={`Enter ${sellAsset?.symbol || 'BTC'} amount`}
             value={sellAmountCryptoPrecision || ''}
             onValueChange={handleSellAmountChange}
             allowNegative={false}
-            decimalScale={fromAsset?.precision}
+            decimalScale={sellAsset?.precision}
             thousandSeparator=','
             allowLeadingZeros={false}
             isAllowed={useCallback(
               ({ value }: { value: string }) => {
                 if (!value) return true
-                if (!fromAsset?.precision) return true
+                if (!sellAsset?.precision) return true
                 const [, decimals] = value.split('.')
-                return !decimals || decimals.length <= fromAsset.precision
+                return !decimals || decimals.length <= sellAsset.precision
               },
-              [fromAsset?.precision],
+              [sellAsset?.precision],
             )}
           />
           {!buyAmountCryptoPrecision ? (
             <Skeleton height='40px' width='full' flex={1}>
               <Input
                 variant='filled'
-                placeholder={`0.0 ${toAsset?.symbol || 'ETH'}`}
+                placeholder={`0.0 ${buyAsset?.symbol || 'ETH'}`}
                 isReadOnly
                 value=''
                 {...skeletonInputStyles}
@@ -421,7 +397,7 @@ export const TradeInput = () => {
           </Text>
           <Input
             {...register('destinationAddress', destinationAddressRules)}
-            placeholder={`Enter ${toAsset?.symbol || ''} address`}
+            placeholder={`Enter ${buyAsset?.symbol || ''} address`}
             isInvalid={!!errors.destinationAddress}
             required
             title='Please enter a valid destination address'
@@ -438,7 +414,7 @@ export const TradeInput = () => {
           </Text>
           <Input
             {...register('refundAddress', refundAddressRules)}
-            placeholder={`Enter ${fromAsset?.symbol || ''} address`}
+            placeholder={`Enter ${sellAsset?.symbol || ''} address`}
             isInvalid={!!errors.refundAddress}
             required
             title='Please enter a valid refund address'
