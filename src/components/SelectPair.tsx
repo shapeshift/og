@@ -1,6 +1,6 @@
 import { Button, Card, CardBody, Flex, Heading, IconButton, useDisclosure } from '@chakra-ui/react'
 import { useCallback, useState } from 'react'
-import { useFormContext } from 'react-hook-form'
+import { useFormContext, useWatch } from 'react-hook-form'
 import { FaArrowRightArrowLeft } from 'react-icons/fa6'
 import { useNavigate } from 'react-router'
 import { useAssetById } from 'store/assets'
@@ -18,8 +18,10 @@ export const SelectPair = () => {
   const { isOpen, onClose, onOpen } = useDisclosure()
   const [assetSelectType, setAssetSelectType] = useState<AssetType>(AssetType.BUY)
   const navigate = useNavigate()
-  const { setValue, watch } = useFormContext<SwapFormData>()
-  const { sellAssetId, buyAssetId } = watch()
+  const { setValue, control } = useFormContext<SwapFormData>()
+
+  const sellAssetId = useWatch({ control, name: 'sellAssetId' })
+  const buyAssetId = useWatch({ control, name: 'buyAssetId' })
 
   const sellAsset = useAssetById(sellAssetId || '')
   const buyAsset = useAssetById(buyAssetId || '')

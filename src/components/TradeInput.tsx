@@ -22,7 +22,7 @@ import { useChainflipQuoteQuery } from 'queries/chainflip/quote'
 import { useChainflipSwapMutation } from 'queries/chainflip/swap'
 import { useMarketDataByAssetIdQuery } from 'queries/marketData'
 import { useCallback, useMemo } from 'react'
-import { useFormContext } from 'react-hook-form'
+import { useFormContext, useWatch } from 'react-hook-form'
 import { FaArrowRightArrowLeft } from 'react-icons/fa6'
 import { NumericFormat } from 'react-number-format'
 import { useNavigate } from 'react-router'
@@ -45,9 +45,13 @@ export const TradeInput = () => {
     watch,
     setValue,
     formState: { errors, isValid },
+    control,
   } = useFormContext<SwapFormData>()
-  const { sellAmountCryptoBaseUnit, destinationAddress, refundAddress, sellAssetId, buyAssetId } =
-    watch()
+  const destinationAddress = useWatch({ control, name: 'destinationAddress' })
+  const sellAmountCryptoBaseUnit = useWatch({ control, name: 'sellAmountCryptoBaseUnit' })
+  const refundAddress = useWatch({ control, name: 'refundAddress' })
+  const sellAssetId = useWatch({ control, name: 'sellAssetId' })
+  const buyAssetId = useWatch({ control, name: 'buyAssetId' })
 
   const sellAsset = useAssetById(sellAssetId)
   const buyAsset = useAssetById(buyAssetId)
