@@ -129,13 +129,13 @@ export const TradeInput = () => {
       e.preventDefault()
 
       if (!(quote && sellAsset && buyAsset)) return
+      if (!buyAmountCryptoPrecision || !sellAmountCryptoPrecision) return
 
       const slippageTolerancePercentageDecimal = bnOrZero(
         quote.recommendedSlippageTolerancePercent,
       ).div(100)
 
-      // Calculate the rate first (buyAmount/sellAmount)
-      const estimatedRate = bnOrZero(quote.egressAmountNative).div(quote.ingressAmountNative)
+      const estimatedRate = bnOrZero(buyAmountCryptoPrecision).div(sellAmountCryptoPrecision)
 
       // This is called minimumPrice upstream but this really is a rate, let's not honour confusing terminology
       const minimumRate = estimatedRate
