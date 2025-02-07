@@ -42,6 +42,12 @@ import { AssetType } from './AssetSelectModal/types'
 
 const divider = <StackDivider borderColor='border.base' />
 
+const skeletonInputSx = {
+  bg: 'background.surface.raised.base',
+  _hover: { bg: 'background.surface.raised.base' },
+  _focus: { bg: 'background.surface.raised.base' },
+}
+
 export const TradeInput = () => {
   const navigate = useNavigate()
   const {
@@ -259,17 +265,15 @@ export const TradeInput = () => {
     setSellAmountInput(values.value)
   }, [])
 
-  // Validation functions at top level
   const validateDestinationAddress = useCallback(
     async (value: string) => {
       if (!value || !buyAssetId) return true
       const { chainId } = fromAssetId(buyAssetId)
-      // If the value hasn't changed and was previously valid, return true immediately
       if (destinationAddress === value && !errors.destinationAddress) {
         return true
       }
       const isValid = await validateAddress(value, chainId)
-      return isValid || 'Invalid address format'
+      return isValid || 'Invalid address'
     },
     [buyAssetId, destinationAddress, errors.destinationAddress],
   )
@@ -278,17 +282,15 @@ export const TradeInput = () => {
     async (value: string) => {
       if (!value || !sellAssetId) return true
       const { chainId } = fromAssetId(sellAssetId)
-      // If the value hasn't changed and was previously valid, return true immediately
       if (refundAddress === value && !errors.refundAddress) {
         return true
       }
       const isValid = await validateAddress(value, chainId)
-      return isValid || 'Invalid address format'
+      return isValid || 'Invalid address'
     },
     [sellAssetId, refundAddress, errors.refundAddress],
   )
 
-  // Validation rules using the memoized validation functions
   const destinationAddressRules = useMemo(
     () => ({
       required: true,
@@ -303,16 +305,6 @@ export const TradeInput = () => {
       validate: validateRefundAddress,
     }),
     [validateRefundAddress],
-  )
-
-  // Memoize style objects
-  const skeletonInputStyles = useMemo(
-    () => ({
-      bg: 'background.surface.raised.base',
-      _hover: { bg: 'background.surface.raised.base' },
-      _focus: { bg: 'background.surface.raised.base' },
-    }),
-    [],
   )
 
   useEffect(() => {
@@ -421,7 +413,7 @@ export const TradeInput = () => {
                     placeholder={`0.0 ${buyAsset.symbol}`}
                     isReadOnly
                     value=''
-                    {...skeletonInputStyles}
+                    {...skeletonInputSx}
                   />
                 </Skeleton>
               ) : (
@@ -430,7 +422,7 @@ export const TradeInput = () => {
                   placeholder={`0.0 ${buyAsset.symbol}`}
                   isReadOnly
                   value={buyAmountCryptoPrecision || 'N/A'}
-                  {...skeletonInputStyles}
+                  {...skeletonInputSx}
                 />
               )}
             </Flex>
