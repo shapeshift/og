@@ -19,6 +19,7 @@ import {
   Stack,
   Tag,
   Text,
+  useClipboard,
   VStack,
 } from '@chakra-ui/react'
 import type { AssetId } from '@shapeshiftoss/caip'
@@ -38,12 +39,11 @@ import { useSearchParams } from 'react-router'
 import { useAssetById } from 'store/assets'
 import { Amount } from 'components/Amount/Amount'
 import { QRCode } from 'components/QRCode/QRCode'
-import { useCopyToClipboard } from 'hooks/useCopyToClipboard'
 import { bnOrZero, fromBaseUnit } from 'lib/bignumber/bignumber'
+import { getChainflipStatusConfig } from 'lib/utils/chainflip'
 import type { SwapFormData } from 'types/form'
 
 import { CHAINFLIP_COMMISSION_BPS } from '../../lib/const'
-import { getChainflipStatusConfig } from '../../queries/chainflip/status'
 import { StatusStepper } from './components/StatusStepper'
 
 dayjs.extend(duration)
@@ -165,7 +165,7 @@ const PendingSwapCardBody = ({
     status: ChainflipSwapStatus
   }
 }) => {
-  const config = getChainflipStatusConfig(swapStatus?.status.state, swapStatus?.status)
+  const config = getChainflipStatusConfig(swapStatus?.status.state, swapStatus)
   const StatusIcon = config.icon
   const isCompleted = swapStatus?.status.state === 'completed'
   const isRefunded = Boolean(swapStatus?.status.refundEgress) && isCompleted
@@ -272,28 +272,34 @@ export const Status = () => {
     return fromBaseUnit(quote.egressAmountNative, buyAsset.precision)
   }, [quote?.egressAmountNative, buyAsset?.precision])
 
-  const { copyToClipboard: copyDepositAddress, isCopied: isDepositAddressCopied } =
-    useCopyToClipboard({ timeout: 3000 })
-  const { copyToClipboard: copyReceiveAddress, isCopied: isReceiveAddressCopied } =
-    useCopyToClipboard({ timeout: 3000 })
-  const { copyToClipboard: copyRefundAddress, isCopied: isRefundAddressCopied } =
-    useCopyToClipboard({ timeout: 3000 })
+  const { onCopy: copyDepositAddress, hasCopied: isDepositAddressCopied } = useClipboard(
+    swapData.address || '',
+    { timeout: 3000 },
+  )
+  const { onCopy: copyReceiveAddress, hasCopied: isReceiveAddressCopied } = useClipboard(
+    destinationAddress || '',
+    { timeout: 3000 },
+  )
+  const { onCopy: copyRefundAddress, hasCopied: isRefundAddressCopied } = useClipboard(
+    refundAddress || '',
+    { timeout: 3000 },
+  )
 
   const handleCopyDepositAddress = useCallback(() => {
     if (swapData.address) {
-      copyDepositAddress(swapData.address)
+      copyDepositAddress()
     }
   }, [copyDepositAddress, swapData.address])
 
   const handleCopyReceiveAddress = useCallback(() => {
     if (destinationAddress) {
-      copyReceiveAddress(destinationAddress)
+      copyReceiveAddress()
     }
   }, [copyReceiveAddress, destinationAddress])
 
   const handleCopyRefundAddress = useCallback(() => {
     if (refundAddress) {
-      copyRefundAddress(refundAddress)
+      copyRefundAddress()
     }
   }, [copyRefundAddress, refundAddress])
 

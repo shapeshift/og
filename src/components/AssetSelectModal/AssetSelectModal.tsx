@@ -14,7 +14,6 @@ import type { ChainId } from '@shapeshiftoss/caip'
 import type { ChangeEvent } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAllAssets } from 'store/assets'
-import { isNft } from 'lib/utils'
 import type { Asset } from 'types/Asset'
 
 import { AssetList } from './AssetList'
@@ -41,10 +40,7 @@ export const AssetSelectModal: React.FC<AssetSelectModalProps> = ({ isOpen, onCl
   const iniitalRef = useRef(null)
 
   const filteredAssets = useMemo(
-    () =>
-      activeChain === 'All'
-        ? assets.filter(a => !isNft(a.assetId))
-        : assets.filter(a => a.chainId === activeChain && !isNft(a.assetId)),
+    () => (activeChain === 'All' ? assets : assets.filter(a => a.chainId === activeChain)),
     [activeChain, assets],
   )
 

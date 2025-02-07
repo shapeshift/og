@@ -5,7 +5,7 @@ import { useShallow } from 'zustand/shallow'
 import { initialAssetsById } from '../constants/assets'
 import type { Asset } from '../types/assets'
 
-interface AssetsState {
+type AssetsState = {
   byId: Record<AssetId, Asset>
   ids: AssetId[]
   getAssetById: <T extends AssetId | undefined>(assetId: T) => T extends AssetId ? Asset : undefined

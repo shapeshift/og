@@ -6,7 +6,7 @@ import { BrowserRouter } from 'react-router'
 
 import { queryClient } from './config/react-query'
 
-function App() {
+const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>

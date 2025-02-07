@@ -115,6 +115,41 @@ type useLocaleFormatterArgs = {
 }
 
 /**
+ * Parse a formatted number string into a prefix, number, and postfix
+ * Example inputs: $1.000,00, 0.01 BTC, 10 $, 50.00%
+ */
+const numberToParts = (value: string): FiatParts => {
+  const parts = parseString.exec(value)
+
+  return {
+    number: parts?.[2],
+    prefix: parts?.[1],
+    postfix: parts?.[3]?.trim(),
+  }
+}
+
+/**
+ * Helper function to abbreviate number to truncate rather than round fractions
+ * @param {number} maximumFractionDigits - truncate fraction after this number of digits. Use 0 for no fraction.
+ * @param omitDecimalTrailingZeros
+ */
+const partsReducer = (maximumFractionDigits: number, omitDecimalTrailingZeros?: boolean) => {
+  return (accum: string, { type, value }: Intl.NumberFormatPart) => {
+    let segment = value
+    if (type === 'decimal' && maximumFractionDigits === 0) segment = ''
+    if (type === 'fraction') {
+      segment = value.substr(0, maximumFractionDigits)
+      if (omitDecimalTrailingZeros && segment && /^0*$/.test(segment)) {
+        // remove trailing zeroes as well as separator character in case there are only zeroes as decimals
+        return accum.slice(0, -1)
+      }
+    }
+
+    return accum + segment
+  }
+}
+
+/**
  * Set of helper functions for formatting using the user's locale
  * such as numbers, currencies, and dates
  */
@@ -129,41 +164,6 @@ export const useLocaleFormatter = (args?: useLocaleFormatterArgs): NumberFormatt
   const localeParts = useMemo((): LocaleParts => {
     return getParts(deviceLocale, fiatTypeToUse)
   }, [fiatTypeToUse, deviceLocale])
-
-  /**
-   * Parse a formatted number string into a prefix, number, and postfix
-   * Example inputs: $1.000,00, 0.01 BTC, 10 $, 50.00%
-   */
-  const numberToParts = (value: string): FiatParts => {
-    const parts = parseString.exec(value)
-
-    return {
-      number: parts?.[2],
-      prefix: parts?.[1],
-      postfix: parts?.[3]?.trim(),
-    }
-  }
-
-  /**
-   * Helper function to abbreviate number to truncate rather than round fractions
-   * @param {number} maximumFractionDigits - truncate fraction after this number of digits. Use 0 for no fraction.
-   * @param omitDecimalTrailingZeros
-   */
-  function partsReducer(maximumFractionDigits: number, omitDecimalTrailingZeros?: boolean) {
-    return (accum: string, { type, value }: Intl.NumberFormatPart) => {
-      let segment = value
-      if (type === 'decimal' && maximumFractionDigits === 0) segment = ''
-      if (type === 'fraction') {
-        segment = value.substr(0, maximumFractionDigits)
-        if (omitDecimalTrailingZeros && segment && /^0*$/.test(segment)) {
-          // remove trailing zeroes as well as separator character in case there are only zeroes as decimals
-          return accum.slice(0, -1)
-        }
-      }
-
-      return accum + segment
-    }
-  }
 
   const abbreviateNumber = useCallback(
     (number: number, fiatType?: string, options?: NumberFormatOptions) => {
@@ -217,32 +217,30 @@ export const useLocaleFormatter = (args?: useLocaleFormatterArgs): NumberFormatt
   )
 
   /** Format a number as a crypto display value */
-  const numberToCrypto = (
-    num: NumberValue,
-    symbol = 'BTC',
-    options?: NumberFormatOptions,
-  ): string => {
-    return `${toNumber(num).toLocaleString(deviceLocale, {
-      maximumFractionDigits: CRYPTO_PRECISION,
-      ...options,
-    })} ${symbol}`
-  }
+  const numberToCrypto = useCallback(
+    (num: NumberValue, symbol = 'BTC', options?: NumberFormatOptions): string => {
+      return `${toNumber(num).toLocaleString(deviceLocale, {
+        maximumFractionDigits: CRYPTO_PRECISION,
+        ...options,
+      })} ${symbol}`
+    },
+    [deviceLocale],
+  )
 
   /**
    * Format a number as a crypto input value.
    * This shows any trailing decimals and zeros as the user is typing in their number
    */
-  const numberToCryptoInput = (
-    num: NumberValue,
-    symbol = 'BTC',
-    options?: NumberFormatOptions,
-  ): string => {
-    const fractionDigits = (String(num).split(localeParts.decimal)?.[1] ?? '').length
-    const minimumFractionDigits =
-      fractionDigits < CRYPTO_PRECISION ? fractionDigits : CRYPTO_PRECISION
-    const crypto = numberToCrypto(num, symbol, { ...options, minimumFractionDigits })
-    return showTrailingDecimal(num, crypto)
-  }
+  const numberToCryptoInput = useCallback(
+    (num: NumberValue, symbol = 'BTC', options?: NumberFormatOptions): string => {
+      const fractionDigits = (String(num).split(localeParts.decimal)?.[1] ?? '').length
+      const minimumFractionDigits =
+        fractionDigits < CRYPTO_PRECISION ? fractionDigits : CRYPTO_PRECISION
+      const crypto = numberToCrypto(num, symbol, { ...options, minimumFractionDigits })
+      return showTrailingDecimal(num, crypto)
+    },
+    [localeParts.decimal, numberToCrypto, showTrailingDecimal],
+  )
 
   /** Format a number as a fiat display value */
   const numberToFiat = useCallback(
@@ -279,37 +277,50 @@ export const useLocaleFormatter = (args?: useLocaleFormatterArgs): NumberFormatt
     [localeParts, numberToFiat, showTrailingDecimal],
   )
 
-  const numberToPercent = (number: NumberValue, options: NumberFormatOptions = {}): string => {
-    return toNumber(number).toLocaleString(deviceLocale, {
-      style: 'percent',
-      minimumIntegerDigits: 1,
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-      ...options,
-    })
-  }
+  const numberToPercent = useCallback(
+    (number: NumberValue, options: NumberFormatOptions = {}): string => {
+      return toNumber(number).toLocaleString(deviceLocale, {
+        style: 'percent',
+        minimumIntegerDigits: 1,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+        ...options,
+      })
+    },
+    [deviceLocale],
+  )
 
-  const numberToString = (number: NumberValue, options?: NumberFormatOptions): string => {
-    if (options?.abbreviated) return abbreviateNumber(toNumber(number), undefined, options)
-    const maximumFractionDigits = options?.maximumFractionDigits ?? 8
-    return toNumber(number).toLocaleString(deviceLocale, { maximumFractionDigits })
-  }
+  const numberToString = useCallback(
+    (number: NumberValue, options?: NumberFormatOptions): string => {
+      if (options?.abbreviated) return abbreviateNumber(toNumber(number), undefined, options)
+      const maximumFractionDigits = options?.maximumFractionDigits ?? 8
+      return toNumber(number).toLocaleString(deviceLocale, { maximumFractionDigits })
+    },
+    [abbreviateNumber, deviceLocale],
+  )
 
   /**
    * Convert date to a locale formatted string
    * Example: '5/12/2020, 3:20:37PM' (US) or '12.5.2020, 15:20:37' (DE)
    */
-  const toDateTime = (date: DateValue, options?: Intl.DateTimeFormatOptions): string => {
-    const d = toDate(date)
-    if (!d) return '' // @TODO: What do we do with invalid dates?
-    return d.toLocaleString(deviceLocale, options)
-  }
+  const toDateTime = useCallback(
+    (date: DateValue, options?: Intl.DateTimeFormatOptions): string => {
+      const d = toDate(date)
+      if (!d) return '' // @TODO: What do we do with invalid dates?
+      return d.toLocaleString(deviceLocale, options)
+    },
+    [deviceLocale],
+  )
 
-  const toShortDate = (date: DateValue): string => {
-    const d = toDate(date)
-    if (!d) return '' // @TODO: What do we do with invalid dates?
-    return d.toLocaleDateString(deviceLocale)
-  }
+  const toShortDate = useCallback(
+    (date: DateValue): string => {
+      const d = toDate(date)
+      if (!d) return '' // @TODO: What do we do with invalid dates?
+      return d.toLocaleDateString(deviceLocale)
+    },
+    [deviceLocale],
+  )
+
   return {
     deviceLocale,
     number: {
