@@ -442,7 +442,7 @@ export const Status = () => {
         <Text color='text.subtle'>Channel ID:</Text>
         {swapData.channelId && (
           <Flex gap={2} alignItems='center'>
-            <Text>Channel Id: {swapData.channelId.toString()}</Text>
+            <Text>{swapData.channelId.toString()}</Text>
             {swapData.channelId && (
               <Link
                 href={`https://scan.chainflip.io/channels/${swapStatus?.status.depositChannel?.id}`}
@@ -528,6 +528,10 @@ export const Status = () => {
         </Stack>
         <Divider borderColor='border.base' />
         <Stack spacing={2}>
+          <Flex alignItems='center' justifyContent='space-between'>
+            <Text color='text.subtle'>Estimated Receive</Text>
+            <Amount.Crypto value={buyAmountCryptoPrecision || '0'} symbol={buyAsset.symbol} />
+          </Flex>
           <Flex alignItems='center' justifyContent='space-between'>
             <Text color='text.subtle'>Estimated Time</Text>
             <Text>
