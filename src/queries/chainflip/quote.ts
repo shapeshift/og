@@ -9,14 +9,20 @@ type QuoteQueryKey = readonly ['chainflip', 'quote', ChainflipQuoteParams]
 
 export const useChainflipQuoteQuery = (
   params: ChainflipQuoteParams,
-  options?: Omit<UseQueryOptions<ChainflipQuote, AxiosError<ChainflipQuoteError>, ChainflipQuote, QuoteQueryKey>, 'queryKey' | 'queryFn'>
+  options?: Omit<
+    UseQueryOptions<ChainflipQuote, AxiosError<ChainflipQuoteError>, ChainflipQuote, QuoteQueryKey>,
+    'queryKey' | 'queryFn'
+  >,
 ) => {
   const { queryKey, queryFn } = reactQueries.chainflip.quote(params)
 
   return useQuery<ChainflipQuote, AxiosError<ChainflipQuoteError>, ChainflipQuote, QuoteQueryKey>({
     queryKey,
-    queryFn: params.sourceAsset && params.destinationAsset && bnOrZero(params.amount).gt(0) ? queryFn : skipToken,
+    queryFn:
+      params.sourceAsset && params.destinationAsset && bnOrZero(params.amount).gt(0)
+        ? queryFn
+        : skipToken,
     retry: false,
-    ...options
+    ...options,
   })
 }
