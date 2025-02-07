@@ -113,7 +113,7 @@ const IdleSwapCardBody = ({
       </Flex>
       <Stack spacing={4} flex={1}>
         <Stack>
-          <Text fontWeight='bold'>Send</Text>
+          <Text color='text.subtle'>Send</Text>
           <Flex alignItems='center' gap={2}>
             <Avatar size='sm' src={sellAsset.icon} />
             <Amount.Crypto value={sellAmountCryptoPrecision} symbol={sellAsset.symbol} />
@@ -121,7 +121,7 @@ const IdleSwapCardBody = ({
         </Stack>
         {!isExpired && (
           <Stack>
-            <Text fontWeight='bold'>To</Text>
+            <Text color='text.subtle'>To</Text>
             <InputGroup>
               <Input isReadOnly value={swapData.address || ''} />
               <InputRightElement>
@@ -139,7 +139,7 @@ const IdleSwapCardBody = ({
         )}
         <Divider borderColor='border.base' />
         <Stack>
-          <Text fontWeight='bold'>You will receive</Text>
+          <Text color='text.subtle'>You will receive</Text>
           <Flex gap={2} alignItems='center'>
             <Avatar size='xs' src={buyAsset.icon} />
             <Amount.Crypto value={buyAmountCryptoPrecision || '0'} symbol={buyAsset.symbol} />
@@ -494,7 +494,7 @@ export const Status = () => {
           <Flex width='full' justifyContent='space-between'>
             <Flex alignItems='center' gap={2}>
               <Avatar size='xs' src={sellAsset.icon} />
-              <Text>Refund Address</Text>
+              <Text color='text.subtle'>Refund Address</Text>
             </Flex>
           </Flex>
           <Flex alignItems='center' gap={2}>
@@ -512,7 +512,7 @@ export const Status = () => {
           <Flex width='full' justifyContent='space-between'>
             <Flex alignItems='center' gap={2}>
               <Avatar size='xs' src={buyAsset.icon} />
-              <Text>Receive Address</Text>
+              <Text color='text.subtle'>Receive Address</Text>
             </Flex>
           </Flex>
           <Flex alignItems='center' gap={2}>
@@ -529,7 +529,7 @@ export const Status = () => {
         <Divider borderColor='border.base' />
         <Stack spacing={2}>
           <Flex alignItems='center' justifyContent='space-between'>
-            <Text>Estimated Time</Text>
+            <Text color='text.subtle'>Estimated Time</Text>
             <Text>
               {quote?.estimatedDurationSeconds
                 ? dayjs.duration(quote.estimatedDurationSeconds, 'seconds').humanize()
@@ -537,7 +537,7 @@ export const Status = () => {
             </Text>
           </Flex>
           <Flex alignItems='center' justifyContent='space-between'>
-            <Text>Estimated Rate</Text>
+            <Text color='text.subtle'>Estimated Rate</Text>
             <Flex gap={1}>
               <Amount.Crypto value='1' symbol={sellAsset.symbol} suffix='=' />
               <Amount.Crypto
@@ -547,11 +547,11 @@ export const Status = () => {
             </Flex>
           </Flex>
           <HStack justify='space-between'>
-            <Text>ShapeShift Fee</Text>
+            <Text color='text.subtle'>ShapeShift Fee</Text>
             <Amount.Fiat value={calculateShapeshiftFee(quote)} />
           </HStack>
           <HStack justify='space-between'>
-            <Text>Protocol Fee</Text>
+            <Text color='text.subtle'>Protocol Fee</Text>
             <Amount.Fiat value={protocolFeesFiat} />
           </HStack>
         </Stack>

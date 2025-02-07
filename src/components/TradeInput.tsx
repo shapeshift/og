@@ -15,14 +15,13 @@ import {
   StatLabel,
   StatNumber,
   Text,
-  useDisclosure,
 } from '@chakra-ui/react'
 import { fromAssetId } from '@shapeshiftoss/caip'
 import { getChainflipAssetId } from 'queries/chainflip/assets'
 import { useChainflipQuoteQuery } from 'queries/chainflip/quote'
 import { useChainflipSwapMutation } from 'queries/chainflip/swap'
 import { useMarketDataByAssetIdQuery } from 'queries/marketData'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { useFormContext, useWatch } from 'react-hook-form'
 import { FaArrowRightArrowLeft } from 'react-icons/fa6'
 import { NumericFormat } from 'react-number-format'
@@ -32,12 +31,9 @@ import { bn, bnOrZero } from 'lib/bignumber/bignumber'
 import { fromBaseUnit, toBaseUnit } from 'lib/bignumber/conversion'
 import { mixpanel, MixPanelEvent } from 'lib/mixpanel'
 import { validateAddress } from 'lib/validation'
-import type { Asset } from 'types/Asset'
 import type { SwapFormData } from 'types/form'
 
 import { Amount } from './Amount/Amount'
-import { AssetSelectModal } from './AssetSelectModal/AssetSelectModal'
-import { AssetType } from './AssetSelectModal/types'
 
 const divider = <StackDivider borderColor='border.base' />
 
@@ -128,9 +124,6 @@ export const TradeInput = () => {
     },
   })
 
-  const { isOpen, onClose, onOpen } = useDisclosure()
-  const [assetSelectType, setAssetSelectType] = useState<AssetType>(AssetType.BUY)
-
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault()
@@ -174,26 +167,12 @@ export const TradeInput = () => {
   )
 
   const handleSellAssetClick = useCallback(() => {
-    setAssetSelectType(AssetType.SELL)
-    onOpen()
-  }, [onOpen])
+    console.info('asset click')
+  }, [])
 
   const handleBuyAssetClick = useCallback(() => {
-    setAssetSelectType(AssetType.BUY)
-    onOpen()
-  }, [onOpen])
-
-  const handleAssetSelect = useCallback(
-    (asset: Asset) => {
-      if (assetSelectType === AssetType.BUY) {
-        setValue('buyAssetId', asset.assetId)
-      }
-      if (assetSelectType === AssetType.SELL) {
-        setValue('sellAssetId', asset.assetId)
-      }
-    },
-    [assetSelectType, setValue],
-  )
+    console.info('to asset click')
+  }, [])
 
   const handleSwitchAssets = useCallback(() => {
     const currentSellAsset = sellAsset
@@ -323,160 +302,157 @@ export const TradeInput = () => {
   if (!(sellAsset && buyAsset)) return null
 
   return (
-    <>
-      <Card width='full' maxWidth='450px' overflow='hidden' as='form' onSubmit={handleSubmit}>
-        <CardHeader px={0} py={0} bg='background.surface.raised.base'>
-          <Flex
-            fontSize='sm'
-            gap={1}
-            justifyContent='center'
-            py={2}
-            bg='background.surface.raised.base'
-          >
-            <Text color='text.subtle'>Your rate</Text>
-            <Skeleton isLoaded={!isQuoteFetching}>
-              <Flex gap={1}>
-                <Amount.Crypto value='1' symbol={sellAsset.symbol} suffix='=' />
-                <Amount.Crypto value={rate} symbol={buyAsset.symbol} />
-              </Flex>
-            </Skeleton>
-          </Flex>
-          <HStack divider={divider} fontSize='sm'>
-            <Stat size='sm' textAlign='center' py={4}>
-              <StatLabel color='text.subtle'>Deposit This</StatLabel>
-              <StatNumber>
-                <Amount.Crypto value={sellAmountCryptoPrecision || '0'} symbol={sellAsset.symbol} />
-              </StatNumber>
-            </Stat>
-            <Stat size='sm' textAlign='center' py={4}>
-              <StatLabel color='text.subtle'>To Get This</StatLabel>
-              <StatNumber>
-                {isQuoteFetching ? (
-                  <Skeleton height='24px' width='100px' />
-                ) : (
-                  <Amount.Crypto value={buyAmountCryptoPrecision ?? '0'} symbol={buyAsset.symbol} />
-                )}
-              </StatNumber>
-            </Stat>
-          </HStack>
-        </CardHeader>
-        <CardBody display='flex' flexDir='column' gap={6}>
-          <Flex width='full' alignItems='center' justifyContent='space-between'>
-            <Flex flex={1} justifyContent='center'>
-              <IconButton
-                size='lg'
-                variant='ghost'
-                icon={SellAssetIcon}
-                aria-label='From Asset'
-                onClick={handleSellAssetClick}
-              />
+    <Card width='full' maxWidth='450px' overflow='hidden' as='form' onSubmit={handleSubmit}>
+      <CardHeader px={0} py={0} bg='background.surface.raised.base'>
+        <Flex
+          fontSize='sm'
+          gap={1}
+          justifyContent='center'
+          py={2}
+          bg='background.surface.raised.base'
+        >
+          <Text color='text.subtle'>Your rate</Text>
+          <Skeleton isLoaded={!isQuoteFetching}>
+            <Flex gap={1}>
+              <Amount.Crypto value='1' symbol={sellAsset.symbol} suffix='=' />
+              <Amount.Crypto value={rate} symbol={buyAsset.symbol} />
             </Flex>
-            <IconButton
-              variant='ghost'
-              icon={SwitchIcon}
-              aria-label='Switch Assets'
-              onClick={handleSwitchAssets}
-            />
-            <Flex flex={1} justifyContent='center'>
-              <IconButton
-                size='lg'
-                variant='ghost'
-                icon={BuyAssetIcon}
-                aria-label='To Asset'
-                onClick={handleBuyAssetClick}
-              />
-            </Flex>
-          </Flex>
-          <Flex gap={6}>
-            <Flex direction='column' width='50%'>
-              <NumericFormat
-                customInput={Input}
-                variant='filled'
-                placeholder={`Enter ${sellAsset.symbol} amount`}
-                value={sellAmountCryptoPrecision}
-                onValueChange={handleSellAmountChange}
-                allowNegative={false}
-                decimalScale={sellAsset.precision}
-                isInvalid={!!errors.sellAmountCryptoBaseUnit}
-              />
-              {errors.sellAmountCryptoBaseUnit && (
-                <Text fontSize='sm' color='red.500' mt={1}>
-                  {errors.sellAmountCryptoBaseUnit.message}
-                </Text>
-              )}
-            </Flex>
-            <Flex width='50%'>
+          </Skeleton>
+        </Flex>
+        <HStack divider={divider} fontSize='sm'>
+          <Stat size='sm' textAlign='center' py={4}>
+            <StatLabel color='text.subtle'>Deposit This</StatLabel>
+            <StatNumber>
+              <Amount.Crypto value={sellAmountCryptoPrecision || '0'} symbol={sellAsset.symbol} />
+            </StatNumber>
+          </Stat>
+          <Stat size='sm' textAlign='center' py={4}>
+            <StatLabel color='text.subtle'>To Get This</StatLabel>
+            <StatNumber>
               {isQuoteFetching ? (
-                <Skeleton height='40px' width='full'>
-                  <Input
-                    variant='filled'
-                    placeholder={`0.0 ${buyAsset.symbol}`}
-                    isReadOnly
-                    value=''
-                    {...skeletonInputStyles}
-                  />
-                </Skeleton>
+                <Skeleton height='24px' width='100px' />
               ) : (
+                <Amount.Crypto value={buyAmountCryptoPrecision ?? '0'} symbol={buyAsset.symbol} />
+              )}
+            </StatNumber>
+          </Stat>
+        </HStack>
+      </CardHeader>
+      <CardBody display='flex' flexDir='column' gap={6}>
+        <Flex width='full' alignItems='center' justifyContent='space-between'>
+          <Flex flex={1} justifyContent='center'>
+            <IconButton
+              size='lg'
+              variant='ghost'
+              icon={SellAssetIcon}
+              aria-label='From Asset'
+              onClick={handleSellAssetClick}
+            />
+          </Flex>
+          <IconButton
+            variant='ghost'
+            icon={SwitchIcon}
+            aria-label='Switch Assets'
+            onClick={handleSwitchAssets}
+          />
+          <Flex flex={1} justifyContent='center'>
+            <IconButton
+              size='lg'
+              variant='ghost'
+              icon={BuyAssetIcon}
+              aria-label='To Asset'
+              onClick={handleBuyAssetClick}
+            />
+          </Flex>
+        </Flex>
+        <Flex gap={6}>
+          <Flex direction='column' width='50%'>
+            <NumericFormat
+              customInput={Input}
+              variant='filled'
+              placeholder={`Enter ${sellAsset.symbol} amount`}
+              value={sellAmountCryptoPrecision}
+              onValueChange={handleSellAmountChange}
+              allowNegative={false}
+              decimalScale={sellAsset.precision}
+              isInvalid={!!errors.sellAmountCryptoBaseUnit}
+            />
+            {errors.sellAmountCryptoBaseUnit && (
+              <Text fontSize='sm' color='red.500' mt={1}>
+                {errors.sellAmountCryptoBaseUnit.message}
+              </Text>
+            )}
+          </Flex>
+          <Flex width='50%'>
+            {isQuoteFetching ? (
+              <Skeleton height='40px' width='full'>
                 <Input
                   variant='filled'
                   placeholder={`0.0 ${buyAsset.symbol}`}
                   isReadOnly
-                  value={buyAmountCryptoPrecision || 'N/A'}
+                  value=''
                   {...skeletonInputStyles}
                 />
-              )}
-            </Flex>
-          </Flex>
-          <Flex direction='column' gap={2}>
-            <Text fontSize='sm' color='text.subtle'>
-              Destination Address
-            </Text>
-            <Input
-              {...register('destinationAddress', destinationAddressRules)}
-              placeholder={`Enter ${buyAsset.symbol || ''} address`}
-              isInvalid={!!errors.destinationAddress}
-              required
-              title='Please enter a valid destination address'
-            />
-            {errors.destinationAddress && (
-              <Text fontSize='sm' color='red.500'>
-                {errors.destinationAddress.message}
-              </Text>
+              </Skeleton>
+            ) : (
+              <Input
+                variant='filled'
+                placeholder={`0.0 ${buyAsset.symbol}`}
+                isReadOnly
+                value={buyAmountCryptoPrecision || 'N/A'}
+                {...skeletonInputStyles}
+              />
             )}
           </Flex>
-          <Flex direction='column' gap={2}>
-            <Text fontSize='sm' color='text.subtle'>
-              Refund Address
+        </Flex>
+        <Flex direction='column' gap={2}>
+          <Text fontSize='sm' color='text.subtle'>
+            Destination Address
+          </Text>
+          <Input
+            {...register('destinationAddress', destinationAddressRules)}
+            placeholder={`Enter ${buyAsset.symbol || ''} address`}
+            isInvalid={!!errors.destinationAddress}
+            required
+            title='Please enter a valid destination address'
+          />
+          {errors.destinationAddress && (
+            <Text fontSize='sm' color='red.500'>
+              {errors.destinationAddress.message}
             </Text>
-            <Input
-              {...register('refundAddress', refundAddressRules)}
-              placeholder={`Enter ${sellAsset.symbol || ''} address`}
-              isInvalid={!!errors.refundAddress}
-              required
-              title='Please enter a valid refund address'
-            />
-            {errors.refundAddress && (
-              <Text fontSize='sm' color='red.500'>
-                {errors.refundAddress.message}
-              </Text>
-            )}
-          </Flex>
-        </CardBody>
-        <CardFooter>
-          <Button
-            type='submit'
-            colorScheme='blue'
-            size='lg'
-            width='full'
-            isDisabled={!quote}
-            isLoading={isSwapPending}
-            loadingText='Creating Swap'
-          >
-            Start Transaction
-          </Button>
-        </CardFooter>
-      </Card>
-      <AssetSelectModal isOpen={isOpen} onClose={onClose} onClick={handleAssetSelect} />
-    </>
+          )}
+        </Flex>
+        <Flex direction='column' gap={2}>
+          <Text fontSize='sm' color='text.subtle'>
+            Refund Address
+          </Text>
+          <Input
+            {...register('refundAddress', refundAddressRules)}
+            placeholder={`Enter ${sellAsset.symbol || ''} address`}
+            isInvalid={!!errors.refundAddress}
+            required
+            title='Please enter a valid refund address'
+          />
+          {errors.refundAddress && (
+            <Text fontSize='sm' color='red.500'>
+              {errors.refundAddress.message}
+            </Text>
+          )}
+        </Flex>
+      </CardBody>
+      <CardFooter>
+        <Button
+          type='submit'
+          colorScheme='blue'
+          size='lg'
+          width='full'
+          isDisabled={!quote}
+          isLoading={isSwapPending}
+          loadingText='Creating Swap'
+        >
+          Start Transaction
+        </Button>
+      </CardFooter>
+    </Card>
   )
 }
