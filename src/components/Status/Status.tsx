@@ -49,12 +49,27 @@ import { StatusStepper } from './components/StatusStepper'
 dayjs.extend(duration)
 dayjs.extend(relativeTime)
 
+const copyIcon = <FaRegCopy />
+const checkIcon = <FaCheck />
+
 const pendingSlideFadeSx = { position: 'absolute', top: 0, left: 0, right: 0 } as const
 const linkHoverSx = { color: 'blue.600' }
 const slideFadeSx = { transitionProperty: 'all', transitionDuration: '0.3s' }
+const cardHeaderSx = {
+  bg: 'background.surface.raised.base',
+  display: 'flex',
+  justifyContent: 'center',
+  gap: 1,
+  borderTopRadius: 'xl',
+  fontSize: 'sm',
+  py: 2,
+}
 
-const copyIcon = <FaRegCopy />
-const checkIcon = <FaCheck />
+const calculateShapeshiftFee = (quote: ChainflipQuote | undefined) => {
+  if (!quote) return '0'
+  const ingressAmountUsd = bnOrZero(quote.ingressAmount).times(quote.estimatedPrice)
+  return ingressAmountUsd.times(CHAINFLIP_COMMISSION_BPS).div(10000).toString()
+}
 
 const IdleSwapCardBody = ({
   swapData,
@@ -199,12 +214,6 @@ const PendingSwapCardBody = ({
   )
 }
 
-const calculateShapeshiftFee = (quote: ChainflipQuote | undefined) => {
-  if (!quote) return '0'
-  const ingressAmountUsd = bnOrZero(quote.ingressAmount).times(quote.estimatedPrice)
-  return ingressAmountUsd.times(CHAINFLIP_COMMISSION_BPS).div(10000).toString()
-}
-
 export const Status = () => {
   const [searchParams] = useSearchParams()
 
@@ -288,19 +297,6 @@ export const Status = () => {
     }
   }, [copyRefundAddress, refundAddress])
 
-  const cardHeaderStyle = useMemo(
-    () => ({
-      bg: 'background.surface.raised.base',
-      display: 'flex',
-      justifyContent: 'center',
-      gap: 1,
-      borderTopRadius: 'xl',
-      fontSize: 'sm',
-      py: 2,
-    }),
-    [],
-  )
-
   // Collect feeAssetIds
   const feeAssetIds = useMemo(() => {
     if (!quote?.includedFees) return []
@@ -345,7 +341,7 @@ export const Status = () => {
 
   return (
     <Card width='full' maxW='465px'>
-      <CardHeader {...cardHeaderStyle}>
+      <CardHeader {...cardHeaderSx}>
         <Text color='text.subtle'>Channel ID:</Text>
         {swapData.channelId && (
           <Flex gap={2} alignItems='center'>

@@ -8,9 +8,7 @@ import { isAddress } from 'viem'
 import { isEvmChainId } from './utils'
 
 const validateAddressSync = (address: string, chainId: string): boolean => {
-  console.log('validateAddress called:', { address, chainId })
   if (!address) {
-    console.log('Empty address, returning true')
     return true
   }
 
