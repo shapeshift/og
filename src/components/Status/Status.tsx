@@ -433,7 +433,21 @@ export const Status = () => {
     <Card width='full' maxW='465px'>
       <CardHeader {...cardHeaderStyle}>
         <Text color='text.subtle'>Channel ID:</Text>
-        <Text>{swapData.channelId?.toString() || 'Loading...'}</Text>
+        {swapData.channelId && (
+          <Flex gap={2} alignItems='center'>
+            <Text>Channel Id: {swapData.channelId.toString()}</Text>
+            {swapData.channelId && (
+              <Link
+                href={`https://scan.chainflip.io/channels/${swapStatus?.status.depositChannel?.id}`}
+                isExternal
+                color='blue.500'
+                _hover={linkHoverSx}
+              >
+                <FaArrowUpRightFromSquare size={12} />
+              </Link>
+            )}
+          </Flex>
+        )}
       </CardHeader>
       <Box position='relative' minH={isCompleted ? '250px' : '150px'}>
         <SlideFade in={!shouldDisplayPendingSwapBody} unmountOnExit>
