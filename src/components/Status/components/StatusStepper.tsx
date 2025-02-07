@@ -8,8 +8,8 @@ export type StepProps = {
 }
 
 const getProgressPercentage = (state?: string, isRefunded?: boolean, isFailed?: boolean) => {
-  if (isFailed) return 100 // Will be colored red
-  if (isRefunded) return 100 // Will be colored red
+  if (isFailed) return 100
+  if (isRefunded) return 100
 
   // Map states to progress percentages
   switch (state) {
@@ -26,7 +26,7 @@ const getProgressPercentage = (state?: string, isRefunded?: boolean, isFailed?: 
     case 'completed':
       return 100
     default:
-      return 0
+      return 1
   }
 }
 
