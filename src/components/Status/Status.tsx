@@ -33,15 +33,7 @@ import type { ChainflipQuote, ChainflipSwapStatus } from 'queries/chainflip/type
 import { reactQueries } from 'queries/react-queries'
 import { useCallback, useMemo } from 'react'
 import { useFormContext, useWatch } from 'react-hook-form'
-import {
-  FaArrowDown,
-  FaArrowRightArrowLeft,
-  FaArrowUpRightFromSquare,
-  FaCheck,
-  FaClock,
-  FaRegCopy,
-  FaRotate,
-} from 'react-icons/fa6'
+import { FaArrowUpRightFromSquare, FaCheck, FaRegCopy } from 'react-icons/fa6'
 import { useSearchParams } from 'react-router'
 import { useAssetById } from 'store/assets'
 import { Amount } from 'components/Amount/Amount'
@@ -51,6 +43,7 @@ import { bnOrZero, fromBaseUnit } from 'lib/bignumber/bignumber'
 import type { SwapFormData } from 'types/form'
 
 import { CHAINFLIP_COMMISSION_BPS } from '../../lib/const'
+import { getChainflipStatusConfig } from '../../queries/chainflip/status'
 import { StatusStepper } from './components/StatusStepper'
 
 dayjs.extend(duration)
@@ -157,91 +150,7 @@ const PendingSwapCardBody = ({
     status: ChainflipSwapStatus
   }
 }) => {
-  const getStatusConfig = (state?: string, swapEgress?: { transactionReference?: string }) => {
-    const retryCount = swapStatus?.status.swap?.regular?.retryCount ?? 0
-    const isRetrying = state === 'swapping' && retryCount > 0
-    const isRefund = Boolean(swapStatus?.status.refundEgress)
-    const isRefunded = isRefund && state === 'completed'
-
-    if (isRefunded) {
-      return {
-        icon: FaCheck,
-        message: 'Refunded',
-        color: 'green.200',
-      }
-    }
-
-    if (isRefund) {
-      return {
-        icon: FaArrowDown,
-        message: 'Refunding...',
-        color: 'green.200',
-      }
-    }
-
-    if (isRetrying) {
-      return {
-        icon: FaRotate,
-        message: 'Retrying Swap...',
-        color: 'green.200',
-      }
-    }
-
-    switch (state) {
-      case 'waiting':
-        return {
-          icon: FaClock,
-          message: 'Waiting for deposit...',
-          color: 'green.200',
-        }
-      case 'receiving':
-        return {
-          icon: FaArrowDown,
-          message: 'Deposit detected, waiting for confirmation...',
-          color: 'green.200',
-        }
-      case 'swapping':
-        return {
-          icon: FaArrowRightArrowLeft,
-          message: 'Processing swap...',
-          color: 'green.200',
-        }
-      case 'sending':
-        return {
-          icon: FaArrowDown,
-          message: swapEgress?.transactionReference
-            ? 'Outbound transaction initiated...'
-            : 'Preparing outbound transaction...',
-          color: 'green.200',
-        }
-      case 'sent':
-        return {
-          icon: FaArrowDown,
-          message: 'Transaction sent, waiting for confirmation...',
-          color: 'green.200',
-        }
-      case 'completed':
-        return {
-          icon: FaCheck,
-          message: 'Swap Complete',
-          color: 'green.200',
-        }
-      case 'failed':
-        return {
-          icon: FaCheck,
-          message: 'Swap failed',
-          color: 'red.500',
-        }
-      default:
-        return {
-          icon: FaClock,
-          message: 'Unknown status',
-          color: 'green.200',
-        }
-    }
-  }
-
-  const config = getStatusConfig(swapStatus?.status.state, swapStatus?.status.swapEgress)
+  const config = getChainflipStatusConfig(swapStatus?.status.state, swapStatus?.status)
   const StatusIcon = config.icon
   const isCompleted = swapStatus?.status.state === 'completed'
   const isRefunded = Boolean(swapStatus?.status.refundEgress) && isCompleted

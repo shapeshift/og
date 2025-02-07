@@ -1,36 +1,19 @@
-import { useQuery } from '@tanstack/react-query'
-import type { IconType } from 'react-icons'
+import type { ChainflipSwapStatus } from 'queries/chainflip/types'
 import { FaArrowDown, FaArrowRightArrowLeft, FaCheck, FaClock, FaRotate } from 'react-icons/fa6'
 
-import { reactQueries } from '../react-queries'
-import type { ChainflipSwapStatus } from './types'
-
-type ChainflipStatusQueryParams = {
-  swapId: number
-  enabled?: boolean
-}
-
-export const useChainflipStatusQuery = ({ swapId, enabled = true }: ChainflipStatusQueryParams) => {
-  return useQuery({
-    ...reactQueries.chainflip.status(swapId),
-    refetchInterval: 15000,
-    enabled,
-  })
-}
-
-export interface StatusConfig {
-  icon: IconType
+type StatusConfig = {
+  icon: typeof FaCheck
   message: string
   color: string
 }
 
 export const getChainflipStatusConfig = (
   state?: string,
-  status?: ChainflipSwapStatus,
+  status?: { status: ChainflipSwapStatus },
 ): StatusConfig => {
-  const retryCount = status?.swap?.regular?.retryCount ?? 0
+  const retryCount = status?.status.swap?.regular?.retryCount ?? 0
   const isRetrying = state === 'swapping' && retryCount > 0
-  const isRefund = Boolean(status?.refundEgress)
+  const isRefund = Boolean(status?.status.refundEgress)
   const isRefunded = isRefund && state === 'completed'
 
   if (isRefunded) {
@@ -79,7 +62,7 @@ export const getChainflipStatusConfig = (
     case 'sending':
       return {
         icon: FaArrowDown,
-        message: status?.swapEgress?.transactionReference
+        message: status?.status.swapEgress?.transactionReference
           ? 'Outbound transaction initiated...'
           : 'Preparing outbound transaction...',
         color: 'green.200',
