@@ -28,6 +28,7 @@ import { FaArrowRightArrowLeft } from 'react-icons/fa6'
 import { NumericFormat } from 'react-number-format'
 import { useNavigate } from 'react-router'
 import { useAssetById } from 'store/assets'
+import { useDebounce } from 'hooks/useDebounce'
 import { bn, bnOrZero } from 'lib/bignumber/bignumber'
 import { fromBaseUnit, toBaseUnit } from 'lib/bignumber/conversion'
 import { mixpanel, MixPanelEvent } from 'lib/mixpanel'
@@ -133,6 +134,13 @@ export const TradeInput = () => {
 
   const { isOpen, onClose, onOpen } = useDisclosure()
   const [assetSelectType, setAssetSelectType] = useState<AssetType>(AssetType.BUY)
+  const [sellAmountInput, setSellAmountInput] = useState('')
+  const debouncedSellAmount = useDebounce(sellAmountInput, 200)
+
+  useEffect(() => {
+    if (!sellAsset?.precision) return
+    setValue('sellAmountCryptoBaseUnit', toBaseUnit(debouncedSellAmount, sellAsset.precision))
+  }, [debouncedSellAmount, sellAsset?.precision, setValue])
 
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
@@ -247,13 +255,9 @@ export const TradeInput = () => {
     setValue,
   ])
 
-  const handleSellAmountChange = useCallback(
-    (values: { value: string }) => {
-      if (!sellAsset?.precision) return
-      setValue('sellAmountCryptoBaseUnit', toBaseUnit(values.value, sellAsset.precision))
-    },
-    [sellAsset?.precision, setValue],
-  )
+  const handleSellAmountChange = useCallback((values: { value: string }) => {
+    setSellAmountInput(values.value)
+  }, [])
 
   // Validation functions at top level
   const validateDestinationAddress = useCallback(
@@ -397,7 +401,7 @@ export const TradeInput = () => {
                 customInput={Input}
                 variant='filled'
                 placeholder={`Enter ${sellAsset.symbol} amount`}
-                value={sellAmountCryptoPrecision}
+                value={sellAmountInput}
                 onValueChange={handleSellAmountChange}
                 allowNegative={false}
                 decimalScale={sellAsset.precision}
