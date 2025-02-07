@@ -242,7 +242,6 @@ const PendingSwapCardBody = ({
   }
 
   const config = getStatusConfig(swapStatus?.status.state, swapStatus?.status.swapEgress)
-  console.log({ config, swapStatus })
   const StatusIcon = config.icon
   const isCompleted = swapStatus?.status.state === 'completed'
   const isRefunded = Boolean(swapStatus?.status.refundEgress) && isCompleted
@@ -258,9 +257,15 @@ const PendingSwapCardBody = ({
           <StatusIcon size={18} color='black' />
         </Circle>
         <Flex gap={2} alignItems='center'>
-          <Text fontSize='lg' fontWeight='medium'>
-            {config.message}
-          </Text>
+          <SlideFade
+            in={true}
+            offsetY='20px'
+            style={{ transitionProperty: 'all', transitionDuration: '0.3s' }}
+          >
+            <Text fontSize='lg' fontWeight='medium'>
+              {config.message}
+            </Text>
+          </SlideFade>
           {swapStatus?.status.state !== 'waiting' && (
             <Link
               href={`https://scan.chainflip.io/swaps/${swapStatus?.status.swapId}`}
@@ -273,14 +278,16 @@ const PendingSwapCardBody = ({
           )}
         </Flex>
         {isCompleted && !isRefunded && (
-          <VStack spacing={4} mt={2}>
-            <Text fontSize='md' color='gray.500'>
-              Do more with the ShapeShift platform
-            </Text>
-            <Button colorScheme='blue' size='md' onClick={handleLaunchApp}>
-              Launch Shapeshift App
-            </Button>
-          </VStack>
+          <SlideFade in={true} offsetY='20px'>
+            <VStack spacing={4} mt={2}>
+              <Text fontSize='md' color='gray.500'>
+                Do more with the ShapeShift platform
+              </Text>
+              <Button colorScheme='blue' size='md' onClick={handleLaunchApp}>
+                Launch Shapeshift App
+              </Button>
+            </VStack>
+          </SlideFade>
         )}
       </Flex>
     </CardBody>
