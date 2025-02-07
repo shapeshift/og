@@ -59,6 +59,7 @@ dayjs.extend(relativeTime)
 
 const pendingSlideFadeSx = { position: 'absolute', top: 0, left: 0, right: 0 } as const
 const linkHoverSx = { color: 'blue.600' }
+const slideFadeSx = { transitionProperty: 'all', transitionDuration: '0.3s' }
 
 const copyIcon = <FaRegCopy />
 const checkIcon = <FaCheck />
@@ -257,11 +258,7 @@ const PendingSwapCardBody = ({
           <StatusIcon size={18} color='black' />
         </Circle>
         <Flex gap={2} alignItems='center'>
-          <SlideFade
-            in={true}
-            offsetY='20px'
-            style={{ transitionProperty: 'all', transitionDuration: '0.3s' }}
-          >
+          <SlideFade in={true} offsetY='20px' style={slideFadeSx}>
             <Text fontSize='lg' fontWeight='medium'>
               {config.message}
             </Text>
