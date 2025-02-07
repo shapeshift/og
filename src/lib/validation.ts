@@ -42,18 +42,15 @@ const validateAddressSync = (address: string, chainId: string): boolean => {
   }
 }
 
-// Create a debounced version that returns a Promise
 const debouncedValidateAddress = debounce(
   (address: string, chainId: string, callback: (result: boolean) => void) => {
     const result = validateAddressSync(address, chainId)
     callback(result)
   },
-  300,
+  500,
 )
 
-// Wrapper function to handle the Promise interface
-export const validateAddress = (address: string, chainId: string): Promise<boolean> => {
-  return new Promise(resolve => {
+export const validateAddress = (address: string, chainId: string): Promise<boolean> =>
+  new Promise(resolve => {
     debouncedValidateAddress(address, chainId, resolve)
   })
-}
