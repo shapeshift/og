@@ -22,7 +22,7 @@ import {
   VStack,
 } from '@chakra-ui/react'
 import type { AssetId } from '@shapeshiftoss/caip'
-import { useQueries } from '@tanstack/react-query'
+import { useQueries, useQueryClient } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import duration from 'dayjs/plugin/duration'
 import relativeTime from 'dayjs/plugin/relativeTime'
@@ -31,7 +31,7 @@ import { useChainflipQuoteQuery } from 'queries/chainflip/quote'
 import { useChainflipStatusQuery } from 'queries/chainflip/status'
 import type { ChainflipQuote, ChainflipSwapStatus } from 'queries/chainflip/types'
 import { reactQueries } from 'queries/react-queries'
-import { useCallback, useMemo } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { useFormContext, useWatch } from 'react-hook-form'
 import {
   FaArrowDown,
@@ -50,6 +50,14 @@ import { useCopyToClipboard } from 'hooks/useCopyToClipboard'
 import { bnOrZero } from 'lib/bignumber/bignumber'
 import { fromBaseUnit } from 'lib/bignumber/conversion'
 import type { SwapFormData } from 'types/form'
+import { useChainflipSwapMutation } from 'queries/chainflip/swap'
+import { useChainflipSwapStatusQuery } from 'queries/chainflip/swapStatus'
+import { useChainflipVaultAddressQuery } from 'queries/chainflip/vaultAddress'
+import { useChainflipWithdrawalAddressQuery } from 'queries/chainflip/withdrawalAddress'
+import { useNavigate } from 'react-router'
+import { useSwapperStore } from 'state/zustand/swapper/useSwapperStore'
+import { AssetIcon } from 'components/AssetIcon'
+import { CircularProgress } from 'components/CircularProgress/CircularProgress'
 
 import { CHAINFLIP_COMMISSION_BPS } from '../../lib/const'
 import { StatusStepper } from './components/StatusStepper'
@@ -335,7 +343,9 @@ export const Status = () => {
     [sellAsset, buyAsset, sellAmountCryptoBaseUnit],
   )
 
-  const { data: quote } = useChainflipQuoteQuery(quoteParams)
+  const { data: quote } = useChainflipQuoteQuery(quoteParams, {
+    enabled: false
+  })
 
   const swapData = useMemo(() => {
     const channelId = searchParams.get('channelId')

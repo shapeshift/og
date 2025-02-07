@@ -32,12 +32,12 @@ import { bn, bnOrZero } from 'lib/bignumber/bignumber'
 import { fromBaseUnit, toBaseUnit } from 'lib/bignumber/conversion'
 import { mixpanel, MixPanelEvent } from 'lib/mixpanel'
 import { validateAddress } from 'lib/validation'
+import type { Asset } from 'types/Asset'
 import type { SwapFormData } from 'types/form'
 
 import { Amount } from './Amount/Amount'
 import { AssetSelectModal } from './AssetSelectModal/AssetSelectModal'
 import { AssetType } from './AssetSelectModal/types'
-import type { Asset } from 'types/Asset'
 
 const divider = <StackDivider borderColor='border.base' />
 
@@ -74,11 +74,14 @@ export const TradeInput = () => {
     data: quote,
     isFetching: isQuoteFetching,
     error: quoteError,
-  } = useChainflipQuoteQuery({
-    sourceAsset: sellAsset ? getChainflipAssetId(sellAsset.assetId) : '',
-    destinationAsset: buyAsset ? getChainflipAssetId(buyAsset.assetId) : '',
-    amount: sellAmountCryptoBaseUnit,
-  })
+  } = useChainflipQuoteQuery(
+    {
+      sourceAsset: sellAsset ? getChainflipAssetId(sellAsset.assetId) : '',
+      destinationAsset: buyAsset ? getChainflipAssetId(buyAsset.assetId) : '',
+      amount: sellAmountCryptoBaseUnit,
+    },
+    { refetchInterval: 5000 },
+  )
 
   const buyAmountCryptoPrecision = useMemo(() => {
     if (!(quote?.egressAmountNative && buyAsset)) return
