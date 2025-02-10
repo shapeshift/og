@@ -48,7 +48,7 @@ const bgContainerSx = {
     bottom: 0,
     left: 0,
     background:
-      'radial-gradient(92.26% 92.26% at 88.33% -16.18%, rgba(0, 0, 0, 0.2) 0%, #000000 100%)',
+      'radial-gradient(92.26% 92.26% at 88.33% -16.18%, rgba(0, 0, 0, 0.4) 0%, #000000 100%)',
     zIndex: 0,
     backdropFilter: 'blur(40px)',
   },
