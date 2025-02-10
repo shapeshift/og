@@ -295,7 +295,11 @@ export const TradeInput = () => {
             <Skeleton isLoaded={!isQuoteFetching}>
               <Flex gap={1}>
                 <Amount.Crypto value='1' symbol={sellAsset.symbol} suffix='=' />
-                <Amount.Crypto value={rate} symbol={buyAsset.symbol} />
+                {bn(rate).isZero() ? (
+                  <Text>N/A</Text>
+                ) : (
+                  <Amount.Crypto value={rate} symbol={buyAsset.symbol} />
+                )}
               </Flex>
             </Skeleton>
           </Flex>
