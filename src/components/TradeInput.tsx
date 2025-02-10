@@ -38,6 +38,7 @@ import type { SwapFormData } from 'types/form'
 import { Amount } from './Amount/Amount'
 import { AssetSelectModal } from './AssetSelectModal/AssetSelectModal'
 import { AssetType } from './AssetSelectModal/types'
+import { AssetIcon } from './AssetIcon'
 
 const divider = <StackDivider borderColor='border.base' />
 
@@ -105,8 +106,8 @@ export const TradeInput = () => {
     return bnOrZero(buyAmountCryptoPrecision).div(sellAmountCryptoPrecision).toString()
   }, [buyAmountCryptoPrecision, quote, sellAmountCryptoPrecision])
 
-  const SellAssetIcon = useMemo(() => <Avatar size='sm' src={sellAsset?.icon} />, [sellAsset?.icon])
-  const BuyAssetIcon = useMemo(() => <Avatar size='sm' src={buyAsset?.icon} />, [buyAsset?.icon])
+  const SellAssetIcon = useMemo(() => <AssetIcon assetId={sellAssetId} size='sm' />, [sellAssetId])
+  const BuyAssetIcon = useMemo(() => <AssetIcon assetId={buyAssetId} size='sm' />, [buyAssetId])
   const SwitchIcon = useMemo(() => <FaArrowRightArrowLeft />, [])
 
   const { mutate: createSwap, isPending: isSwapPending } = useChainflipSwapMutation({
