@@ -1,5 +1,5 @@
 import type { inferQueryKeyStore } from '@lukemorales/query-key-factory'
-import { createQueryKeyStore } from '@lukemorales/query-key-factory'
+import { createMutationKeys, createQueryKeyStore } from '@lukemorales/query-key-factory'
 import axios from 'axios'
 
 import type {
@@ -14,13 +14,38 @@ import { findByAssetId } from './marketData'
 
 const CHAINFLIP_API_URL = import.meta.env.VITE_CHAINFLIP_API_URL
 const CHAINFLIP_API_KEY = import.meta.env.VITE_CHAINFLIP_API_KEY
+const CHAINFLIP_COMMISSION_BPS = import.meta.env.VITE_CHAINFLIP_COMMISSION_BPS
+
+const createSwap = async (params: ChainflipSwapParams): Promise<ChainflipSwapResponse> => {
+  const { data } = await axios.get<ChainflipSwapResponse>(`${CHAINFLIP_API_URL}/swap`, {
+    params: {
+      apiKey: CHAINFLIP_API_KEY,
+      ...params,
+      boostFee: params.maxBoostFee ?? 0,
+      retryDurationInBlocks: params.retryDurationInBlocks ?? 150,
+      commissionBps: CHAINFLIP_COMMISSION_BPS,
+    },
+  })
+  return data
+}
+
+export const reactMutations = createMutationKeys('chainflip', {
+  swap: {
+    mutationKey: null,
+    mutationFn: createSwap,
+  },
+})
 
 export const reactQueries = createQueryKeyStore({
   chainflip: {
     assets: {
       queryKey: null,
       queryFn: async () => {
-        const { data } = await axios.get<ChainflipAssetsResponse>(`${CHAINFLIP_API_URL}/assets`)
+        const { data } = await axios.get<ChainflipAssetsResponse>(`${CHAINFLIP_API_URL}/assets`, {
+          params: {
+            apiKey: CHAINFLIP_API_KEY,
+          },
+        })
         return data
       },
     },
@@ -33,25 +58,12 @@ export const reactQueries = createQueryKeyStore({
             sourceAsset: params.sourceAsset,
             destinationAsset: params.destinationAsset,
             amount: params.amount,
-            ...(params.commissionBps && { commissionBps: params.commissionBps }),
+            commissionBps: CHAINFLIP_COMMISSION_BPS,
           },
         })
         return data[0]
       },
-    }),
-    swap: (params: ChainflipSwapParams) => ({
-      queryKey: [params],
-      queryFn: async () => {
-        const { data } = await axios.get<ChainflipSwapResponse>(`${CHAINFLIP_API_URL}/swap`, {
-          params: {
-            apiKey: CHAINFLIP_API_KEY,
-            ...params,
-            boostFee: params.maxBoostFee ?? 0,
-            retryDurationInBlocks: params.retryDurationInBlocks ?? 150,
-          },
-        })
-        return data
-      },
+      enabled: Boolean(params.sourceAsset && params.destinationAsset && params.amount),
     }),
     status: (swapId: number) => ({
       queryKey: [swapId],

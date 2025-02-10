@@ -13,7 +13,7 @@ on:
 jobs:
   install-and-cache:
     name: Install Lint Type-check
-    container: node:18-bullseye
+    container: node:20-bullseye
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -22,7 +22,6 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
-          node-version: '18.20.4'
           node-version-file: '.nvmrc'
           cache: 'yarn'
 

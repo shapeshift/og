@@ -1,20 +1,24 @@
 import { Avatar, Button, Text } from '@chakra-ui/react'
-import type { Asset } from 'types/Asset'
+import type { AssetId } from '@shapeshiftoss/caip'
+import { memo } from 'react'
+import { useAssetById } from 'store/assets'
 
 type AssetSelectionProps = {
   onClick: () => void
   label: string
-  asset?: Asset
+  assetId?: AssetId
 }
 
-export const AssetSelection: React.FC<AssetSelectionProps> = ({ label, onClick, asset }) => {
+export const AssetSelection = memo(({ label, onClick, assetId }: AssetSelectionProps) => {
+  const asset = useAssetById(assetId)
+
   return (
     <Button flexDir='column' height='auto' py={4} gap={4} flex={1} onClick={onClick}>
       <Text color='text.subtle'>{label}</Text>
-      <Avatar src={asset ? asset.icon : ''} />
+      <Avatar src={asset?.icon || ''} />
       <Text textOverflow='ellipsis' overflow='hidden' width='full'>
-        {asset ? asset.name : 'Select Asset'}
+        {asset?.name || 'Select Asset'}
       </Text>
     </Button>
   )
-}
+})

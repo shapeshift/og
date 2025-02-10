@@ -62,9 +62,18 @@ export type ChainflipQuote = {
   boostQuote?: ChainflipQuote
 }
 
+export type ChainflipQuoteError = {
+  errors?: {
+    minimalAmount?: string[]
+    minimalAmountNative?: string[]
+  }
+  detail?: string
+  status?: number
+}
+
 export type ChainflipQuoteParams = {
-  sourceAsset: string
-  destinationAsset: string
+  sourceAsset: string | undefined
+  destinationAsset: string | undefined
   amount: string
   commissionBps?: number
 }
@@ -100,7 +109,38 @@ export type ChainflipSwapEgress = {
 
 export type ChainflipSwapStatus = {
   state: 'waiting' | 'receiving' | 'swapping' | 'sending' | 'sent' | 'completed' | 'failed'
+  swapId?: string
   swapEgress?: ChainflipSwapEgress
+  depositChannel?: {
+    id: string
+    estimatedExpiryTime: string
+    isExpired: boolean
+  }
+  sourceAsset: string
+  destinationAsset: string
+  destinationAddress: string
+  estimatedDurationSeconds: number
+  fees: any[]
+  swap?: {
+    regular?: {
+      retryCount: number
+      inputAmount: number
+      inputAmountNative: string
+      scheduledAt: number
+      scheduledAtDate: string
+      scheduledBlockIndex: string
+    }
+  }
+  refundEgress?: {
+    amountNative: string
+    amount: number
+    scheduledAt: number
+    scheduledAtDate: string
+    scheduledBlockIndex: string
+    transactionReference?: string
+    witnessedAt?: number
+    witnessedBlockIndex?: string
+  }
 }
 
 export type ChainflipStatusResponse = {

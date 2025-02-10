@@ -13,8 +13,7 @@ import {
 import type { ChainId } from '@shapeshiftoss/caip'
 import type { ChangeEvent } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import AssetData from 'lib/generatedAssetData.json'
-import { isNft } from 'lib/utils'
+import { useAllAssets } from 'store/assets'
 import type { Asset } from 'types/Asset'
 
 import { AssetList } from './AssetList'
@@ -35,16 +34,13 @@ type NetworkItem = {
 
 export const AssetSelectModal: React.FC<AssetSelectModalProps> = ({ isOpen, onClose, onClick }) => {
   const [searchQuery, setSearchQuery] = useState('')
-  const assets = useMemo(() => Object.values(AssetData) as Asset[], [])
+  const assets = useAllAssets()
   const [activeChain, setActiveChain] = useState<ChainId | 'All'>('All')
   const [searchTermAssets, setSearchTermAssets] = useState<Asset[]>([])
   const iniitalRef = useRef(null)
 
   const filteredAssets = useMemo(
-    () =>
-      activeChain === 'All'
-        ? assets.filter(a => !isNft(a.assetId))
-        : assets.filter(a => a.chainId === activeChain && !isNft(a.assetId)),
+    () => (activeChain === 'All' ? assets : assets.filter(a => a.chainId === activeChain)),
     [activeChain, assets],
   )
 
@@ -136,7 +132,7 @@ export const AssetSelectModal: React.FC<AssetSelectModalProps> = ({ isOpen, onCl
             <Text fontWeight='bold' fontSize='md'>
               Select asset
             </Text>
-            <CloseButton position='relative' />
+            <CloseButton position='relative' onClick={handleClose} />
           </Flex>
           <Input
             size='lg'

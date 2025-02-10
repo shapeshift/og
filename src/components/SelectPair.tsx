@@ -1,35 +1,48 @@
 import { Button, Card, CardBody, Flex, Heading, IconButton, useDisclosure } from '@chakra-ui/react'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useState } from 'react'
+import { useFormContext, useWatch } from 'react-hook-form'
 import { FaArrowRightArrowLeft } from 'react-icons/fa6'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router'
+import { useAssetById } from 'store/assets'
 import { mixpanel, MixPanelEvent } from 'lib/mixpanel'
 import type { Asset } from 'types/Asset'
+import type { SwapFormData } from 'types/form'
 
 import { AssetSelection } from './AssetSelection'
 import { AssetSelectModal } from './AssetSelectModal/AssetSelectModal'
 import { AssetType } from './AssetSelectModal/types'
 
+const switchIcon = <FaArrowRightArrowLeft />
+
 export const SelectPair = () => {
   const { isOpen, onClose, onOpen } = useDisclosure()
-  const [sellAsset, setSellAsset] = useState<Asset>()
-  const [buyAsset, setBuyAsset] = useState<Asset>()
   const [assetSelectType, setAssetSelectType] = useState<AssetType>(AssetType.BUY)
   const navigate = useNavigate()
-  const switchIcon = useMemo(() => <FaArrowRightArrowLeft />, [])
+  const { setValue, control } = useFormContext<SwapFormData>()
+
+  const sellAssetId = useWatch({ control, name: 'sellAssetId' })
+  const buyAssetId = useWatch({ control, name: 'buyAssetId' })
+
+  const sellAsset = useAssetById(sellAssetId || '')
+  const buyAsset = useAssetById(buyAssetId || '')
+
   const handleSubmit = useCallback(() => {
+    if (!(sellAsset && buyAsset)) return
+
     mixpanel?.track(MixPanelEvent.PairSelected, {
-      'some key': 'some val',
+      sellAsset,
+      buyAsset,
     })
 
     navigate('/input')
-  }, [navigate])
+  }, [navigate, sellAsset, buyAsset])
 
-  const handleFromAssetClick = useCallback(() => {
+  const handleSellAssetClick = useCallback(() => {
     setAssetSelectType(AssetType.SELL)
     onOpen()
   }, [onOpen])
 
-  const handleToAssetClick = useCallback(() => {
+  const handleBuyAssetClick = useCallback(() => {
     setAssetSelectType(AssetType.BUY)
     onOpen()
   }, [onOpen])
@@ -37,14 +50,22 @@ export const SelectPair = () => {
   const handleAssetSelect = useCallback(
     (asset: Asset) => {
       if (assetSelectType === AssetType.BUY) {
-        setBuyAsset(asset)
+        setValue('buyAssetId', asset.assetId)
       }
       if (assetSelectType === AssetType.SELL) {
-        setSellAsset(asset)
+        setValue('sellAssetId', asset.assetId)
       }
     },
-    [assetSelectType],
+    [assetSelectType, setValue],
   )
+
+  const handleSwitchAssets = useCallback(() => {
+    const currentSellAssetId = sellAssetId
+    const currentBuyAssetId = buyAssetId
+
+    setValue('sellAssetId', currentBuyAssetId)
+    setValue('buyAssetId', currentSellAssetId)
+  }, [sellAssetId, buyAssetId, setValue])
 
   return (
     <Card width='full' maxWidth='450px'>
@@ -53,11 +74,21 @@ export const SelectPair = () => {
           Choose which assets to trade
         </Heading>
         <Flex alignItems='center' gap={4} color='text.subtle' width='full'>
-          <AssetSelection label='Deposit' onClick={handleFromAssetClick} asset={sellAsset} />
-          <IconButton variant='ghost' icon={switchIcon} aria-label='Switch assets' />
-          <AssetSelection label='Receive' onClick={handleToAssetClick} asset={buyAsset} />
+          <AssetSelection label='Deposit' onClick={handleSellAssetClick} assetId={sellAssetId} />
+          <IconButton
+            variant='ghost'
+            icon={switchIcon}
+            aria-label='Switch assets'
+            onClick={handleSwitchAssets}
+          />
+          <AssetSelection label='Receive' onClick={handleBuyAssetClick} assetId={buyAssetId} />
         </Flex>
-        <Button size='lg' colorScheme='blue' onClick={handleSubmit}>
+        <Button
+          size='lg'
+          colorScheme='blue'
+          onClick={handleSubmit}
+          isDisabled={!sellAssetId || !buyAssetId}
+        >
           Continue
         </Button>
       </CardBody>
