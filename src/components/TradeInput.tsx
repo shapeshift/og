@@ -246,14 +246,10 @@ export const TradeInput = () => {
       ? '0'
       : sellAmountUsd.div(buyAssetMarketData.price).toString()
 
-    // Convert to base units with new precision
-    const newSellAmountBaseUnit = toBaseUnit(
-      newSellAmountCryptoPrecision,
-      currentBuyAsset.precision,
-    )
+    // Update the input value first and immediately (since we're debouncing)
+    setSellAmountInput(newSellAmountCryptoPrecision)
 
-    setValue('sellAmountCryptoBaseUnit', newSellAmountBaseUnit)
-
+    // Then switch the assets
     setValue('sellAssetId', currentBuyAsset.assetId)
     setValue('buyAssetId', currentSellAsset.assetId)
   }, [
@@ -263,6 +259,7 @@ export const TradeInput = () => {
     buyAssetMarketData,
     sellAmountCryptoBaseUnit,
     setValue,
+    setSellAmountInput,
   ])
 
   const handleSellAmountChange = useCallback((values: { value: string }) => {
