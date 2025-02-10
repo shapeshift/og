@@ -1,4 +1,4 @@
-import { CircularProgress, useColorModeValue } from '@chakra-ui/react'
+import { CircularProgress, Tooltip, useColorModeValue } from '@chakra-ui/react'
 import { memo, useEffect } from 'react'
 
 import { useCountdown } from '../../hooks/useCountdown'
@@ -29,14 +29,21 @@ export const CountdownSpinner = memo(({ isLoading, initialTimeMs }: CountdownSpi
     return () => window.removeEventListener('focus', handleFocus)
   }, [reset, start])
 
+  const secondsRemaining = Math.ceil(timeRemainingMs / 1000)
+
   return (
-    <CircularProgress
-      size='20px'
-      color='blue.500'
-      trackColor={useColorModeValue('gray.50', 'gray.700')}
-      value={timeRemainingMs}
-      max={initialTimeMs}
-      isIndeterminate={isLoading}
-    />
+    <Tooltip 
+      label={`The quote will refetch in ${secondsRemaining}s`}
+      isDisabled={isLoading}
+    >
+      <CircularProgress
+        size='20px'
+        color='blue.500'
+        trackColor={useColorModeValue('gray.50', 'gray.700')}
+        value={timeRemainingMs}
+        max={initialTimeMs}
+        isIndeterminate={isLoading}
+      />
+    </Tooltip>
   )
 })
