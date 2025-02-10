@@ -9,7 +9,6 @@ import {
   IconButton,
   Input,
   Skeleton,
-  SlideFade,
   StackDivider,
   Stat,
   StatLabel,
@@ -45,8 +44,6 @@ const skeletonInputSx = {
   _hover: { bg: 'background.surface.raised.base' },
   _focus: { bg: 'background.surface.raised.base' },
 }
-
-const slideFadeSx = { transitionDuration: '0.1s' }
 
 export const TradeInput = () => {
   const navigate = useNavigate()
@@ -286,51 +283,43 @@ export const TradeInput = () => {
   return (
     <>
       <Card width='full' maxWidth='450px' overflow='hidden' as='form' onSubmit={handleSubmit}>
-        <SlideFade in={Boolean(quote)} unmountOnExit style={slideFadeSx}>
-          <CardHeader px={0} py={0} bg='background.surface.raised.base'>
-            <Flex
-              fontSize='sm'
-              gap={1}
-              justifyContent='center'
-              py={2}
-              bg='background.surface.raised.base'
-            >
-              <Text color='text.subtle'>Your rate</Text>
-              <Skeleton isLoaded={!isQuoteFetching}>
-                <Flex gap={1}>
-                  <Amount.Crypto value='1' symbol={sellAsset.symbol} suffix='=' />
-                  <Amount.Crypto value={rate} symbol={buyAsset.symbol} />
-                </Flex>
-              </Skeleton>
-            </Flex>
-            <HStack divider={divider} fontSize='sm'>
-              <Stat size='sm' textAlign='center' py={4}>
-                <StatLabel color='text.subtle'>Deposit This</StatLabel>
-                <StatNumber>
-                  <Amount.Crypto
-                    value={sellAmountCryptoPrecision || '0'}
-                    symbol={sellAsset.symbol}
-                  />
-                </StatNumber>
-              </Stat>
-              <Stat size='sm' textAlign='center' py={4}>
-                <StatLabel color='text.subtle'>To Get This</StatLabel>
-                <StatNumber>
-                  {isQuoteFetching ? (
-                    <Skeleton height='24px' width='100px' textAlign='center' margin='0 auto'>
-                      <Amount.Crypto value='0' symbol={buyAsset.symbol} />
-                    </Skeleton>
-                  ) : (
-                    <Amount.Crypto
-                      value={buyAmountCryptoPrecision ?? '0'}
-                      symbol={buyAsset.symbol}
-                    />
-                  )}
-                </StatNumber>
-              </Stat>
-            </HStack>
-          </CardHeader>
-        </SlideFade>
+        <CardHeader px={0} py={0} bg='background.surface.raised.base'>
+          <Flex
+            fontSize='sm'
+            gap={1}
+            justifyContent='center'
+            py={2}
+            bg='background.surface.raised.base'
+          >
+            <Text color='text.subtle'>Your rate</Text>
+            <Skeleton isLoaded={!isQuoteFetching}>
+              <Flex gap={1}>
+                <Amount.Crypto value='1' symbol={sellAsset.symbol} suffix='=' />
+                <Amount.Crypto value={rate} symbol={buyAsset.symbol} />
+              </Flex>
+            </Skeleton>
+          </Flex>
+          <HStack divider={divider} fontSize='sm'>
+            <Stat size='sm' textAlign='center' py={4}>
+              <StatLabel color='text.subtle'>Deposit This</StatLabel>
+              <StatNumber>
+                <Amount.Crypto value={sellAmountCryptoPrecision || '0'} symbol={sellAsset.symbol} />
+              </StatNumber>
+            </Stat>
+            <Stat size='sm' textAlign='center' py={4}>
+              <StatLabel color='text.subtle'>To Get This</StatLabel>
+              <StatNumber>
+                {isQuoteFetching ? (
+                  <Skeleton height='24px' width='100px' textAlign='center' margin='0 auto'>
+                    <Amount.Crypto value='0' symbol={buyAsset.symbol} />
+                  </Skeleton>
+                ) : (
+                  <Amount.Crypto value={buyAmountCryptoPrecision ?? '0'} symbol={buyAsset.symbol} />
+                )}
+              </StatNumber>
+            </Stat>
+          </HStack>
+        </CardHeader>
         <CardBody display='flex' flexDir='column' gap={6}>
           <Flex width='full' alignItems='center' justifyContent='space-between'>
             <Flex flex={1} justifyContent='center'>
