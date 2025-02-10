@@ -45,7 +45,6 @@ import type { SwapFormData } from 'types/form'
 
 import { StatusStepper } from './components/StatusStepper'
 
-const CHAINFLIP_COMMISSION_BPS = import.meta.env.VITE_CHAINFLIP_COMMISSION_BPS
 const CHAINFLIP_EXPLORER_BASE_URL = import.meta.env.VITE_CHAINFLIP_COMMISSION_BPS
 
 dayjs.extend(duration)
@@ -68,9 +67,11 @@ const cardHeaderSx = {
 }
 
 const calculateShapeshiftFee = (quote: ChainflipQuote | undefined) => {
-  if (!quote) return '0'
-  const ingressAmountUsd = bnOrZero(quote.ingressAmount).times(quote.estimatedPrice)
-  return ingressAmountUsd.times(CHAINFLIP_COMMISSION_BPS).div(10000).toString()
+  if (!quote?.includedFees) return '0'
+
+  const brokerFee = quote.includedFees.find(fee => fee.type === 'broker')
+
+  return bnOrZero(brokerFee?.amount).toFixed(2)
 }
 
 const IdleSwapCardBody = ({
