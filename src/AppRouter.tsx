@@ -123,7 +123,7 @@ export const AppRouter = () => {
       <Box width='full' height='100vh' position='relative'>
         {/* Blurry fancy bg underlay */}
         <Center
-          position='absolute'
+          position='fixed'
           top={0}
           left={0}
           right={0}
