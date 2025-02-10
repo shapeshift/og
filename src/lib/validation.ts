@@ -7,7 +7,7 @@ import { isAddress } from 'viem'
 
 import { isEvmChainId } from './utils'
 
-const validateAddressSync = (address: string, chainId: string): boolean => {
+const isValidAddressSync = (address: string, chainId: string): boolean => {
   if (!address) {
     return true
   }
@@ -40,15 +40,15 @@ const validateAddressSync = (address: string, chainId: string): boolean => {
   }
 }
 
-const debouncedValidateAddress = debounce(
+const debouncedIsValidAddress = debounce(
   (address: string, chainId: string, callback: (result: boolean) => void) => {
-    const result = validateAddressSync(address, chainId)
+    const result = isValidAddressSync(address, chainId)
     callback(result)
   },
   500,
 )
 
-export const validateAddress = (address: string, chainId: string): Promise<boolean> =>
+export const isValidAddress = (address: string, chainId: string): Promise<boolean> =>
   new Promise(resolve => {
-    debouncedValidateAddress(address, chainId, resolve)
+    debouncedIsValidAddress(address, chainId, resolve)
   })

@@ -31,7 +31,7 @@ import { useAssetById } from 'store/assets'
 import { useDebounce } from 'hooks/useDebounce'
 import { bn, bnOrZero, fromBaseUnit, toBaseUnit } from 'lib/bignumber/bignumber'
 import { mixpanel, MixPanelEvent } from 'lib/mixpanel'
-import { validateAddress } from 'lib/validation'
+import { isValidAddress } from 'lib/validation'
 import type { Asset } from 'types/Asset'
 import type { SwapFormData } from 'types/form'
 
@@ -271,7 +271,7 @@ export const TradeInput = () => {
       if (destinationAddress === value && !errors.destinationAddress) {
         return true
       }
-      const isValid = await validateAddress(value, chainId)
+      const isValid = await isValidAddress(value, chainId)
       return isValid || 'Invalid address'
     },
     [buyAssetId, destinationAddress, errors.destinationAddress],
@@ -284,7 +284,7 @@ export const TradeInput = () => {
       if (refundAddress === value && !errors.refundAddress) {
         return true
       }
-      const isValid = await validateAddress(value, chainId)
+      const isValid = await isValidAddress(value, chainId)
       return isValid || 'Invalid address'
     },
     [sellAssetId, refundAddress, errors.refundAddress],
