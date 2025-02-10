@@ -1,4 +1,4 @@
-import { Center } from '@chakra-ui/react'
+import { Box, Center } from '@chakra-ui/react'
 import { btcAssetId, ethAssetId } from 'constants/caip'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useMemo } from 'react'
@@ -37,6 +37,20 @@ const transition = {
   type: 'tween',
   ease: [0.25, 0.1, 0.25, 1],
   duration: 0.3,
+}
+
+const bgContainerSx = {
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    background: 'radial-gradient(92.26% 92.26% at 88.33% -16.18%, rgba(0, 0, 0, 0.2) 0%, #000000 100%)',
+    zIndex: 0,
+    backdropFilter: 'blur(40px)',
+  },
 }
 
 const getVariants = (pathname: string) => {
@@ -101,25 +115,47 @@ export const AppRouter = () => {
 
   return (
     <FormProvider {...methods}>
-      <Center width='full' height='100vh' flexDir='column'>
-        <AnimatePresence mode='wait' initial={false}>
-          <motion.div
-            key={location.pathname}
-            initial='initial'
-            animate='animate'
-            exit='exit'
-            variants={getVariants(location.pathname)}
-            transition={transition}
-            style={motionWrapperSx}
-          >
-            <Routes location={location}>
-              <Route path='/' element={selectPair} />
-              <Route path='/input' element={tradeInput} />
-              <Route path='/status' element={status} />
-            </Routes>
-          </motion.div>
-        </AnimatePresence>
-        <ChatwootButton />
+      <Center
+        width='full'
+        height='100vh'
+        flexDir='column'
+        bgImage="url('/src/assets/bg.jpg')"
+        bgSize='cover'
+        bgPosition='center'
+        bgRepeat='no-repeat'
+        position='relative'
+        sx={bgContainerSx}
+      >
+        <Box
+          position='relative'
+          zIndex={1}
+          width='full'
+          display='flex'
+          justifyContent='center'
+          flexDir='column'
+          alignItems='center'
+        >
+          <AnimatePresence mode='wait' initial={false}>
+            <motion.div
+              key={location.pathname}
+              initial='initial'
+              animate='animate'
+              exit='exit'
+              variants={getVariants(location.pathname)}
+              transition={transition}
+              style={motionWrapperSx}
+            >
+              <Routes location={location}>
+                <Route path='/' element={selectPair} />
+                <Route path='/input' element={tradeInput} />
+                <Route path='/status' element={status} />
+              </Routes>
+            </motion.div>
+          </AnimatePresence>
+        </Box>
+        <Box position='absolute' bottom={4} right={4} zIndex={1}>
+          <ChatwootButton />
+        </Box>
       </Center>
     </FormProvider>
   )

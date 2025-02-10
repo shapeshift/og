@@ -20,7 +20,7 @@ export const AssetSelection = memo(({ label, onClick, assetId }: AssetSelectionP
     <Button flexDir='column' height='auto' py={4} gap={4} flex={1} onClick={onClick}>
       <Text color='text.subtle'>{label}</Text>
       <AssetIcon asset={asset} />
-      <VStack spacing={0} minHeight="42px">
+      <VStack spacing={0} minHeight='42px'>
         <Text textOverflow='ellipsis' overflow='hidden' width='full'>
           {asset?.name || 'Select Asset'}
         </Text>
