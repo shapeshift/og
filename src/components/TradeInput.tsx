@@ -55,7 +55,8 @@ export const TradeInput = () => {
     setValue,
     setError,
     clearErrors,
-    formState: { errors },
+    trigger,
+    formState: { errors, isValid },
     control,
   } = useFormContext<SwapFormData>()
   const destinationAddress = useWatch({ control, name: 'destinationAddress' })
@@ -63,6 +64,10 @@ export const TradeInput = () => {
   const refundAddress = useWatch({ control, name: 'refundAddress' })
   const sellAssetId = useWatch({ control, name: 'sellAssetId' })
   const buyAssetId = useWatch({ control, name: 'buyAssetId' })
+
+  useEffect(() => {
+    trigger(['destinationAddress', 'refundAddress'])
+  }, [trigger, destinationAddress, refundAddress])
 
   const sellAsset = useAssetById(sellAssetId)
   const buyAsset = useAssetById(buyAssetId)
@@ -467,7 +472,7 @@ export const TradeInput = () => {
             colorScheme='blue'
             size='lg'
             width='full'
-            isDisabled={!quote}
+            isDisabled={!quote || !isValid}
             isLoading={isSwapPending}
             loadingText='Creating Swap'
           >
