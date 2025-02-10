@@ -1,7 +1,8 @@
 import { Box, Button, Flex, SkeletonCircle, Text } from '@chakra-ui/react'
 import type { FC } from 'react'
 import { memo, useCallback, useState } from 'react'
-import type { Asset } from 'types/assets'
+import type { Asset } from 'types/Asset'
+
 import { AssetIcon } from '../AssetIcon'
 
 const focus = {

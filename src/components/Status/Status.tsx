@@ -1,5 +1,4 @@
 import {
-  Avatar,
   Box,
   Button,
   Card,
@@ -42,8 +41,8 @@ import { QRCode } from 'components/QRCode/QRCode'
 import { bnOrZero, fromBaseUnit } from 'lib/bignumber/bignumber'
 import { getChainflipStatusConfig } from 'lib/utils/chainflip'
 import type { SwapFormData } from 'types/form'
-import { AssetIcon } from '../AssetIcon'
 
+import { AssetIcon } from '../AssetIcon'
 import { StatusStepper } from './components/StatusStepper'
 
 const CHAINFLIP_EXPLORER_BASE_URL = import.meta.env.VITE_CHAINFLIP_COMMISSION_BPS

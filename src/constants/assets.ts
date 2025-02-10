@@ -1,6 +1,6 @@
 import type { AssetId } from '@shapeshiftoss/caip'
 
-import type { Asset } from '../types/assets'
+import type { Asset } from '../types/Asset'
 
 // Chainflip-supported assets
 export const initialAssets: Asset[] = [

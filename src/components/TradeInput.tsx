@@ -17,7 +17,6 @@ import {
   Text,
   useDisclosure,
 } from '@chakra-ui/react'
-import { fromAssetId } from '@shapeshiftoss/caip'
 import { getChainflipId } from 'queries/chainflip/assets'
 import { useChainflipQuoteQuery } from 'queries/chainflip/quote'
 import { useChainflipSwapMutation } from 'queries/chainflip/swap'
