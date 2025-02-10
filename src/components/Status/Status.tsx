@@ -251,9 +251,7 @@ export const Status = () => {
     [sellAsset, buyAsset, sellAmountCryptoBaseUnit],
   )
 
-  const { data: quote } = useChainflipQuoteQuery(quoteParams, {
-    enabled: false,
-  })
+  const { data: quote } = useChainflipQuoteQuery(quoteParams)
 
   const swapData = useMemo(() => {
     const channelId = searchParams.get('channelId')
