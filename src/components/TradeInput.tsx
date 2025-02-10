@@ -39,6 +39,8 @@ import { AssetSelectModal } from './AssetSelectModal/AssetSelectModal'
 import { AssetType } from './AssetSelectModal/types'
 import { CountdownSpinner } from './CountdownSpinner/CountdownSpinner'
 
+const QUOTE_REFETCH_INTERVAL = 15_000
+
 const divider = <StackDivider borderColor='border.base' />
 
 const skeletonInputSx = {
@@ -95,7 +97,7 @@ export const TradeInput = () => {
       destinationAsset: buyAsset ? getChainflipId(buyAsset.assetId) : '',
       amount: sellAmountCryptoBaseUnit,
     },
-    { refetchInterval: 15_000 },
+    { refetchInterval: QUOTE_REFETCH_INTERVAL },
   )
 
   const buyAmountCryptoPrecision = useMemo(() => {
@@ -316,7 +318,10 @@ export const TradeInput = () => {
               )}
             </Flex>
             <Box position='absolute' right='4' top='50%' transform='translateY(-50%)'>
-              <CountdownSpinner isLoading={isQuoteFetching} initialTimeMs={15_000} />
+              <CountdownSpinner
+                isLoading={isQuoteFetching}
+                initialTimeMs={QUOTE_REFETCH_INTERVAL}
+              />
             </Box>
           </Flex>
           <HStack divider={divider} fontSize='sm'>
