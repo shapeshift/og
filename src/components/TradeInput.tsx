@@ -318,7 +318,9 @@ export const TradeInput = () => {
                 <StatLabel color='text.subtle'>To Get This</StatLabel>
                 <StatNumber>
                   {isQuoteFetching ? (
-                    <Skeleton height='24px' width='100px' />
+                    <Skeleton height='24px' width='100px' textAlign='center' margin='0 auto'>
+                      <Amount.Crypto value='0' symbol={buyAsset.symbol} />
+                    </Skeleton>
                   ) : (
                     <Amount.Crypto
                       value={buyAmountCryptoPrecision ?? '0'}
