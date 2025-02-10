@@ -18,7 +18,7 @@ const isValidAddressSync = (address: string, chainId: string): boolean => {
       return isValid
     }
 
-    switch (chainId.toLowerCase()) {
+    switch (chainId) {
       case solanaChainId:
         try {
           new PublicKey(address)
