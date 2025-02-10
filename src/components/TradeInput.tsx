@@ -67,7 +67,7 @@ export const TradeInput = () => {
 
   useEffect(() => {
     trigger(['destinationAddress', 'refundAddress'])
-  }, [trigger, destinationAddress, refundAddress])
+  }, [trigger, destinationAddress, refundAddress, sellAssetId, buyAssetId])
 
   const sellAsset = useAssetById(sellAssetId)
   const buyAsset = useAssetById(buyAssetId)
@@ -273,26 +273,20 @@ export const TradeInput = () => {
     async (value: string) => {
       if (!value || !buyAssetId) return true
       const { chainId } = fromAssetId(buyAssetId)
-      if (destinationAddress === value && !errors.destinationAddress) {
-        return true
-      }
       const isValid = await isValidAddress(value, chainId)
       return isValid || 'Invalid address'
     },
-    [buyAssetId, destinationAddress, errors.destinationAddress],
+    [buyAssetId],
   )
 
   const validateRefundAddress = useCallback(
     async (value: string) => {
       if (!value || !sellAssetId) return true
       const { chainId } = fromAssetId(sellAssetId)
-      if (refundAddress === value && !errors.refundAddress) {
-        return true
-      }
       const isValid = await isValidAddress(value, chainId)
       return isValid || 'Invalid address'
     },
-    [sellAssetId, refundAddress, errors.refundAddress],
+    [sellAssetId],
   )
 
   const destinationAddressRules = useMemo(

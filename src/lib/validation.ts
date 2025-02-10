@@ -45,7 +45,7 @@ const debouncedIsValidAddress = debounce(
     const result = isValidAddressSync(address, chainId)
     callback(result)
   },
-  500,
+  250,
 )
 
 export const isValidAddress = (address: string, chainId: string): Promise<boolean> =>
