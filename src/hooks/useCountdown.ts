@@ -29,4 +29,3 @@ export const useCountdown = (initialTimeMs: number, startImmediately = true) => 
 
   return { timeRemainingMs, reset, start }
 }
-

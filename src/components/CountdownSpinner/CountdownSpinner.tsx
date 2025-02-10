@@ -32,10 +32,7 @@ export const CountdownSpinner = memo(({ isLoading, initialTimeMs }: CountdownSpi
   const secondsRemaining = Math.ceil(timeRemainingMs / 1000)
 
   return (
-    <Tooltip 
-      label={`The quote will refetch in ${secondsRemaining}s`}
-      isDisabled={isLoading}
-    >
+    <Tooltip label={`The quote will refetch in ${secondsRemaining}s`} isDisabled={isLoading}>
       <CircularProgress
         size='20px'
         color='blue.500'
