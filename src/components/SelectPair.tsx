@@ -92,7 +92,12 @@ export const SelectPair = () => {
           Continue
         </Button>
       </CardBody>
-      <AssetSelectModal isOpen={isOpen} onClose={onClose} onClick={handleAssetSelect} />
+      <AssetSelectModal
+        isOpen={isOpen}
+        onClose={onClose}
+        onClick={handleAssetSelect}
+        excludeAssetId={assetSelectType === AssetType.BUY ? sellAssetId : buyAssetId}
+      />
     </Card>
   )
 }
