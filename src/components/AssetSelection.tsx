@@ -9,11 +9,7 @@ type AssetSelectionProps = {
   assetId?: AssetId
 }
 
-export const AssetSelection = memo(function AssetSelection({
-  label,
-  onClick,
-  assetId,
-}: AssetSelectionProps) {
+export const AssetSelection = memo(({ label, onClick, assetId }: AssetSelectionProps) => {
   const asset = useAssetById(assetId)
 
   return (
