@@ -1,5 +1,4 @@
 import {
-  Avatar,
   Button,
   Card,
   CardBody,
@@ -36,9 +35,9 @@ import type { Asset } from 'types/Asset'
 import type { SwapFormData } from 'types/form'
 
 import { Amount } from './Amount/Amount'
+import { AssetIcon } from './AssetIcon'
 import { AssetSelectModal } from './AssetSelectModal/AssetSelectModal'
 import { AssetType } from './AssetSelectModal/types'
-import { AssetIcon } from './AssetIcon'
 
 const divider = <StackDivider borderColor='border.base' />
 
@@ -74,6 +73,13 @@ export const TradeInput = () => {
 
   const sellAsset = useAssetById(sellAssetId)
   const buyAsset = useAssetById(buyAssetId)
+
+  // Rehydrate sell amount input, since we only store amounts in base unit
+  useEffect(() => {
+    if (!sellAsset?.precision || !sellAmountCryptoBaseUnit) return
+    const amountCryptoPrecision = fromBaseUnit(sellAmountCryptoBaseUnit, sellAsset.precision)
+    setSellAmountInput(amountCryptoPrecision)
+  }, [sellAsset?.precision, sellAmountCryptoBaseUnit])
 
   const sellAmountCryptoPrecision = useMemo(() => {
     if (!sellAsset) return
