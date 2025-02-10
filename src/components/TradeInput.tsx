@@ -21,7 +21,6 @@ import { fromAssetId } from '@shapeshiftoss/caip'
 import { getChainflipId } from 'queries/chainflip/assets'
 import { useChainflipQuoteQuery } from 'queries/chainflip/quote'
 import { useChainflipSwapMutation } from 'queries/chainflip/swap'
-import { useMarketDataByAssetIdQuery } from 'queries/marketData'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useFormContext, useWatch } from 'react-hook-form'
 import { FaArrowRightArrowLeft } from 'react-icons/fa6'
@@ -72,9 +71,6 @@ export const TradeInput = () => {
   const sellAsset = useAssetById(sellAssetId)
   const buyAsset = useAssetById(buyAssetId)
 
-  const { data: sellAssetMarketData } = useMarketDataByAssetIdQuery(sellAsset?.assetId || '')
-  const { data: buyAssetMarketData } = useMarketDataByAssetIdQuery(buyAsset?.assetId || '')
-
   const sellAmountCryptoPrecision = useMemo(() => {
     if (!sellAsset) return
 
@@ -101,21 +97,10 @@ export const TradeInput = () => {
   }, [quote?.egressAmountNative, buyAsset])
 
   const rate = useMemo(() => {
-    if (quote && sellAmountCryptoPrecision)
-      return bnOrZero(buyAmountCryptoPrecision).div(sellAmountCryptoPrecision).toString()
+    if (!(quote && sellAmountCryptoPrecision)) return '0'
 
-    // Fallback to market-data if no quote
-    const sellAssetPrice = bnOrZero(sellAssetMarketData?.price)
-    const buyAssetPrice = bnOrZero(buyAssetMarketData?.price)
-
-    return sellAssetPrice.div(buyAssetPrice).toString()
-  }, [
-    buyAmountCryptoPrecision,
-    quote,
-    sellAmountCryptoPrecision,
-    sellAssetMarketData?.price,
-    buyAssetMarketData?.price,
-  ])
+    return bnOrZero(buyAmountCryptoPrecision).div(sellAmountCryptoPrecision).toString()
+  }, [buyAmountCryptoPrecision, quote, sellAmountCryptoPrecision])
 
   const SellAssetIcon = useMemo(() => <Avatar size='sm' src={sellAsset?.icon} />, [sellAsset?.icon])
   const BuyAssetIcon = useMemo(() => <Avatar size='sm' src={buyAsset?.icon} />, [buyAsset?.icon])
@@ -221,46 +206,16 @@ export const TradeInput = () => {
     const currentSellAsset = sellAsset
     const currentBuyAsset = buyAsset
 
-    if (
-      !(
-        currentSellAsset &&
-        currentBuyAsset &&
-        sellAssetMarketData &&
-        buyAssetMarketData &&
-        sellAmountCryptoBaseUnit
-      )
-    )
-      return
+    if (!(currentSellAsset && currentBuyAsset && quote)) return
 
-    // Get current fiat value using market rates only
-    const currentSellAmountCryptoPrecision = fromBaseUnit(
-      sellAmountCryptoBaseUnit,
-      currentSellAsset.precision,
-    )
-    const sellAmountUsd = bnOrZero(currentSellAmountCryptoPrecision).times(
-      sellAssetMarketData.price,
-    )
+    // New sell amount is the previous buy amount. Easy as!
+    // Note, we set it *before* switching the assets because something something debounce.
+    const newSellAmountCryptoPrecision = bnOrZero(buyAmountCryptoPrecision)
+    setSellAmountInput(newSellAmountCryptoPrecision.toString())
 
-    // Calculate new sell amount in crypto using market rates, avoiding division by zero
-    const newSellAmountCryptoPrecision = bnOrZero(buyAssetMarketData.price).isZero()
-      ? '0'
-      : sellAmountUsd.div(buyAssetMarketData.price).toString()
-
-    // Update the input value first and immediately (since we're debouncing)
-    setSellAmountInput(newSellAmountCryptoPrecision)
-
-    // Then switch the assets
     setValue('sellAssetId', currentBuyAsset.assetId)
     setValue('buyAssetId', currentSellAsset.assetId)
-  }, [
-    sellAsset,
-    buyAsset,
-    sellAssetMarketData,
-    buyAssetMarketData,
-    sellAmountCryptoBaseUnit,
-    setValue,
-    setSellAmountInput,
-  ])
+  }, [sellAsset, buyAsset, quote, buyAmountCryptoPrecision, setValue, setSellAmountInput])
 
   const handleSellAmountChange = useCallback((values: { value: string }) => {
     setSellAmountInput(values.value)
