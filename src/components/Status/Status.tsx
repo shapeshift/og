@@ -23,6 +23,7 @@ import { Amount } from 'components/Amount/Amount'
 import { useCopyToClipboard } from 'hooks/useCopyToClipboard'
 import { BTCImage, ETHImage } from 'lib/const'
 
+import { QRCode } from './components/QRCode'
 import type { StepProps } from './components/StatusStepper'
 import { StatusStepper } from './components/StatusStepper'
 
@@ -62,6 +63,10 @@ export const Status = () => {
     copyDepositAddress('1234')
   }, [copyDepositAddress])
 
+  const qrCodeUri = useMemo(() => {
+    return 'ethereum:0x742d35Cc6634C0532925a3b844Bc454e4438f44e?value=1000000000000000000'
+  }, [])
+
   return (
     <Card width='full' maxW='465px'>
       <CardHeader
@@ -79,7 +84,9 @@ export const Status = () => {
       <Collapse in={activeStep === 0}>
         <CardBody display='flex' flexDir='row-reverse' gap={6} px={4}>
           <Flex flexDir='column' gap={4}>
-            <Center boxSize='150px' bg='background.surface.raised.base' borderRadius='xl' />
+            <Center boxSize='150px' bg='background.surface.raised.base' borderRadius='xl'>
+              <QRCode text={qrCodeUri} loading={false} />
+            </Center>
             <Tag colorScheme='green' size='sm' justifyContent='center'>
               Time remaining 06:23
             </Tag>
