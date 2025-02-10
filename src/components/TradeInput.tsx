@@ -212,13 +212,19 @@ export const TradeInput = () => {
     const currentSellAsset = sellAsset
     const currentBuyAsset = buyAsset
 
-    if (!(currentSellAsset && currentBuyAsset && quote)) return
+    if (!(currentSellAsset && currentBuyAsset)) return
 
-    // New sell amount is the previous buy amount. Easy as!
+    // Zero out amount if no quote available
+    if (!quote || !buyAmountCryptoPrecision) {
+      setSellAmountInput('')
+      setValue('sellAssetId', currentBuyAsset.assetId)
+      setValue('buyAssetId', currentSellAsset.assetId)
+      return
+    }
+
     // Note, we set it *before* switching the assets because something something debounce.
     const newSellAmountCryptoPrecision = bnOrZero(buyAmountCryptoPrecision)
     setSellAmountInput(newSellAmountCryptoPrecision.toString())
-
     setValue('sellAssetId', currentBuyAsset.assetId)
     setValue('buyAssetId', currentSellAsset.assetId)
   }, [sellAsset, buyAsset, quote, buyAmountCryptoPrecision, setValue, setSellAmountInput])
