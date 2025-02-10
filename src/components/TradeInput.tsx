@@ -316,7 +316,7 @@ export const TradeInput = () => {
               )}
             </Flex>
             <Box position='absolute' right='4' top='50%' transform='translateY(-50%)'>
-              <CountdownSpinner isLoading={isQuoteFetching} initialTimeMs={5000} />
+              <CountdownSpinner isLoading={isQuoteFetching} initialTimeMs={15_000} />
             </Box>
           </Flex>
           <HStack divider={divider} fontSize='sm'>
