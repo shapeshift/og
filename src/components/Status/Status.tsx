@@ -43,8 +43,9 @@ import { bnOrZero, fromBaseUnit } from 'lib/bignumber/bignumber'
 import { getChainflipStatusConfig } from 'lib/utils/chainflip'
 import type { SwapFormData } from 'types/form'
 
-import { CHAINFLIP_COMMISSION_BPS } from '../../lib/const'
 import { StatusStepper } from './components/StatusStepper'
+
+const CHAINFLIP_COMMISSION_BPS = import.meta.env.VITE_CHAINFLIP_COMMISSION_BPS
 
 dayjs.extend(duration)
 dayjs.extend(relativeTime)
