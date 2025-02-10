@@ -17,7 +17,7 @@
     "@emotion/react": "^11.11.3",
     "@emotion/styled": "^11.11.0",
     "@lukemorales/query-key-factory": "^1.3.4",
-    "@shapeshiftoss/caip": "^8.15.0",
+    "@shapeshiftoss/caip": "patch:@shapeshiftoss/caip@npm%3A8.15.0#~/.yarn/patches/@shapeshiftoss-caip-npm-8.15.0-f1e7f80009.patch",
     "@shapeshiftoss/types": "^8.6.0",
     "@solana/web3.js": "^1.98.0",
     "@tanstack/react-query": "^5.65.1",

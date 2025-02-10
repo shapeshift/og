@@ -233,22 +233,24 @@ export const TradeInput = () => {
 
   const validateDestinationAddress = useCallback(
     async (value: string) => {
-      if (!value || !buyAssetId) return true
-      const { chainId } = fromAssetId(buyAssetId)
+      if (!buyAsset) return 'Please select a destination asset'
+
+      const chainId = buyAsset.chainId
       const isValid = await isValidAddress(value, chainId)
-      return isValid || 'Invalid address'
+      return isValid ? true : `Invalid address for ${buyAsset?.symbol || 'selected asset'}`
     },
-    [buyAssetId],
+    [buyAsset],
   )
 
   const validateRefundAddress = useCallback(
     async (value: string) => {
-      if (!value || !sellAssetId) return true
-      const { chainId } = fromAssetId(sellAssetId)
+      if (!sellAsset) return 'Please select a source asset'
+
+      const chainId = sellAsset.chainId
       const isValid = await isValidAddress(value, chainId)
-      return isValid || 'Invalid address'
+      return isValid ? true : `Invalid address for ${sellAsset?.symbol || 'selected asset'}`
     },
-    [sellAssetId],
+    [sellAsset],
   )
 
   const destinationAddressRules = useMemo(

@@ -1,0 +1,14 @@
+diff --git a/dist/chainId/chainId.js b/dist/chainId/chainId.js
+index f54ac899d5efc939fde7d9b75337515a25a8c919..ee1858e70ba5c7647f0c3b8cb4d324d341ae4ff4 100644
+--- a/dist/chainId/chainId.js
++++ b/dist/chainId/chainId.js
+@@ -12,9 +12,6 @@ const toChainId = (args) => {
+ exports.toChainId = toChainId;
+ const fromChainId = (chainId) => {
+     const [chainNamespace, chainReference] = chainId.split(':');
+-    (0, typeGuards_1.assertIsChainNamespace)(chainNamespace);
+-    (0, typeGuards_1.assertIsChainReference)(chainReference);
+-    (0, typeGuards_1.assertValidChainPartsPair)(chainNamespace, chainReference);
+     return { chainNamespace, chainReference };
+ };
+ exports.fromChainId = fromChainId;
