@@ -1,4 +1,5 @@
 import {
+  Box,
   Button,
   Card,
   CardBody,
@@ -36,6 +37,7 @@ import { Amount } from './Amount/Amount'
 import { AssetIcon } from './AssetIcon'
 import { AssetSelectModal } from './AssetSelectModal/AssetSelectModal'
 import { AssetType } from './AssetSelectModal/types'
+import { CountdownSpinner } from './CountdownSpinner/CountdownSpinner'
 
 const divider = <StackDivider borderColor='border.base' />
 
@@ -93,7 +95,7 @@ export const TradeInput = () => {
       destinationAsset: buyAsset ? getChainflipId(buyAsset.assetId) : '',
       amount: sellAmountCryptoBaseUnit,
     },
-    { refetchInterval: 5000 },
+    { refetchInterval: 15_000 },
   )
 
   const buyAmountCryptoPrecision = useMemo(() => {
@@ -294,10 +296,15 @@ export const TradeInput = () => {
             fontSize='sm'
             gap={1}
             justifyContent='center'
+            alignItems='center'
             py={2}
+            px={4}
             bg='background.surface.raised.base'
+            position='relative'
           >
-            <Text color='text.subtle'>Your rate</Text>
+            <Text color='text.subtle' mr={2}>
+              Your rate
+            </Text>
             <Flex gap={1}>
               <Amount.Crypto value='1' symbol={sellAsset.symbol} suffix='=' />
               {bn(rate).isZero() ? (
@@ -308,6 +315,9 @@ export const TradeInput = () => {
                 </Skeleton>
               )}
             </Flex>
+            <Box position='absolute' right='4' top='50%' transform='translateY(-50%)'>
+              <CountdownSpinner isLoading={isQuoteFetching} initialTimeMs={5000} />
+            </Box>
           </Flex>
           <HStack divider={divider} fontSize='sm'>
             <Stat size='sm' textAlign='center' py={4}>
