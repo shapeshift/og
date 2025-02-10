@@ -18,7 +18,7 @@ import {
   useDisclosure,
 } from '@chakra-ui/react'
 import { fromAssetId } from '@shapeshiftoss/caip'
-import { getChainflipAssetId } from 'queries/chainflip/assets'
+import { getChainflipId } from 'queries/chainflip/assets'
 import { useChainflipQuoteQuery } from 'queries/chainflip/quote'
 import { useChainflipSwapMutation } from 'queries/chainflip/swap'
 import { useMarketDataByAssetIdQuery } from 'queries/marketData'
@@ -82,8 +82,8 @@ export const TradeInput = () => {
     error: quoteError,
   } = useChainflipQuoteQuery(
     {
-      sourceAsset: sellAsset ? getChainflipAssetId(sellAsset.assetId) : '',
-      destinationAsset: buyAsset ? getChainflipAssetId(buyAsset.assetId) : '',
+      sourceAsset: sellAsset ? getChainflipId(sellAsset.assetId) : '',
+      destinationAsset: buyAsset ? getChainflipId(buyAsset.assetId) : '',
       amount: sellAmountCryptoBaseUnit,
     },
     { refetchInterval: 5000 },
@@ -166,8 +166,8 @@ export const TradeInput = () => {
         .toFixed(buyAsset.precision)
 
       const createSwapPayload = {
-        sourceAsset: getChainflipAssetId(sellAsset.assetId),
-        destinationAsset: getChainflipAssetId(buyAsset.assetId),
+        sourceAsset: getChainflipId(sellAsset.assetId),
+        destinationAsset: getChainflipId(buyAsset.assetId),
         destinationAddress: destinationAddress || '',
         refundAddress: refundAddress || '',
         minimumPrice: minimumRate,

@@ -17,7 +17,7 @@ import { reactQueries } from '../react-queries'
 import type { ChainflipAssetsResponse } from './types'
 
 // Map CAIPs to Chainflip internal asset IDs
-const assetIdToChainflip: Record<AssetId, string> = {
+const assetIdToChainflipId: Record<AssetId, string> = {
   [btcAssetId]: 'btc.btc',
   [arbitrumAssetId]: 'eth.arb',
   [ethAssetId]: 'eth.eth',
@@ -30,14 +30,14 @@ const assetIdToChainflip: Record<AssetId, string> = {
 }
 
 // Map Chainflip internal asset IDs to CAIPs
-export const chainflipToAssetId = mirror(assetIdToChainflip)
+export const chainflipToAssetId = mirror(assetIdToChainflipId)
 
 export const transformChainflipAssets = (data: ChainflipAssetsResponse) => {
   return data.assets.map(asset => chainflipToAssetId[asset.id]).filter(Boolean)
 }
 
-export const getChainflipAssetId = (assetId: string): string => {
-  const chainflipAssetId = assetIdToChainflip[assetId]
+export const getChainflipId = (assetId: AssetId): string => {
+  const chainflipAssetId = assetIdToChainflipId[assetId]
   if (!chainflipAssetId) throw new Error(`Asset ${assetId} not supported by Chainflip`)
   return chainflipAssetId
 }

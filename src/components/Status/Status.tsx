@@ -27,7 +27,7 @@ import { useQueries } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import duration from 'dayjs/plugin/duration'
 import relativeTime from 'dayjs/plugin/relativeTime'
-import { chainflipToAssetId, getChainflipAssetId } from 'queries/chainflip/assets'
+import { chainflipToAssetId, getChainflipId } from 'queries/chainflip/assets'
 import { useChainflipQuoteQuery } from 'queries/chainflip/quote'
 import { useChainflipStatusQuery } from 'queries/chainflip/status'
 import type { ChainflipQuote, ChainflipSwapStatus } from 'queries/chainflip/types'
@@ -242,8 +242,8 @@ export const Status = () => {
 
   const quoteParams = useMemo(
     () => ({
-      sourceAsset: sellAsset ? getChainflipAssetId(sellAsset.assetId) : undefined,
-      destinationAsset: buyAsset ? getChainflipAssetId(buyAsset.assetId) : undefined,
+      sourceAsset: sellAsset ? getChainflipId(sellAsset.assetId) : undefined,
+      destinationAsset: buyAsset ? getChainflipId(buyAsset.assetId) : undefined,
       amount: sellAmountCryptoBaseUnit,
     }),
     [sellAsset, buyAsset, sellAmountCryptoBaseUnit],
