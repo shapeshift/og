@@ -298,16 +298,16 @@ export const TradeInput = () => {
             bg='background.surface.raised.base'
           >
             <Text color='text.subtle'>Your rate</Text>
-            <Skeleton isLoaded={!isQuoteFetching}>
-              <Flex gap={1}>
-                <Amount.Crypto value='1' symbol={sellAsset.symbol} suffix='=' />
-                {bn(rate).isZero() ? (
-                  <Text>N/A</Text>
-                ) : (
+            <Flex gap={1}>
+              <Amount.Crypto value='1' symbol={sellAsset.symbol} suffix='=' />
+              {bn(rate).isZero() ? (
+                <Text>N/A</Text>
+              ) : (
+                <Skeleton isLoaded={!isQuoteFetching}>
                   <Amount.Crypto value={rate} symbol={buyAsset.symbol} />
-                )}
-              </Flex>
-            </Skeleton>
+                </Skeleton>
+              )}
+            </Flex>
           </Flex>
           <HStack divider={divider} fontSize='sm'>
             <Stat size='sm' textAlign='center' py={4}>
@@ -320,7 +320,7 @@ export const TradeInput = () => {
               <StatLabel color='text.subtle'>To Get This</StatLabel>
               <StatNumber>
                 {isQuoteFetching ? (
-                  <Skeleton height='24px' width='100px' textAlign='center' margin='0 auto'>
+                  <Skeleton height='24px' width='140px' textAlign='center' margin='0 auto'>
                     <Amount.Crypto value='0' symbol={buyAsset.symbol} />
                   </Skeleton>
                 ) : (
