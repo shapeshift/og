@@ -10,7 +10,7 @@ import {
   ModalOverlay,
   Text,
 } from '@chakra-ui/react'
-import type { AssetId, ChainId } from '@shapeshiftoss/caip'
+import type { ChainId } from '@shapeshiftoss/caip'
 import type { ChangeEvent } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAllAssets } from 'store/assets'
@@ -24,7 +24,6 @@ type AssetSelectModalProps = {
   isOpen: boolean
   onClose: () => void
   onClick: (asset: Asset) => void
-  excludeAssetId?: AssetId
 }
 
 type NetworkItem = {
@@ -33,33 +32,19 @@ type NetworkItem = {
   name: string
 }
 
-export const AssetSelectModal: React.FC<AssetSelectModalProps> = ({
-  isOpen,
-  onClose,
-  onClick,
-  excludeAssetId,
-}) => {
+export const AssetSelectModal: React.FC<AssetSelectModalProps> = ({ isOpen, onClose, onClick }) => {
   const [searchQuery, setSearchQuery] = useState('')
   const assets = useAllAssets()
   const [activeChain, setActiveChain] = useState<ChainId | 'All'>('All')
   const [searchTermAssets, setSearchTermAssets] = useState<Asset[]>([])
   const iniitalRef = useRef(null)
 
-  // All assets, minus the selected one on the opposite side
-  const assetsExcludeOpposite = useMemo(
-    () => assets.filter(asset => asset.assetId !== excludeAssetId),
-    [assets, excludeAssetId],
+  const filteredAssets = useMemo(
+    () => (activeChain === 'All' ? assets : assets.filter(a => a.chainId === activeChain)),
+    [activeChain, assets],
   )
 
-  const maybeActiveChainFilteredAssets = useMemo(
-    () =>
-      activeChain === 'All'
-        ? assetsExcludeOpposite
-        : assetsExcludeOpposite.filter(a => a.chainId === activeChain),
-    [activeChain, assetsExcludeOpposite],
-  )
-
-  const isSearching = useMemo(() => searchQuery.length > 0, [searchQuery])
+  const searching = useMemo(() => searchQuery.length > 0, [searchQuery])
 
   const handleSearchQuery = useCallback((value: ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(value.target.value)
@@ -89,40 +74,40 @@ export const AssetSelectModal: React.FC<AssetSelectModalProps> = ({
   )
 
   useEffect(() => {
-    if (maybeActiveChainFilteredAssets && isSearching) {
+    if (filteredAssets && searching) {
       setSearchTermAssets(
-        isSearching
-          ? filterAssetsBySearchTerm(searchQuery, maybeActiveChainFilteredAssets)
-          : maybeActiveChainFilteredAssets,
+        searching ? filterAssetsBySearchTerm(searchQuery, filteredAssets) : filteredAssets,
       )
     }
-  }, [searchQuery, isSearching, maybeActiveChainFilteredAssets])
+  }, [searchQuery, searching, filteredAssets])
 
-  // Only display chains that have available assets after excluding the opposite side asset
-  const availableChains: NetworkItem[] = useMemo(() => {
-    const chainMap = new Map<ChainId, NetworkItem>()
+  const listAssets = searching ? searchTermAssets : filteredAssets
 
-    assetsExcludeOpposite.forEach(asset => {
-      if (!chainMap.has(asset.chainId)) {
-        chainMap.set(asset.chainId, {
-          chainId: asset.chainId,
-          icon: asset.networkIcon || asset.icon,
-          name: asset.networkName || asset.name,
+  const uniqueChainIds: NetworkItem[] = assets.reduce<NetworkItem[]>(
+    (accumulator, currentAsset) => {
+      const existingEntry = accumulator.find(
+        (entry: NetworkItem) => entry.chainId === currentAsset.chainId,
+      )
+
+      if (!existingEntry) {
+        accumulator.push({
+          chainId: currentAsset.chainId,
+          icon: currentAsset.networkIcon || currentAsset.icon,
+          name: currentAsset.networkName || currentAsset.name,
         })
       }
-    })
 
-    return Array.from(chainMap.values())
-  }, [assetsExcludeOpposite])
+      return accumulator
+    },
+    [],
+  )
 
   const renderRows = useMemo(() => {
-    const assets = isSearching ? searchTermAssets : maybeActiveChainFilteredAssets
-
-    return <AssetList assets={assets} handleClick={handleClick} />
-  }, [handleClick, isSearching, maybeActiveChainFilteredAssets, searchTermAssets])
+    return <AssetList assets={listAssets} handleClick={handleClick} />
+  }, [handleClick, listAssets])
 
   const renderChains = useMemo(() => {
-    return availableChains.map(chain => (
+    return uniqueChainIds.map(chain => (
       <ChainButton
         key={chain.chainId}
         isActive={chain.chainId === activeChain}
@@ -130,7 +115,7 @@ export const AssetSelectModal: React.FC<AssetSelectModalProps> = ({
         {...chain}
       />
     ))
-  }, [activeChain, handleChainClick, availableChains])
+  }, [activeChain, handleChainClick, uniqueChainIds])
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} isCentered initialFocusRef={iniitalRef}>

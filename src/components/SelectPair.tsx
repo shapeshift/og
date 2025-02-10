@@ -49,14 +49,24 @@ export const SelectPair = () => {
 
   const handleAssetSelect = useCallback(
     (asset: Asset) => {
-      if (assetSelectType === AssetType.BUY) {
-        setValue('buyAssetId', asset.assetId)
-      }
-      if (assetSelectType === AssetType.SELL) {
-        setValue('sellAssetId', asset.assetId)
+      switch (assetSelectType) {
+        case AssetType.BUY:
+          if (asset.assetId === sellAssetId) {
+            setValue('sellAssetId', buyAssetId)
+            setValue('buyAssetId', sellAssetId)
+          } else setValue('buyAssetId', asset.assetId)
+          break
+        case AssetType.SELL:
+          if (asset.assetId === buyAssetId) {
+            setValue('sellAssetId', buyAssetId)
+            setValue('buyAssetId', sellAssetId)
+          } else setValue('sellAssetId', asset.assetId)
+          break
+        default:
+          return
       }
     },
-    [assetSelectType, setValue],
+    [assetSelectType, setValue, sellAssetId, buyAssetId],
   )
 
   const handleSwitchAssets = useCallback(() => {
@@ -92,12 +102,7 @@ export const SelectPair = () => {
           Continue
         </Button>
       </CardBody>
-      <AssetSelectModal
-        isOpen={isOpen}
-        onClose={onClose}
-        onClick={handleAssetSelect}
-        excludeAssetId={assetSelectType === AssetType.BUY ? sellAssetId : buyAssetId}
-      />
+      <AssetSelectModal isOpen={isOpen} onClose={onClose} onClick={handleAssetSelect} />
     </Card>
   )
 }

@@ -440,12 +440,7 @@ export const TradeInput = () => {
           </Button>
         </CardFooter>
       </Card>
-      <AssetSelectModal
-        isOpen={isOpen}
-        onClose={onClose}
-        onClick={handleAssetSelect}
-        excludeAssetId={assetSelectType === AssetType.BUY ? sellAssetId : buyAssetId}
-      />
+      <AssetSelectModal isOpen={isOpen} onClose={onClose} onClick={handleAssetSelect} />
     </>
   )
 }
