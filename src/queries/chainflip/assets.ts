@@ -1,3 +1,4 @@
+import type { AssetId } from '@shapeshiftoss/caip'
 import { useQuery } from '@tanstack/react-query'
 import {
   arbitrumAssetId,
@@ -16,7 +17,7 @@ import { reactQueries } from '../react-queries'
 import type { ChainflipAssetsResponse } from './types'
 
 // Map CAIPs to Chainflip internal asset IDs
-const assetIdToChainflip: Record<string, string> = {
+const assetIdToChainflip: Record<AssetId, string> = {
   [btcAssetId]: 'btc.btc',
   [arbitrumAssetId]: 'eth.arb',
   [ethAssetId]: 'eth.eth',
