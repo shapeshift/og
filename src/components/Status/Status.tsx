@@ -46,6 +46,7 @@ import type { SwapFormData } from 'types/form'
 import { StatusStepper } from './components/StatusStepper'
 
 const CHAINFLIP_COMMISSION_BPS = import.meta.env.VITE_CHAINFLIP_COMMISSION_BPS
+const CHAINFLIP_EXPLORER_BASE_URL = import.meta.env.VITE_CHAINFLIP_COMMISSION_BPS
 
 dayjs.extend(duration)
 dayjs.extend(relativeTime)
@@ -189,7 +190,7 @@ const PendingSwapCardBody = ({
           </SlideFade>
           {swapStatus?.status.state !== 'waiting' && (
             <Link
-              href={`https://scan.chainflip.io/swaps/${swapStatus?.status.swapId}`}
+              href={`${CHAINFLIP_EXPLORER_BASE_URL}/swaps/${swapStatus?.status.swapId}`}
               isExternal
               color='blue.500'
               _hover={linkHoverSx}
@@ -355,7 +356,7 @@ export const Status = () => {
             <Text>{swapData.channelId.toString()}</Text>
             {swapData.channelId && (
               <Link
-                href={`https://scan.chainflip.io/channels/${swapStatus?.status.depositChannel?.id}`}
+                href={`${CHAINFLIP_EXPLORER_BASE_URL}/channels/${swapStatus?.status.depositChannel?.id}`}
                 isExternal
                 color='blue.500'
                 _hover={linkHoverSx}
