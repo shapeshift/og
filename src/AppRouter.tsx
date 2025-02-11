@@ -177,8 +177,7 @@ export const AppRouter = () => {
                 lineHeight='1.6'
                 letterSpacing='-0.01em'
               >
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
-                incididunt ut labore et dolore magna aliqua.
+                Buy and sell Bitcoin, Ethereum, Solana, Arbitrum, USDT, and more in seconds
               </Text>
             </Box>
             <AnimatePresence mode='wait' initial={false}>
