@@ -1,8 +1,9 @@
-import { Avatar, Box, Button, Flex, SkeletonCircle, Text } from '@chakra-ui/react'
+import { Box, Button, Flex, SkeletonCircle, Text } from '@chakra-ui/react'
 import type { FC } from 'react'
 import { memo, useCallback, useState } from 'react'
-import { middleEllipsis } from 'lib/utils'
 import type { Asset } from 'types/Asset'
+
+import { AssetIcon } from '../AssetIcon'
 
 const focus = {
   shadow: 'outline-inset',
@@ -14,7 +15,7 @@ type AssetRowProps = {
 
 export const AssetRow: FC<AssetRowProps> = memo(({ onClick, ...asset }) => {
   const [imgLoaded, setImgLoaded] = useState(false)
-  const { name, icon, symbol, id } = asset
+  const { name, symbol } = asset
   const handleClick = useCallback(() => {
     onClick(asset)
   }, [asset, onClick])
@@ -37,7 +38,7 @@ export const AssetRow: FC<AssetRowProps> = memo(({ onClick, ...asset }) => {
     >
       <Flex gap={4} alignItems='center'>
         <SkeletonCircle isLoaded={imgLoaded}>
-          <Avatar src={icon} size='sm' onLoad={handleImageLoad} />
+          <AssetIcon asset={asset} size='sm' onLoad={handleImageLoad} />
         </SkeletonCircle>
         <Box textAlign='left'>
           <Text
@@ -52,16 +53,9 @@ export const AssetRow: FC<AssetRowProps> = memo(({ onClick, ...asset }) => {
           >
             {name}
           </Text>
-          <Flex alignItems='center' gap={2}>
-            <Text fontWeight='normal' fontSize='xs' color='text.subtle'>
-              {symbol}
-            </Text>
-            {id && (
-              <Text fontWeight='normal' fontSize='xs' color='text.subtle'>
-                {middleEllipsis(id)}
-              </Text>
-            )}
-          </Flex>
+          <Text fontWeight='normal' fontSize='xs' color='text.subtle'>
+            {symbol}
+          </Text>
         </Box>
       </Flex>
     </Button>

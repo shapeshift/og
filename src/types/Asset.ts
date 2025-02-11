@@ -18,4 +18,5 @@ export type Asset = {
   explorer: string
   explorerTxLink: string
   explorerAddressLink: string
+  relatedAssetKey: AssetId | null
 }

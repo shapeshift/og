@@ -1,5 +1,5 @@
 import {
-  Avatar,
+  Box,
   Button,
   Card,
   CardBody,
@@ -10,7 +10,6 @@ import {
   IconButton,
   Input,
   Skeleton,
-  SlideFade,
   StackDivider,
   Stat,
   StatLabel,
@@ -18,7 +17,6 @@ import {
   Text,
   useDisclosure,
 } from '@chakra-ui/react'
-import { fromAssetId } from '@shapeshiftoss/caip'
 import { getChainflipId } from 'queries/chainflip/assets'
 import { useChainflipQuoteQuery } from 'queries/chainflip/quote'
 import { useChainflipSwapMutation } from 'queries/chainflip/swap'
@@ -36,8 +34,12 @@ import type { Asset } from 'types/Asset'
 import type { SwapFormData } from 'types/form'
 
 import { Amount } from './Amount/Amount'
+import { AssetIcon } from './AssetIcon'
 import { AssetSelectModal } from './AssetSelectModal/AssetSelectModal'
 import { AssetType } from './AssetSelectModal/types'
+import { CountdownSpinner } from './CountdownSpinner/CountdownSpinner'
+
+const QUOTE_REFETCH_INTERVAL = 15_000
 
 const divider = <StackDivider borderColor='border.base' />
 
@@ -46,8 +48,6 @@ const skeletonInputSx = {
   _hover: { bg: 'background.surface.raised.base' },
   _focus: { bg: 'background.surface.raised.base' },
 }
-
-const slideFadeSx = { transitionDuration: '0.1s' }
 
 export const TradeInput = () => {
   const navigate = useNavigate()
@@ -74,6 +74,13 @@ export const TradeInput = () => {
   const sellAsset = useAssetById(sellAssetId)
   const buyAsset = useAssetById(buyAssetId)
 
+  // Rehydrate sell amount input, since we only store amounts in base unit
+  useEffect(() => {
+    if (!sellAsset?.precision || !sellAmountCryptoBaseUnit) return
+    const amountCryptoPrecision = fromBaseUnit(sellAmountCryptoBaseUnit, sellAsset.precision)
+    setSellAmountInput(amountCryptoPrecision)
+  }, [sellAsset?.precision, sellAmountCryptoBaseUnit])
+
   const sellAmountCryptoPrecision = useMemo(() => {
     if (!sellAsset) return
 
@@ -90,7 +97,7 @@ export const TradeInput = () => {
       destinationAsset: buyAsset ? getChainflipId(buyAsset.assetId) : '',
       amount: sellAmountCryptoBaseUnit,
     },
-    { refetchInterval: 5000 },
+    { refetchInterval: QUOTE_REFETCH_INTERVAL },
   )
 
   const buyAmountCryptoPrecision = useMemo(() => {
@@ -105,8 +112,8 @@ export const TradeInput = () => {
     return bnOrZero(buyAmountCryptoPrecision).div(sellAmountCryptoPrecision).toString()
   }, [buyAmountCryptoPrecision, quote, sellAmountCryptoPrecision])
 
-  const SellAssetIcon = useMemo(() => <Avatar size='sm' src={sellAsset?.icon} />, [sellAsset?.icon])
-  const BuyAssetIcon = useMemo(() => <Avatar size='sm' src={buyAsset?.icon} />, [buyAsset?.icon])
+  const SellAssetIcon = useMemo(() => <AssetIcon assetId={sellAssetId} size='sm' />, [sellAssetId])
+  const BuyAssetIcon = useMemo(() => <AssetIcon assetId={buyAssetId} size='sm' />, [buyAssetId])
   const SwitchIcon = useMemo(() => <FaArrowRightArrowLeft />, [])
 
   const { mutate: createSwap, isPending: isSwapPending } = useChainflipSwapMutation({
@@ -209,13 +216,19 @@ export const TradeInput = () => {
     const currentSellAsset = sellAsset
     const currentBuyAsset = buyAsset
 
-    if (!(currentSellAsset && currentBuyAsset && quote)) return
+    if (!(currentSellAsset && currentBuyAsset)) return
 
-    // New sell amount is the previous buy amount. Easy as!
+    // Zero out amount if no quote available
+    if (!quote || !buyAmountCryptoPrecision) {
+      setSellAmountInput('')
+      setValue('sellAssetId', currentBuyAsset.assetId)
+      setValue('buyAssetId', currentSellAsset.assetId)
+      return
+    }
+
     // Note, we set it *before* switching the assets because something something debounce.
     const newSellAmountCryptoPrecision = bnOrZero(buyAmountCryptoPrecision)
     setSellAmountInput(newSellAmountCryptoPrecision.toString())
-
     setValue('sellAssetId', currentBuyAsset.assetId)
     setValue('buyAssetId', currentSellAsset.assetId)
   }, [sellAsset, buyAsset, quote, buyAmountCryptoPrecision, setValue, setSellAmountInput])
@@ -226,22 +239,24 @@ export const TradeInput = () => {
 
   const validateDestinationAddress = useCallback(
     async (value: string) => {
-      if (!value || !buyAssetId) return true
-      const { chainId } = fromAssetId(buyAssetId)
+      if (!buyAsset) return 'Please select a destination asset'
+
+      const chainId = buyAsset.chainId
       const isValid = await isValidAddress(value, chainId)
-      return isValid || 'Invalid address'
+      return isValid ? true : `Invalid address for ${buyAsset?.symbol || 'selected asset'}`
     },
-    [buyAssetId],
+    [buyAsset],
   )
 
   const validateRefundAddress = useCallback(
     async (value: string) => {
-      if (!value || !sellAssetId) return true
-      const { chainId } = fromAssetId(sellAssetId)
+      if (!sellAsset) return 'Please select a source asset'
+
+      const chainId = sellAsset.chainId
       const isValid = await isValidAddress(value, chainId)
-      return isValid || 'Invalid address'
+      return isValid ? true : `Invalid address for ${sellAsset?.symbol || 'selected asset'}`
     },
-    [sellAssetId],
+    [sellAsset],
   )
 
   const destinationAddressRules = useMemo(
@@ -278,49 +293,58 @@ export const TradeInput = () => {
   return (
     <>
       <Card width='full' maxWidth='450px' overflow='hidden' as='form' onSubmit={handleSubmit}>
-        <SlideFade in={Boolean(quote)} unmountOnExit style={slideFadeSx}>
-          <CardHeader px={0} py={0} bg='background.surface.raised.base'>
-            <Flex
-              fontSize='sm'
-              gap={1}
-              justifyContent='center'
-              py={2}
-              bg='background.surface.raised.base'
-            >
-              <Text color='text.subtle'>Your rate</Text>
-              <Skeleton isLoaded={!isQuoteFetching}>
-                <Flex gap={1}>
-                  <Amount.Crypto value='1' symbol={sellAsset.symbol} suffix='=' />
+        <CardHeader px={0} py={0} bg='background.surface.raised.base'>
+          <Flex
+            fontSize='sm'
+            gap={1}
+            justifyContent='center'
+            alignItems='center'
+            py={2}
+            px={4}
+            bg='background.surface.raised.base'
+            position='relative'
+          >
+            <Text color='text.subtle' mr={2}>
+              Your rate
+            </Text>
+            <Flex gap={1}>
+              <Amount.Crypto value='1' symbol={sellAsset.symbol} suffix='=' />
+              {bn(rate).isZero() ? (
+                <Text>N/A</Text>
+              ) : (
+                <Skeleton isLoaded={!isQuoteFetching}>
                   <Amount.Crypto value={rate} symbol={buyAsset.symbol} />
-                </Flex>
-              </Skeleton>
+                </Skeleton>
+              )}
             </Flex>
-            <HStack divider={divider} fontSize='sm'>
-              <Stat size='sm' textAlign='center' py={4}>
-                <StatLabel color='text.subtle'>Deposit This</StatLabel>
-                <StatNumber>
-                  <Amount.Crypto
-                    value={sellAmountCryptoPrecision || '0'}
-                    symbol={sellAsset.symbol}
-                  />
-                </StatNumber>
-              </Stat>
-              <Stat size='sm' textAlign='center' py={4}>
-                <StatLabel color='text.subtle'>To Get This</StatLabel>
-                <StatNumber>
-                  {isQuoteFetching ? (
-                    <Skeleton height='24px' width='100px' />
-                  ) : (
-                    <Amount.Crypto
-                      value={buyAmountCryptoPrecision ?? '0'}
-                      symbol={buyAsset.symbol}
-                    />
-                  )}
-                </StatNumber>
-              </Stat>
-            </HStack>
-          </CardHeader>
-        </SlideFade>
+            <Box position='absolute' right='4' top='50%' transform='translateY(-50%)'>
+              <CountdownSpinner
+                isLoading={isQuoteFetching}
+                initialTimeMs={QUOTE_REFETCH_INTERVAL}
+              />
+            </Box>
+          </Flex>
+          <HStack divider={divider} fontSize='sm'>
+            <Stat size='sm' textAlign='center' py={4}>
+              <StatLabel color='text.subtle'>Deposit This</StatLabel>
+              <StatNumber>
+                <Amount.Crypto value={sellAmountCryptoPrecision || '0'} symbol={sellAsset.symbol} />
+              </StatNumber>
+            </Stat>
+            <Stat size='sm' textAlign='center' py={4}>
+              <StatLabel color='text.subtle'>To Get This</StatLabel>
+              <StatNumber>
+                {isQuoteFetching ? (
+                  <Skeleton height='24px' width='140px' textAlign='center' margin='0 auto'>
+                    <Amount.Crypto value='0' symbol={buyAsset.symbol} />
+                  </Skeleton>
+                ) : (
+                  <Amount.Crypto value={buyAmountCryptoPrecision ?? '0'} symbol={buyAsset.symbol} />
+                )}
+              </StatNumber>
+            </Stat>
+          </HStack>
+        </CardHeader>
         <CardBody display='flex' flexDir='column' gap={6}>
           <Flex width='full' alignItems='center' justifyContent='space-between'>
             <Flex flex={1} justifyContent='center'>

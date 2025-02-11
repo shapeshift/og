@@ -31,8 +31,8 @@ export const QRCode: React.FC<QRCodeProps> = ({ content, width, icon, standardCo
           left='50%'
           transform='translate(-50%, -50%)'
           boxSize='34px'
-          borderRadius='md'
-          bg='background.surface.raised.base'
+          borderRadius='full'
+          bg='white'
           zIndex={1}
         >
           {icon}

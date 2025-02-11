@@ -3,7 +3,7 @@ import { create } from 'zustand'
 import { useShallow } from 'zustand/shallow'
 
 import { initialAssetsById } from '../constants/assets'
-import type { Asset } from '../types/assets'
+import type { Asset } from '../types/Asset'
 
 type AssetsState = {
   byId: Record<AssetId, Asset>

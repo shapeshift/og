@@ -1,4 +1,4 @@
-import { Center } from '@chakra-ui/react'
+import { Box, Center, Heading, Text } from '@chakra-ui/react'
 import { btcAssetId, ethAssetId } from 'constants/caip'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useMemo } from 'react'
@@ -38,6 +38,25 @@ const transition = {
   ease: [0.25, 0.1, 0.25, 1],
   duration: 0.3,
 }
+
+const bgContainerSx = {
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    background:
+      'radial-gradient(92.26% 92.26% at 88.33% -16.18%, rgba(0, 0, 0, 0.4) 0%, #000000 100%)',
+    zIndex: 0,
+    backdropFilter: 'blur(40px)',
+  },
+}
+
+const headingFontSizeSx = { base: '40px', md: '56px' }
+const headingLineHeightSx = { base: '48px', md: '64px' }
+const contentPt = { base: '6vh', md: '8vh' }
 
 const getVariants = (pathname: string) => {
   // Not sure what this does but this looks good on status screen so
@@ -101,26 +120,73 @@ export const AppRouter = () => {
 
   return (
     <FormProvider {...methods}>
-      <Center width='full' height='100vh' flexDir='column'>
-        <AnimatePresence mode='wait' initial={false}>
-          <motion.div
-            key={location.pathname}
-            initial='initial'
-            animate='animate'
-            exit='exit'
-            variants={getVariants(location.pathname)}
-            transition={transition}
-            style={motionWrapperSx}
-          >
-            <Routes location={location}>
-              <Route path='/' element={selectPair} />
-              <Route path='/input' element={tradeInput} />
-              <Route path='/status' element={status} />
-            </Routes>
-          </motion.div>
-        </AnimatePresence>
-        <ChatwootButton />
-      </Center>
+      <Box width='full' height='100vh' position='relative'>
+        {/* Blurry fancy bg underlay */}
+        <Center
+          position='fixed'
+          top={0}
+          left={0}
+          right={0}
+          bottom={0}
+          bgImage="url('/bg.jpg')"
+          bgSize='cover'
+          bgPosition='center'
+          bgRepeat='no-repeat'
+          sx={bgContainerSx}
+        />
+        {/* Akschual content overlay */}
+        <Box position='relative' zIndex={1} width='full' height='full' pt={contentPt}>
+          <Box width='full' display='flex' flexDir='column' alignItems='center'>
+            <Box mb={12} textAlign='center' maxWidth='container.sm' mx='auto'>
+              <Heading
+                fontSize={headingFontSizeSx}
+                lineHeight={headingLineHeightSx}
+                fontWeight='semibold'
+                mb={4}
+                letterSpacing='-0.02em'
+                display='flex'
+                flexDirection='column'
+                alignItems='center'
+              >
+                <span>Ditch your wallet,</span>
+                <span>Swap multichain</span>
+              </Heading>
+              <Text
+                fontSize='16px'
+                color='whiteAlpha.700'
+                maxWidth='480px'
+                mx='auto'
+                textAlign='center'
+                lineHeight='1.6'
+                letterSpacing='-0.01em'
+              >
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
+                incididunt ut labore et dolore magna aliqua.
+              </Text>
+            </Box>
+            <AnimatePresence mode='wait' initial={false}>
+              <motion.div
+                key={location.pathname}
+                initial='initial'
+                animate='animate'
+                exit='exit'
+                variants={getVariants(location.pathname)}
+                transition={transition}
+                style={motionWrapperSx}
+              >
+                <Routes location={location}>
+                  <Route path='/' element={selectPair} />
+                  <Route path='/input' element={tradeInput} />
+                  <Route path='/status' element={status} />
+                </Routes>
+              </motion.div>
+            </AnimatePresence>
+          </Box>
+          <Box position='absolute' bottom={4} right={4} zIndex={1}>
+            <ChatwootButton />
+          </Box>
+        </Box>
+      </Box>
     </FormProvider>
   )
 }

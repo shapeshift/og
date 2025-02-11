@@ -1,5 +1,4 @@
 import {
-  Avatar,
   Box,
   Button,
   Card,
@@ -43,6 +42,7 @@ import { bnOrZero, fromBaseUnit } from 'lib/bignumber/bignumber'
 import { getChainflipStatusConfig } from 'lib/utils/chainflip'
 import type { SwapFormData } from 'types/form'
 
+import { AssetIcon } from '../AssetIcon'
 import { StatusStepper } from './components/StatusStepper'
 
 const CHAINFLIP_EXPLORER_BASE_URL = import.meta.env.VITE_CHAINFLIP_COMMISSION_BPS
@@ -99,7 +99,7 @@ const IdleSwapCardBody = ({
 }) => {
   const sellAsset = useAssetById(sellAssetId)
   const buyAsset = useAssetById(buyAssetId)
-  const qrCodeIcon = useMemo(() => <Avatar size='xs' src={sellAsset?.icon} />, [sellAsset?.icon])
+  const qrCodeIcon = useMemo(() => <AssetIcon assetId={sellAssetId} size='xs' />, [sellAssetId])
 
   const timeToExpiry = useMemo(() => {
     if (isStatusLoading) return 'N/A'
@@ -126,8 +126,15 @@ const IdleSwapCardBody = ({
         <Stack>
           <Text color='text.subtle'>Send</Text>
           <Flex alignItems='center' gap={2}>
-            <Avatar size='sm' src={sellAsset.icon} />
-            <Amount.Crypto value={sellAmountCryptoPrecision} symbol={sellAsset.symbol} />
+            <AssetIcon assetId={sellAssetId} size='sm' />
+            <VStack spacing={0} alignItems='flex-start'>
+              <Amount.Crypto value={sellAmountCryptoPrecision} symbol={sellAsset.symbol} />
+              {sellAsset.relatedAssetKey && (
+                <Text fontSize='xs' color='text.subtle'>
+                  on {sellAsset.networkName}
+                </Text>
+              )}
+            </VStack>
           </Flex>
         </Stack>
         {!isExpired && (
@@ -152,8 +159,15 @@ const IdleSwapCardBody = ({
         <Stack>
           <Text color='text.subtle'>You will receive</Text>
           <Flex gap={2} alignItems='center'>
-            <Avatar size='xs' src={buyAsset.icon} />
-            <Amount.Crypto value={buyAmountCryptoPrecision || '0'} symbol={buyAsset.symbol} />
+            <AssetIcon assetId={buyAssetId} size='xs' />
+            <VStack spacing={0} alignItems='flex-start'>
+              <Amount.Crypto value={buyAmountCryptoPrecision || '0'} symbol={buyAsset.symbol} />
+              {buyAsset.relatedAssetKey && (
+                <Text fontSize='xs' color='text.subtle'>
+                  on {buyAsset.networkName}
+                </Text>
+              )}
+            </VStack>
           </Flex>
         </Stack>
       </Stack>
@@ -403,7 +417,7 @@ export const Status = () => {
         <Stack>
           <Flex width='full' justifyContent='space-between'>
             <Flex alignItems='center' gap={2}>
-              <Avatar size='xs' src={sellAsset.icon} />
+              <AssetIcon assetId={sellAssetId} size='xs' />
               <Text color='text.subtle'>Refund Address</Text>
             </Flex>
           </Flex>
@@ -421,7 +435,7 @@ export const Status = () => {
         <Stack>
           <Flex width='full' justifyContent='space-between'>
             <Flex alignItems='center' gap={2}>
-              <Avatar size='xs' src={buyAsset.icon} />
+              <AssetIcon assetId={buyAssetId} size='xs' />
               <Text color='text.subtle'>Receive Address</Text>
             </Flex>
           </Flex>
