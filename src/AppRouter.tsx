@@ -33,6 +33,15 @@ const motionWrapperSx = {
   justifyContent: 'center',
 }
 
+const chatwootBoxProps = {
+  width: 'auto',
+  maxWidth: 'none',
+  position: 'fixed',
+  bottom: 4,
+  right: 4,
+  zIndex: 1,
+} as const
+
 const transition = {
   type: 'tween',
   ease: [0.25, 0.1, 0.25, 1],
@@ -57,6 +66,7 @@ const bgContainerSx = {
 const headingFontSizeSx = { base: '40px', md: '56px' }
 const headingLineHeightSx = { base: '48px', md: '64px' }
 const contentPt = { base: '6vh', md: '8vh' }
+const contentPx = { base: 4, md: 0 }
 
 const getVariants = (pathname: string) => {
   // Not sure what this does but this looks good on status screen so
@@ -120,7 +130,7 @@ export const AppRouter = () => {
 
   return (
     <FormProvider {...methods}>
-      <Box width='full' height='100vh' position='relative'>
+      <Box width='full' height='100vh' position='relative' overflowY='auto'>
         {/* Blurry fancy bg underlay */}
         <Center
           position='fixed'
@@ -135,9 +145,16 @@ export const AppRouter = () => {
           sx={bgContainerSx}
         />
         {/* Akschual content overlay */}
-        <Box position='relative' zIndex={1} width='full' height='full' pt={contentPt}>
-          <Box width='full' display='flex' flexDir='column' alignItems='center'>
-            <Box mb={12} textAlign='center' maxWidth='container.sm' mx='auto'>
+        <Box
+          position='relative'
+          zIndex={1}
+          width='full'
+          minHeight='100vh'
+          pt={contentPt}
+          px={contentPx}
+        >
+          <Box width='full' minHeight='inherit' display='flex' flexDir='column' alignItems='center'>
+            <Box mb={12} textAlign='center' maxWidth='container.sm' mx='auto' px={4}>
               <Heading
                 fontSize={headingFontSizeSx}
                 lineHeight={headingLineHeightSx}
@@ -181,9 +198,9 @@ export const AppRouter = () => {
                 </Routes>
               </motion.div>
             </AnimatePresence>
-          </Box>
-          <Box position='absolute' bottom={4} right={4} zIndex={1}>
-            <ChatwootButton />
+            <Box {...chatwootBoxProps}>
+              <ChatwootButton />
+            </Box>
           </Box>
         </Box>
       </Box>

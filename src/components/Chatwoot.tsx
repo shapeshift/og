@@ -1,6 +1,9 @@
-import { Button } from '@chakra-ui/react'
+import { IconButton } from '@chakra-ui/react'
 import { useCallback, useEffect } from 'react'
+import { FaMessage } from 'react-icons/fa6'
 import { getFeatureFlag } from 'lib/utils'
+
+const faMessage = <FaMessage />
 
 export const ChatwootButton: React.FC = () => {
   const chatWootEnabled = getFeatureFlag('chatwoot')
@@ -36,8 +39,18 @@ export const ChatwootButton: React.FC = () => {
   }, [])
 
   return chatWootEnabled ? (
-    <Button position='absolute' right='1rem' bottom='1rem' onClick={handleChatWoot}>
-      Get support
-    </Button>
+    <IconButton
+      aria-label='Get support'
+      icon={faMessage}
+      width='48px'
+      height='48px'
+      borderRadius='full'
+      boxShadow='lg'
+      onClick={handleChatWoot}
+      colorScheme='gray'
+      bg='whiteAlpha.50'
+      variant='outline'
+      fontSize='20px'
+    />
   ) : null
 }
