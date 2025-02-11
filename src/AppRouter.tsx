@@ -145,14 +145,15 @@ export const AppRouter = () => {
           sx={bgContainerSx}
         />
         {/* Akschual content overlay */}
-        <Box position='relative' zIndex={1} width='full' minHeight='100vh' pt={contentPt} px={contentPx}>
-          <Box 
-            width='full' 
-            minHeight='inherit'
-            display='flex' 
-            flexDir='column' 
-            alignItems='center'
-          >
+        <Box
+          position='relative'
+          zIndex={1}
+          width='full'
+          minHeight='100vh'
+          pt={contentPt}
+          px={contentPx}
+        >
+          <Box width='full' minHeight='inherit' display='flex' flexDir='column' alignItems='center'>
             <Box mb={12} textAlign='center' maxWidth='container.sm' mx='auto' px={4}>
               <Heading
                 fontSize={headingFontSizeSx}
