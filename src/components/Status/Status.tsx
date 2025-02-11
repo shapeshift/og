@@ -421,16 +421,19 @@ export const Status = () => {
               <Text color='text.subtle'>Refund Address</Text>
             </Flex>
           </Flex>
-          <Flex alignItems='center' gap={2}>
-            <Text>{refundAddress || ''}</Text>
-            <IconButton
-              size='sm'
-              variant='ghost'
-              icon={isRefundAddressCopied ? checkIcon : copyIcon}
-              aria-label='Copy refund address'
-              onClick={handleCopyRefundAddress}
-            />
-          </Flex>
+          <InputGroup>
+            <Input isReadOnly value={refundAddress} />
+            <InputRightElement>
+              <IconButton
+                borderRadius='lg'
+                size='sm'
+                variant='ghost'
+                icon={isRefundAddressCopied ? checkIcon : copyIcon}
+                aria-label='Copy refund address'
+                onClick={handleCopyRefundAddress}
+              />
+            </InputRightElement>
+          </InputGroup>
         </Stack>
         <Stack>
           <Flex width='full' justifyContent='space-between'>
@@ -439,16 +442,19 @@ export const Status = () => {
               <Text color='text.subtle'>Receive Address</Text>
             </Flex>
           </Flex>
-          <Flex alignItems='center' gap={2}>
-            <Text>{destinationAddress || ''}</Text>
-            <IconButton
-              size='sm'
-              variant='ghost'
-              icon={isReceiveAddressCopied ? checkIcon : copyIcon}
-              aria-label='Copy receive address'
-              onClick={handleCopyReceiveAddress}
-            />
-          </Flex>
+          <InputGroup>
+            <Input isReadOnly value={destinationAddress} />
+            <InputRightElement>
+              <IconButton
+                borderRadius='lg'
+                size='sm'
+                variant='ghost'
+                icon={isReceiveAddressCopied ? checkIcon : copyIcon}
+                aria-label='Copy receive address'
+                onClick={handleCopyReceiveAddress}
+              />
+            </InputRightElement>
+          </InputGroup>
         </Stack>
         <Divider borderColor='border.base' />
         <Stack spacing={2}>
