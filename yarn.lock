@@ -2621,12 +2621,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@shapeshiftoss/caip@patch:@shapeshiftoss/caip@npm%3A8.15.0#~/.yarn/patches/@shapeshiftoss-caip-npm-8.15.0-f1e7f80009.patch":
+"@shapeshiftoss/caip@patch:@shapeshiftoss/caip@npm%3A8.15.0#~/.yarn/patches/@shapeshiftoss-caip-npm-8.15.0-f1e7f80009.patch::version=8.15.0&hash=8aa54a":
   version: 8.15.0
   resolution: "@shapeshiftoss/caip@patch:@shapeshiftoss/caip@npm%3A8.15.0#~/.yarn/patches/@shapeshiftoss-caip-npm-8.15.0-f1e7f80009.patch::version=8.15.0&hash=8aa54a"
   peerDependencies:
     "@shapeshiftoss/types": ^8.1.0
   checksum: 10c0/a1f3c6c69577d3d8a4c8ce0d8e5a39a07ccce6364d04f58cc3aef5fcff294649a89bdb992409f2bf2ce406b011bb39ad60a030b9beb4c10b218c0065f961e717
+  languageName: node
+  linkType: hard
+
+"@shapeshiftoss/caip@patch:@shapeshiftoss/caip@patch%3A@shapeshiftoss/caip@npm%253A8.15.0%23~/.yarn/patches/@shapeshiftoss-caip-npm-8.15.0-f1e7f80009.patch%3A%3Aversion=8.15.0&hash=8aa54a#~/.yarn/patches/@shapeshiftoss-caip-patch-5a8d59028c.patch":
+  version: 8.15.0
+  resolution: "@shapeshiftoss/caip@patch:@shapeshiftoss/caip@patch%3A@shapeshiftoss/caip@npm%253A8.15.0%23~/.yarn/patches/@shapeshiftoss-caip-npm-8.15.0-f1e7f80009.patch%3A%3Aversion=8.15.0&hash=8aa54a#~/.yarn/patches/@shapeshiftoss-caip-patch-5a8d59028c.patch::version=8.15.0&hash=a19242"
+  peerDependencies:
+    "@shapeshiftoss/types": ^8.1.0
+  checksum: 10c0/cddf4647bf10eeeaa72336c8c07ac7d36d615517052e228165894eb283abef9360ff6fa00ce4a7e55c8989806e2268480c4d89e7cc60eaab3f8537ce4e2b4591
   languageName: node
   linkType: hard
 
@@ -7985,7 +7994,7 @@ __metadata:
     "@emotion/react": "npm:^11.11.3"
     "@emotion/styled": "npm:^11.11.0"
     "@lukemorales/query-key-factory": "npm:^1.3.4"
-    "@shapeshiftoss/caip": "patch:@shapeshiftoss/caip@npm%3A8.15.0#~/.yarn/patches/@shapeshiftoss-caip-npm-8.15.0-f1e7f80009.patch"
+    "@shapeshiftoss/caip": "patch:@shapeshiftoss/caip@patch%3A@shapeshiftoss/caip@npm%253A8.15.0%23~/.yarn/patches/@shapeshiftoss-caip-npm-8.15.0-f1e7f80009.patch%3A%3Aversion=8.15.0&hash=8aa54a#~/.yarn/patches/@shapeshiftoss-caip-patch-5a8d59028c.patch"
     "@shapeshiftoss/types": "npm:^8.6.0"
     "@solana/web3.js": "npm:^1.98.0"
     "@tanstack/react-query": "npm:^5.65.1"
