@@ -47,7 +47,9 @@ export const ChatwootButton: React.FC = () => {
       borderRadius='full'
       boxShadow='lg'
       onClick={handleChatWoot}
-      colorScheme='blue'
+      colorScheme='gray'
+      bg='whiteAlpha.50'
+      variant='outline'
       fontSize='20px'
     />
   ) : null
