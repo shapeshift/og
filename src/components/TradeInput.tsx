@@ -16,10 +16,12 @@ import {
   StatNumber,
   Text,
   useDisclosure,
+  VStack,
 } from '@chakra-ui/react'
 import { getChainflipId } from 'queries/chainflip/assets'
 import { useChainflipQuoteQuery } from 'queries/chainflip/quote'
 import { useChainflipSwapMutation } from 'queries/chainflip/swap'
+import { useMarketDataByAssetIdQuery } from 'queries/marketData'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useFormContext, useWatch } from 'react-hook-form'
 import { FaArrowRightArrowLeft } from 'react-icons/fa6'
@@ -73,13 +75,6 @@ export const TradeInput = () => {
 
   const sellAsset = useAssetById(sellAssetId)
   const buyAsset = useAssetById(buyAssetId)
-
-  // Rehydrate sell amount input, since we only store amounts in base unit
-  useEffect(() => {
-    if (!sellAsset?.precision || !sellAmountCryptoBaseUnit) return
-    const amountCryptoPrecision = fromBaseUnit(sellAmountCryptoBaseUnit, sellAsset.precision)
-    setSellAmountInput(amountCryptoPrecision)
-  }, [sellAsset?.precision, sellAmountCryptoBaseUnit])
 
   const sellAmountCryptoPrecision = useMemo(() => {
     if (!sellAsset) return
@@ -141,6 +136,28 @@ export const TradeInput = () => {
   const [assetSelectType, setAssetSelectType] = useState<AssetType>(AssetType.BUY)
   const [sellAmountInput, setSellAmountInput] = useState('')
   const debouncedSellAmount = useDebounce(sellAmountInput, 200)
+
+  // Rehydrate sell amount input, since we only store amounts in base unit
+  useEffect(() => {
+    if (!sellAsset?.precision || !sellAmountCryptoBaseUnit) return
+    // Run on rehydration only
+    if (sellAmountInput !== '') return
+    const amountCryptoPrecision = fromBaseUnit(sellAmountCryptoBaseUnit, sellAsset.precision)
+    setSellAmountInput(amountCryptoPrecision)
+  }, [sellAsset?.precision, sellAmountCryptoBaseUnit, sellAmountInput])
+
+  const { data: sellAssetMarketData } = useMarketDataByAssetIdQuery(sellAssetId || '')
+  const { data: buyAssetMarketData } = useMarketDataByAssetIdQuery(buyAssetId || '')
+
+  const sellAmountFiat = useMemo(() => {
+    if (!sellAssetMarketData?.price || !sellAmountCryptoPrecision) return '0'
+    return bnOrZero(sellAmountCryptoPrecision).times(sellAssetMarketData.price).toString()
+  }, [sellAssetMarketData?.price, sellAmountCryptoPrecision])
+
+  const buyAmountFiat = useMemo(() => {
+    if (!buyAssetMarketData?.price || !buyAmountCryptoPrecision) return '0'
+    return bnOrZero(buyAmountCryptoPrecision).times(buyAssetMarketData.price).toString()
+  }, [buyAssetMarketData?.price, buyAmountCryptoPrecision])
 
   useEffect(() => {
     if (!sellAsset?.precision) return
@@ -218,23 +235,34 @@ export const TradeInput = () => {
 
     if (!(currentSellAsset && currentBuyAsset)) return
 
-    // Zero out amount if no quote available
-    if (!quote || !buyAmountCryptoPrecision) {
+    if (!sellAssetMarketData?.price || !buyAssetMarketData?.price) {
       setSellAmountInput('')
+      setValue('sellAmountCryptoBaseUnit', '0')
       setValue('sellAssetId', currentBuyAsset.assetId)
       setValue('buyAssetId', currentSellAsset.assetId)
       return
     }
 
-    // Note, we set it *before* switching the assets because something something debounce.
-    const newSellAmountCryptoPrecision = bnOrZero(buyAmountCryptoPrecision)
-    setSellAmountInput(newSellAmountCryptoPrecision.toString())
+    // Prorate sell amount in fiat terms
+    const sellAmountUsd = bnOrZero(sellAmountCryptoPrecision).times(sellAssetMarketData.price)
+    const newAmount = sellAmountUsd.div(buyAssetMarketData.price).toFixed()
+
+    setValue('sellAmountCryptoBaseUnit', toBaseUnit(newAmount, currentBuyAsset.precision))
+    setSellAmountInput(newAmount)
     setValue('sellAssetId', currentBuyAsset.assetId)
     setValue('buyAssetId', currentSellAsset.assetId)
-  }, [sellAsset, buyAsset, quote, buyAmountCryptoPrecision, setValue, setSellAmountInput])
+  }, [
+    sellAsset,
+    buyAsset,
+    sellAmountCryptoPrecision,
+    sellAssetMarketData?.price,
+    buyAssetMarketData?.price,
+    setValue,
+    setSellAmountInput,
+  ])
 
   const handleSellAmountChange = useCallback((values: { value: string }) => {
-    setSellAmountInput(values.value)
+    setSellAmountInput(bnOrZero(values.value).toFixed())
   }, [])
 
   const validateDestinationAddress = useCallback(
@@ -328,7 +356,13 @@ export const TradeInput = () => {
             <Stat size='sm' textAlign='center' py={4}>
               <StatLabel color='text.subtle'>Deposit This</StatLabel>
               <StatNumber>
-                <Amount.Crypto value={sellAmountCryptoPrecision || '0'} symbol={sellAsset.symbol} />
+                <VStack spacing={0}>
+                  <Amount.Crypto
+                    value={sellAmountCryptoPrecision ?? '0'}
+                    symbol={sellAsset.symbol}
+                  />
+                  <Amount.Fiat value={sellAmountFiat} color='text.subtle' fontSize='sm' />
+                </VStack>
               </StatNumber>
             </Stat>
             <Stat size='sm' textAlign='center' py={4}>
@@ -336,10 +370,19 @@ export const TradeInput = () => {
               <StatNumber>
                 {isQuoteFetching ? (
                   <Skeleton height='24px' width='140px' textAlign='center' margin='0 auto'>
-                    <Amount.Crypto value='0' symbol={buyAsset.symbol} />
+                    <VStack spacing={0}>
+                      <Amount.Crypto value='0' symbol={buyAsset.symbol} />
+                      <Amount.Fiat value='0' color='text.subtle' fontSize='sm' />
+                    </VStack>
                   </Skeleton>
                 ) : (
-                  <Amount.Crypto value={buyAmountCryptoPrecision ?? '0'} symbol={buyAsset.symbol} />
+                  <VStack spacing={0}>
+                    <Amount.Crypto
+                      value={buyAmountCryptoPrecision ?? '0'}
+                      symbol={buyAsset.symbol}
+                    />
+                    <Amount.Fiat value={buyAmountFiat} color='text.subtle' fontSize='sm' />
+                  </VStack>
                 )}
               </StatNumber>
             </Stat>
@@ -384,31 +427,40 @@ export const TradeInput = () => {
                 decimalScale={sellAsset.precision}
                 isInvalid={!!errors.sellAmountCryptoBaseUnit}
               />
+              <Amount.Fiat value={sellAmountFiat} color='text.subtle' fontSize='sm' mt={1} />
               {errors.sellAmountCryptoBaseUnit && (
                 <Text fontSize='sm' color='red.500' mt={1}>
                   {errors.sellAmountCryptoBaseUnit.message}
                 </Text>
               )}
             </Flex>
-            <Flex width='50%'>
+            <Flex direction='column' width='50%'>
               {isQuoteFetching ? (
-                <Skeleton height='40px' width='full'>
+                <VStack width='full' spacing={1} align='stretch'>
+                  <Skeleton height='40px' width='full'>
+                    <Input
+                      variant='filled'
+                      placeholder={`0.0 ${buyAsset.symbol}`}
+                      isReadOnly
+                      value=''
+                      {...skeletonInputSx}
+                    />
+                  </Skeleton>
+                  <Skeleton height='18px' width='80px'>
+                    <Amount.Fiat value='0' color='text.subtle' fontSize='sm' />
+                  </Skeleton>
+                </VStack>
+              ) : (
+                <VStack width='full' spacing={1} align='stretch'>
                   <Input
                     variant='filled'
                     placeholder={`0.0 ${buyAsset.symbol}`}
                     isReadOnly
-                    value=''
+                    value={buyAmountCryptoPrecision || 'N/A'}
                     {...skeletonInputSx}
                   />
-                </Skeleton>
-              ) : (
-                <Input
-                  variant='filled'
-                  placeholder={`0.0 ${buyAsset.symbol}`}
-                  isReadOnly
-                  value={buyAmountCryptoPrecision || 'N/A'}
-                  {...skeletonInputSx}
-                />
+                  <Amount.Fiat value={buyAmountFiat} color='text.subtle' fontSize='sm' />
+                </VStack>
               )}
             </Flex>
           </Flex>
