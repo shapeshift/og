@@ -82,6 +82,8 @@ export const TradeInput = () => {
     return fromBaseUnit(sellAmountCryptoBaseUnit, sellAsset.precision)
   }, [sellAsset, sellAmountCryptoBaseUnit])
 
+  const [isSwitching, setIsSwitching] = useState(false)
+
   const {
     data: quote,
     isFetching: isQuoteFetching,
@@ -92,7 +94,11 @@ export const TradeInput = () => {
       destinationAsset: buyAsset ? getChainflipId(buyAsset.assetId) : '',
       amount: sellAmountCryptoBaseUnit,
     },
-    { refetchInterval: QUOTE_REFETCH_INTERVAL },
+    {
+      refetchInterval: QUOTE_REFETCH_INTERVAL,
+      enabled:
+        !isSwitching && !!sellAsset && !!buyAsset && bnOrZero(sellAmountCryptoBaseUnit).gt(0),
+    },
   )
 
   const buyAmountCryptoPrecision = useMemo(() => {
@@ -235,6 +241,10 @@ export const TradeInput = () => {
 
     if (!(currentSellAsset && currentBuyAsset)) return
 
+    setIsSwitching(true)
+    // Another day in react land - avoids flashes of (wrong) content by making the transition state a loading state
+    setTimeout(() => setIsSwitching(false), 250)
+
     if (!sellAssetMarketData?.price || !buyAssetMarketData?.price) {
       setSellAmountInput('')
       setValue('sellAmountCryptoBaseUnit', '0')
@@ -316,6 +326,8 @@ export const TradeInput = () => {
     }
   }, [quoteError, setError, clearErrors, sellAsset])
 
+  const isLoading = isQuoteFetching || isSwitching
+
   if (!(sellAsset && buyAsset)) return null
 
   return (
@@ -336,13 +348,22 @@ export const TradeInput = () => {
               Your rate
             </Text>
             <Flex gap={1}>
-              <Amount.Crypto value='1' symbol={sellAsset.symbol} suffix='=' />
-              {bn(rate).isZero() ? (
-                <Text>N/A</Text>
-              ) : (
-                <Skeleton isLoaded={!isQuoteFetching}>
-                  <Amount.Crypto value={rate} symbol={buyAsset.symbol} />
+              {isLoading ? (
+                <Skeleton height='20px' width='200px'>
+                  <Flex gap={1}>
+                    <Amount.Crypto value='1' symbol={sellAsset.symbol} suffix='=' />
+                    <Amount.Crypto value='0' symbol={buyAsset.symbol} />
+                  </Flex>
                 </Skeleton>
+              ) : (
+                <>
+                  <Amount.Crypto value='1' symbol={sellAsset.symbol} suffix='=' />
+                  {bn(rate).isZero() ? (
+                    <Text>N/A</Text>
+                  ) : (
+                    <Amount.Crypto value={rate} symbol={buyAsset.symbol} />
+                  )}
+                </>
               )}
             </Flex>
             <Box position='absolute' right='4' top='50%' transform='translateY(-50%)'>
@@ -356,19 +377,28 @@ export const TradeInput = () => {
             <Stat size='sm' textAlign='center' py={4}>
               <StatLabel color='text.subtle'>Deposit This</StatLabel>
               <StatNumber>
-                <VStack spacing={0}>
-                  <Amount.Crypto
-                    value={sellAmountCryptoPrecision ?? '0'}
-                    symbol={sellAsset.symbol}
-                  />
-                  <Amount.Fiat value={sellAmountFiat} color='text.subtle' fontSize='sm' />
-                </VStack>
+                {isLoading ? (
+                  <Skeleton height='24px' width='140px' textAlign='center' margin='0 auto'>
+                    <VStack spacing={0}>
+                      <Amount.Crypto value='0' symbol={sellAsset.symbol} />
+                      <Amount.Fiat value='0' color='text.subtle' fontSize='sm' />
+                    </VStack>
+                  </Skeleton>
+                ) : (
+                  <VStack spacing={0}>
+                    <Amount.Crypto
+                      value={sellAmountCryptoPrecision ?? '0'}
+                      symbol={sellAsset.symbol}
+                    />
+                    <Amount.Fiat value={sellAmountFiat} color='text.subtle' fontSize='sm' />
+                  </VStack>
+                )}
               </StatNumber>
             </Stat>
             <Stat size='sm' textAlign='center' py={4}>
               <StatLabel color='text.subtle'>To Get This</StatLabel>
               <StatNumber>
-                {isQuoteFetching ? (
+                {isLoading ? (
                   <Skeleton height='24px' width='140px' textAlign='center' margin='0 auto'>
                     <VStack spacing={0}>
                       <Amount.Crypto value='0' symbol={buyAsset.symbol} />
@@ -417,25 +447,44 @@ export const TradeInput = () => {
           </Flex>
           <Flex gap={6}>
             <Flex direction='column' width='50%'>
-              <NumericFormat
-                customInput={Input}
-                variant='filled'
-                placeholder={`Enter ${sellAsset.symbol} amount`}
-                value={sellAmountInput}
-                onValueChange={handleSellAmountChange}
-                allowNegative={false}
-                decimalScale={sellAsset.precision}
-                isInvalid={!!errors.sellAmountCryptoBaseUnit}
-              />
-              <Amount.Fiat value={sellAmountFiat} color='text.subtle' fontSize='sm' mt={1} />
-              {errors.sellAmountCryptoBaseUnit && (
-                <Text fontSize='sm' color='red.500' mt={1}>
-                  {errors.sellAmountCryptoBaseUnit.message}
-                </Text>
+              {isLoading ? (
+                <VStack width='full' spacing={1} align='stretch'>
+                  <Skeleton height='40px' width='full'>
+                    <Input
+                      variant='filled'
+                      placeholder={`Enter ${sellAsset.symbol} amount`}
+                      isReadOnly
+                      value=''
+                      {...skeletonInputSx}
+                    />
+                  </Skeleton>
+                  <Skeleton height='18px' width='80px'>
+                    <Amount.Fiat value='0' color='text.subtle' fontSize='sm' />
+                  </Skeleton>
+                </VStack>
+              ) : (
+                <>
+                  <NumericFormat
+                    customInput={Input}
+                    variant='filled'
+                    placeholder={`Enter ${sellAsset.symbol} amount`}
+                    value={sellAmountInput}
+                    onValueChange={handleSellAmountChange}
+                    allowNegative={false}
+                    decimalScale={sellAsset.precision}
+                    isInvalid={!!errors.sellAmountCryptoBaseUnit}
+                  />
+                  <Amount.Fiat value={sellAmountFiat} color='text.subtle' fontSize='sm' mt={1} />
+                  {errors.sellAmountCryptoBaseUnit && (
+                    <Text fontSize='sm' color='red.500' mt={1}>
+                      {errors.sellAmountCryptoBaseUnit.message}
+                    </Text>
+                  )}
+                </>
               )}
             </Flex>
             <Flex direction='column' width='50%'>
-              {isQuoteFetching ? (
+              {isLoading ? (
                 <VStack width='full' spacing={1} align='stretch'>
                   <Skeleton height='40px' width='full'>
                     <Input
