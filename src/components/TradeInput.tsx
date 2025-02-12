@@ -392,7 +392,7 @@ export const TradeInput = () => {
               <StatLabel color='text.subtle'>Deposit This</StatLabel>
               <StatNumber>
                 {isLoading ? (
-                  <Skeleton height='24px' width='140px' textAlign='center' margin='0 auto'>
+                  <Skeleton width='140px' textAlign='center' margin='0 auto'>
                     <VStack spacing={0}>
                       <Amount.Crypto value='0' symbol={sellAsset.symbol} />
                       <Amount.Fiat value='0' color='text.subtle' fontSize='sm' />
@@ -413,7 +413,7 @@ export const TradeInput = () => {
               <StatLabel color='text.subtle'>To Get This</StatLabel>
               <StatNumber>
                 {isLoading ? (
-                  <Skeleton height='24px' width='140px' textAlign='center' margin='0 auto'>
+                  <Skeleton width='140px' textAlign='center' margin='0 auto'>
                     <VStack spacing={0}>
                       <Amount.Crypto value='0' symbol={buyAsset.symbol} />
                       <Amount.Fiat value='0' color='text.subtle' fontSize='sm' />
