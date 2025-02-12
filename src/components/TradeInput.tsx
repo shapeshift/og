@@ -328,6 +328,15 @@ export const TradeInput = () => {
 
   const isLoading = isQuoteFetching || isSwitching
 
+  const renderedBuyAmountCryptoPrecision = useMemo(() => {
+    // No sell amount has been entered
+    if (bnOrZero(sellAmountInput).eq(0)) return '0'
+    // We have a quote error, most likely because of amount too high/low
+    if (quoteError) return 'N/A'
+    // We have a quote, show the estimated buy amount
+    return buyAmountCryptoPrecision
+  }, [buyAmountCryptoPrecision, sellAmountInput, quoteError])
+
   if (!(sellAsset && buyAsset)) return null
 
   return (
@@ -505,7 +514,7 @@ export const TradeInput = () => {
                     variant='filled'
                     placeholder={`0.0 ${buyAsset.symbol}`}
                     isReadOnly
-                    value={buyAmountCryptoPrecision || 'N/A'}
+                    value={renderedBuyAmountCryptoPrecision}
                     {...skeletonInputSx}
                   />
                   <Amount.Fiat value={buyAmountFiat} color='text.subtle' fontSize='sm' />
