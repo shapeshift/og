@@ -352,29 +352,34 @@ export const TradeInput = () => {
             px={4}
             bg='background.surface.raised.base'
             position='relative'
+            minH={37}
           >
-            <Text color='text.subtle' mr={2}>
-              Your rate
-            </Text>
-            <Flex gap={1}>
-              {isLoading ? (
-                <Skeleton height='20px' width='200px'>
-                  <Flex gap={1}>
-                    <Amount.Crypto value='1' symbol={sellAsset.symbol} suffix='=' />
-                    <Amount.Crypto value='0' symbol={buyAsset.symbol} />
-                  </Flex>
-                </Skeleton>
-              ) : (
-                <>
-                  <Amount.Crypto value='1' symbol={sellAsset.symbol} suffix='=' />
-                  {bn(rate).isZero() ? (
-                    <Text>N/A</Text>
+            {bn(rate).gt(0) ? (
+              <>
+                <Text color='text.subtle' mr={2}>
+                  Your rate
+                </Text>
+                <Flex gap={1}>
+                  {isLoading ? (
+                    <Skeleton height='20px' width='200px'>
+                      <Flex gap={1}>
+                        <Amount.Crypto value='1' symbol={sellAsset.symbol} suffix='=' />
+                        <Amount.Crypto value='0' symbol={buyAsset.symbol} />
+                      </Flex>
+                    </Skeleton>
                   ) : (
-                    <Amount.Crypto value={rate} symbol={buyAsset.symbol} />
+                    <>
+                      <Amount.Crypto value='1' symbol={sellAsset.symbol} suffix='=' />
+                      {bn(rate).isZero() ? (
+                        <Text>N/A</Text>
+                      ) : (
+                        <Amount.Crypto value={rate} symbol={buyAsset.symbol} />
+                      )}
+                    </>
                   )}
-                </>
-              )}
-            </Flex>
+                </Flex>
+              </>
+            ) : null}
             <Box position='absolute' right='4' top='50%' transform='translateY(-50%)'>
               <CountdownSpinner
                 isLoading={isQuoteFetching}
