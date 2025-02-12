@@ -461,7 +461,7 @@ export const TradeInput = () => {
           </Flex>
           <Flex gap={6}>
             <Flex direction='column' width='50%'>
-              {isLoading && isSwitching ? (
+              {isLoading || isSwitching ? (
                 <VStack width='full' spacing={1} align='stretch'>
                   <Skeleton height='40px' width='full'>
                     <Input
