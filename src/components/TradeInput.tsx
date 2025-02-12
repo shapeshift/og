@@ -447,21 +447,40 @@ export const TradeInput = () => {
           </Flex>
           <Flex gap={6}>
             <Flex direction='column' width='50%'>
-              <NumericFormat
-                customInput={Input}
-                variant='filled'
-                placeholder={`Enter ${sellAsset.symbol} amount`}
-                value={sellAmountInput}
-                onValueChange={handleSellAmountChange}
-                allowNegative={false}
-                decimalScale={sellAsset.precision}
-                isInvalid={!!errors.sellAmountCryptoBaseUnit}
-              />
-              <Amount.Fiat value={sellAmountFiat} color='text.subtle' fontSize='sm' mt={1} />
-              {errors.sellAmountCryptoBaseUnit && (
-                <Text fontSize='sm' color='red.500' mt={1}>
-                  {errors.sellAmountCryptoBaseUnit.message}
-                </Text>
+              {isLoading && isSwitching ? (
+                <VStack width='full' spacing={1} align='stretch'>
+                  <Skeleton height='40px' width='full'>
+                    <Input
+                      variant='filled'
+                      placeholder={`Enter ${sellAsset.symbol} amount`}
+                      isReadOnly
+                      value=''
+                      {...skeletonInputSx}
+                    />
+                  </Skeleton>
+                  <Skeleton height='18px' width='80px'>
+                    <Amount.Fiat value='0' color='text.subtle' fontSize='sm' />
+                  </Skeleton>
+                </VStack>
+              ) : (
+                <>
+                  <NumericFormat
+                    customInput={Input}
+                    variant='filled'
+                    placeholder={`Enter ${sellAsset.symbol} amount`}
+                    value={sellAmountInput}
+                    onValueChange={handleSellAmountChange}
+                    allowNegative={false}
+                    decimalScale={sellAsset.precision}
+                    isInvalid={!!errors.sellAmountCryptoBaseUnit}
+                  />
+                  <Amount.Fiat value={sellAmountFiat} color='text.subtle' fontSize='sm' mt={1} />
+                  {errors.sellAmountCryptoBaseUnit && (
+                    <Text fontSize='sm' color='red.500' mt={1}>
+                      {errors.sellAmountCryptoBaseUnit.message}
+                    </Text>
+                  )}
+                </>
               )}
             </Flex>
             <Flex direction='column' width='50%'>
