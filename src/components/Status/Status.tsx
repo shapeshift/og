@@ -45,7 +45,7 @@ import type { SwapFormData } from 'types/form'
 import { AssetIcon } from '../AssetIcon'
 import { StatusStepper } from './components/StatusStepper'
 
-const CHAINFLIP_EXPLORER_BASE_URL = import.meta.env.VITE_CHAINFLIP_COMMISSION_BPS
+const CHAINFLIP_EXPLORER_BASE_URL = import.meta.env.VITE_CHAINFLIP_EXPLORER_BASE_URL
 
 dayjs.extend(duration)
 dayjs.extend(relativeTime)
