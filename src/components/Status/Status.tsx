@@ -230,7 +230,7 @@ const PendingSwapCardBody = ({
                   Launch Shapeshift App
                 </Button>
                 <Button colorScheme='gray' size='md' onClick={handleDoAnotherSwap}>
-                  Do another swap
+                  Do Another Swap
                 </Button>
               </Flex>
             </VStack>
