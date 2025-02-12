@@ -331,11 +331,11 @@ export const TradeInput = () => {
   const renderedBuyAmountCryptoPrecision = useMemo(() => {
     // No sell amount has been entered
     if (bnOrZero(sellAmountInput).eq(0)) return '0'
-    // We couldn't get a quote
-    if (!quote && !isQuoteFetching) return 'N/A'
+    // We have a quote error, most likely because of amount too high/low
+    if (quoteError) return 'N/A'
     // We have a quote, show the estimated buy amount
     return buyAmountCryptoPrecision
-  }, [buyAmountCryptoPrecision, sellAmountInput, quote, isQuoteFetching])
+  }, [buyAmountCryptoPrecision, sellAmountInput, quoteError])
 
   if (!(sellAsset && buyAsset)) return null
 
