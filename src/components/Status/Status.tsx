@@ -34,7 +34,7 @@ import { reactQueries } from 'queries/react-queries'
 import { useCallback, useMemo } from 'react'
 import { useFormContext, useWatch } from 'react-hook-form'
 import { FaArrowUpRightFromSquare, FaCheck, FaRegCopy } from 'react-icons/fa6'
-import { useSearchParams } from 'react-router'
+import { useNavigate, useSearchParams } from 'react-router'
 import { useAssetById } from 'store/assets'
 import { Amount } from 'components/Amount/Amount'
 import { QRCode } from 'components/QRCode/QRCode'
@@ -182,6 +182,7 @@ const PendingSwapCardBody = ({
     status: ChainflipSwapStatus
   }
 }) => {
+  const navigate = useNavigate()
   const config = getChainflipStatusConfig(swapStatus?.status.state, swapStatus)
   const StatusIcon = config.icon
   const isCompleted = swapStatus?.status.state === 'completed'
@@ -190,6 +191,10 @@ const PendingSwapCardBody = ({
   const handleLaunchApp = useCallback(() => {
     window.open('https://app.shapeshift.com', '_blank')
   }, [])
+
+  const handleDoAnotherSwap = useCallback(() => {
+    navigate('/')
+  }, [navigate])
 
   return (
     <CardBody height='full' display='flex' alignItems='center' justifyContent='center'>
@@ -220,9 +225,14 @@ const PendingSwapCardBody = ({
               <Text fontSize='md' color='gray.500'>
                 Do more with the ShapeShift platform
               </Text>
-              <Button colorScheme='blue' size='md' onClick={handleLaunchApp}>
-                Launch Shapeshift App
-              </Button>
+              <Flex gap={2}>
+                <Button colorScheme='blue' size='md' onClick={handleLaunchApp}>
+                  Launch Shapeshift App
+                </Button>
+                <Button colorScheme='gray' size='md' onClick={handleDoAnotherSwap}>
+                  Do Another Swap
+                </Button>
+              </Flex>
             </VStack>
           </SlideFade>
         )}
