@@ -101,13 +101,6 @@ const IdleSwapCardBody = ({
   const buyAsset = useAssetById(buyAssetId)
   const qrCodeIcon = useMemo(() => <AssetIcon assetId={sellAssetId} size='xs' />, [sellAssetId])
 
-  const timeToExpiry = useMemo(() => {
-    if (isStatusLoading) return 'N/A'
-    if (!estimatedExpiryTime) return 'N/A'
-    if (isExpired) return null
-    return dayjs.duration(dayjs(estimatedExpiryTime).diff(dayjs())).humanize()
-  }, [estimatedExpiryTime, isExpired, isStatusLoading])
-
   if (!(sellAsset && buyAsset)) return null
 
   return (
@@ -119,7 +112,21 @@ const IdleSwapCardBody = ({
           </Box>
         )}
         <Tag colorScheme={isExpired ? 'red' : 'yellow'} size='sm' justifyContent='center'>
-          {isExpired ? 'Expired' : `Expires in: ${timeToExpiry}`}
+          {(() => {
+            switch (true) {
+              case isExpired:
+                return 'Expired'
+              case isStatusLoading:
+              case !estimatedExpiryTime:
+                return 'Fetching expiry time...'
+              default: {
+                const timeToExpiry = dayjs
+                  .duration(dayjs(estimatedExpiryTime).diff(dayjs()))
+                  .humanize()
+                return `Expires in: ${timeToExpiry}`
+              }
+            }
+          })()}
         </Tag>
       </Flex>
       <Stack spacing={4} flex={1}>
@@ -377,7 +384,7 @@ export const Status = () => {
         {swapData.channelId && (
           <Flex gap={2} alignItems='center'>
             <Text>{swapData.channelId.toString()}</Text>
-            {swapData.channelId && (
+            {swapData.channelId && swapStatus?.status.depositChannel?.id && (
               <Link
                 href={`${CHAINFLIP_EXPLORER_BASE_URL}/channels/${swapStatus?.status.depositChannel?.id}`}
                 isExternal
