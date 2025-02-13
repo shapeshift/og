@@ -68,6 +68,16 @@ const headingLineHeightSx = { base: '48px', md: '64px' }
 const contentPt = { base: '6vh', md: '8vh' }
 const contentPx = { base: 4, md: 0 }
 
+const subtitleTextProps = {
+  fontSize: '16px',
+  color: 'whiteAlpha.700',
+  maxWidth: '480px',
+  mx: 'auto',
+  textAlign: 'center',
+  lineHeight: '1.6',
+  letterSpacing: '-0.01em',
+} as const
+
 const getVariants = (pathname: string) => {
   // Not sure what this does but this looks good on status screen so
   if (pathname === '/status') return fadeUpVariants
@@ -168,16 +178,11 @@ export const AppRouter = () => {
                 <span>Ditch your wallet,</span>
                 <span>Swap multichain</span>
               </Heading>
-              <Text
-                fontSize='16px'
-                color='whiteAlpha.700'
-                maxWidth='480px'
-                mx='auto'
-                textAlign='center'
-                lineHeight='1.6'
-                letterSpacing='-0.01em'
-              >
-                Buy and sell Bitcoin, Ethereum, Solana, Arbitrum, USDT, and more in seconds
+              <Text {...subtitleTextProps}>
+                <span>No Wallet. No Tracking. No KYC.</span>
+              </Text>
+              <Text {...subtitleTextProps}>
+                <span>Swap in seconds.</span>
               </Text>
             </Box>
             <AnimatePresence mode='wait' initial={false}>
