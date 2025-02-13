@@ -29,7 +29,7 @@ import relativeTime from 'dayjs/plugin/relativeTime'
 import { chainflipToAssetId, getChainflipId } from 'queries/chainflip/assets'
 import { useChainflipQuoteQuery } from 'queries/chainflip/quote'
 import { useChainflipStatusQuery } from 'queries/chainflip/status'
-import type { ChainflipQuote, ChainflipSwapStatus } from 'queries/chainflip/types'
+import type { ChainflipSwapStatus } from 'queries/chainflip/types'
 import { reactQueries } from 'queries/react-queries'
 import { useCallback, useMemo } from 'react'
 import { useFormContext, useWatch } from 'react-hook-form'
@@ -64,14 +64,6 @@ const cardHeaderSx = {
   borderTopRadius: 'xl',
   fontSize: 'sm',
   py: 2,
-}
-
-const calculateShapeshiftFee = (quote: ChainflipQuote | undefined) => {
-  if (!quote?.includedFees) return '0'
-
-  const brokerFee = quote.includedFees.find(fee => fee.type === 'broker')
-
-  return bnOrZero(brokerFee?.amount).toFixed(2)
 }
 
 const IdleSwapCardBody = ({
@@ -490,14 +482,6 @@ export const Status = () => {
               />
             </Flex>
           </Flex>
-          <HStack justify='space-between'>
-            <Text color='text.subtle'>ShapeShift Fee</Text>
-            <Amount.Fiat value={calculateShapeshiftFee(quote)} />
-          </HStack>
-          <HStack justify='space-between'>
-            <Text color='text.subtle'>Protocol Fee</Text>
-            <Amount.Fiat value={protocolFeesFiat} />
-          </HStack>
         </Stack>
       </CardFooter>
     </Card>
