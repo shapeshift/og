@@ -377,7 +377,7 @@ export const Status = () => {
         {swapData.channelId && (
           <Flex gap={2} alignItems='center'>
             <Text>{swapData.channelId.toString()}</Text>
-            {swapData.channelId && (
+            {swapData.channelId && swapStatus?.status.depositChannel?.id && (
               <Link
                 href={`${CHAINFLIP_EXPLORER_BASE_URL}/channels/${swapStatus?.status.depositChannel?.id}`}
                 isExternal
