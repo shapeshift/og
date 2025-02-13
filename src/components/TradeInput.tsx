@@ -380,12 +380,14 @@ export const TradeInput = () => {
                 </Flex>
               </>
             ) : null}
-            <Box position='absolute' right='4' top='50%' transform='translateY(-50%)'>
-              <CountdownSpinner
-                isLoading={isQuoteFetching}
-                initialTimeMs={QUOTE_REFETCH_INTERVAL}
-              />
-            </Box>
+            {bnOrZero(sellAmountInput).gt(0) && (
+              <Box position='absolute' right='4' top='50%' transform='translateY(-50%)'>
+                <CountdownSpinner
+                  isLoading={isQuoteFetching}
+                  initialTimeMs={QUOTE_REFETCH_INTERVAL}
+                />
+              </Box>
+            )}
           </Flex>
           <HStack divider={divider} fontSize='sm'>
             <Stat size='sm' textAlign='center' py={4}>
