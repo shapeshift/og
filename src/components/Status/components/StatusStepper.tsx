@@ -56,8 +56,8 @@ export const StatusStepper = ({
       borderColor='border.base'
     >
       <Progress
-        isAnimated
-        hasStripe
+        isAnimated={progress !== 100}
+        hasStripe={progress !== 100}
         value={progress}
         size='sm'
         colorScheme={colorScheme}
