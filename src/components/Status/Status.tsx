@@ -8,7 +8,6 @@ import {
   Circle,
   Divider,
   Flex,
-  HStack,
   IconButton,
   Input,
   InputGroup,
@@ -22,15 +21,13 @@ import {
   VStack,
 } from '@chakra-ui/react'
 import type { AssetId } from '@shapeshiftoss/caip'
-import { useQueries } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import duration from 'dayjs/plugin/duration'
 import relativeTime from 'dayjs/plugin/relativeTime'
-import { chainflipToAssetId, getChainflipId } from 'queries/chainflip/assets'
+import { getChainflipId } from 'queries/chainflip/assets'
 import { useChainflipQuoteQuery } from 'queries/chainflip/quote'
 import { useChainflipStatusQuery } from 'queries/chainflip/status'
 import type { ChainflipSwapStatus } from 'queries/chainflip/types'
-import { reactQueries } from 'queries/react-queries'
 import { useCallback, useMemo } from 'react'
 import { useFormContext, useWatch } from 'react-hook-form'
 import { FaArrowUpRightFromSquare, FaCheck, FaRegCopy } from 'react-icons/fa6'
@@ -38,7 +35,7 @@ import { useNavigate, useSearchParams } from 'react-router'
 import { useAssetById } from 'store/assets'
 import { Amount } from 'components/Amount/Amount'
 import { QRCode } from 'components/QRCode/QRCode'
-import { bnOrZero, fromBaseUnit } from 'lib/bignumber/bignumber'
+import { fromBaseUnit } from 'lib/bignumber/bignumber'
 import { getChainflipStatusConfig } from 'lib/utils/chainflip'
 import type { SwapFormData } from 'types/form'
 
@@ -319,45 +316,6 @@ export const Status = () => {
       copyRefundAddress()
     }
   }, [copyRefundAddress, refundAddress])
-
-  // Collect feeAssetIds
-  const feeAssetIds = useMemo(() => {
-    if (!quote?.includedFees) return []
-    return [
-      ...new Set(
-        quote.includedFees
-          .filter(fee => fee.type !== 'broker')
-          .map(fee => chainflipToAssetId[fee.asset])
-          .filter(Boolean),
-      ),
-    ]
-  }, [quote?.includedFees])
-
-  // Ensure we have market-data for all fee assets so we can sum em up
-  const feeMarketData = useQueries({
-    queries: feeAssetIds.map(assetId => ({
-      ...reactQueries.marketData.byAssetId(assetId),
-    })),
-  })
-
-  // And finally, do sum em up
-  const protocolFeesFiat = useMemo(() => {
-    if (!quote?.includedFees) return '0'
-
-    return quote.includedFees
-      .filter(fee => fee.type !== 'broker')
-      .reduce((total, fee) => {
-        const assetId = chainflipToAssetId[fee.asset]
-        if (!assetId) return total
-
-        const marketData = feeMarketData[feeAssetIds.indexOf(assetId)]?.data
-        if (marketData?.price) {
-          return total.plus(bnOrZero(fee.amount).times(marketData.price))
-        }
-        return total
-      }, bnOrZero(0))
-      .toString()
-  }, [quote?.includedFees, feeMarketData, feeAssetIds])
 
   if (!(sellAssetId && buyAssetId)) return null
   if (!(sellAsset && buyAsset)) return null
