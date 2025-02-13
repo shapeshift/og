@@ -165,8 +165,8 @@ export const AppRouter = () => {
                 flexDirection='column'
                 alignItems='center'
               >
-                <span>Ditch your wallet,</span>
-                <span>Swap multichain</span>
+                <span>No Wallet. No Tracking. No KYC.</span>
+                <span>Swap in seconds.</span>
               </Heading>
               <Text
                 fontSize='16px'
