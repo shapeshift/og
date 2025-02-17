@@ -8,6 +8,7 @@ import { ChatwootButton } from 'components/Chatwoot'
 import { SelectPair } from 'components/SelectPair'
 import { Status } from 'components/Status/Status'
 import { TradeInput } from 'components/TradeInput'
+import { bnOrZero } from 'lib/bignumber/bignumber'
 import type { SwapFormData } from 'types/form'
 
 const selectPair = <SelectPair />
@@ -88,16 +89,19 @@ export const AppRouter = () => {
   const [searchParams, setSearchParams] = useSearchParams()
   const location = useLocation()
 
-  const defaultValues = useMemo(
-    () => ({
+  const defaultValues = useMemo(() => {
+    const sellAmountCryptoBaseUnit = searchParams.get('sellAmountCryptoBaseUnit')
+
+    return {
       sellAssetId: searchParams.get('sellAssetId') || ethAssetId,
       buyAssetId: searchParams.get('buyAssetId') || btcAssetId,
-      sellAmountCryptoBaseUnit: searchParams.get('sellAmountCryptoBaseUnit') || undefined,
+      sellAmountCryptoBaseUnit: bnOrZero(sellAmountCryptoBaseUnit).gt(0)
+        ? sellAmountCryptoBaseUnit!
+        : undefined,
       destinationAddress: searchParams.get('destinationAddress') || undefined,
       refundAddress: searchParams.get('refundAddress') || undefined,
-    }),
-    [searchParams],
-  )
+    }
+  }, [searchParams])
 
   const methods = useForm<SwapFormData>({
     mode: 'all',
