@@ -1,0 +1,12 @@
+diff --git a/dist/constants.d.ts b/dist/constants.d.ts
+index 7996dc6abe5075c8aef9324e52ab5a8ba93f5b71..6667eac4897f210bc72d1d12d3583b8eb7af293b 100644
+--- a/dist/constants.d.ts
++++ b/dist/constants.d.ts
+@@ -36,6 +36,7 @@ export declare const CHAIN_NAMESPACE: {
+     readonly Evm: "eip155";
+     readonly Utxo: "bip122";
+     readonly CosmosSdk: "cosmos";
++    readonly Solana: "solana";
+ };
+ declare type ValidChainMap = {
+     [k in ChainNamespace]: ChainReference[];

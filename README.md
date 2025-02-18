@@ -1,8 +1,14 @@
 # Getting started
 
-You may need to add sensitive env vars locally. This can be done by copying .env.example to .env.local and replacing with your own values
+Install packages:
 
-- `cp .env.example .env.local`
+`yarn`
+
+Run the app for development:
+
+`yarn dev`
+
+You may need to add sensitive env vars locally. This can be done by adding `.local` to your env file and replacing with your own values.
 
 # React + TypeScript + Vite
 

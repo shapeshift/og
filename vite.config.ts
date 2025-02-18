@@ -9,4 +9,7 @@ export default defineConfig({
     port: 3000,
   },
   plugins: [tsconfigPaths(), react()],
+  define: {
+    global: 'globalThis',
+  },
 })

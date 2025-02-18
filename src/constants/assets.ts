@@ -1,0 +1,161 @@
+import type { AssetId } from '@shapeshiftoss/caip'
+
+import type { Asset } from '../types/Asset'
+
+// Chainflip-supported assets
+export const initialAssets: Asset[] = [
+  {
+    assetId: 'eip155:1/slip44:60',
+    chainId: 'eip155:1',
+    symbol: 'ETH',
+    name: 'Ethereum',
+    precision: 18,
+    color: '#5C6BC0',
+    icon: 'https://rawcdn.githack.com/trustwallet/assets/32e51d582a890b3dd3135fe3ee7c20c2fd699a6d/blockchains/ethereum/info/logo.png',
+    explorer: 'https://etherscan.io',
+    explorerAddressLink: 'https://etherscan.io/address/',
+    explorerTxLink: 'https://etherscan.io/tx/',
+    relatedAssetKey: 'eip155:1/slip44:60',
+    networkName: 'Ethereum',
+    networkIcon:
+      'https://rawcdn.githack.com/trustwallet/assets/master/blockchains/ethereum/info/logo.png',
+  },
+  {
+    assetId: 'eip155:1/erc20:0x826180541412d574cf1336d22c0c0a287822678a',
+    chainId: 'eip155:1',
+    symbol: 'FLIP',
+    name: 'Chainflip',
+    precision: 18,
+    color: '#040404',
+    icon: 'https://assets.coingecko.com/coins/images/25576/large/kdt_AgmT_400x400.png?1696524709',
+    explorer: 'https://etherscan.io',
+    explorerAddressLink: 'https://etherscan.io/address/',
+    explorerTxLink: 'https://etherscan.io/tx/',
+    relatedAssetKey: null,
+    networkName: 'Ethereum',
+    networkIcon:
+      'https://rawcdn.githack.com/trustwallet/assets/master/blockchains/ethereum/info/logo.png',
+  },
+  {
+    assetId: 'eip155:1/erc20:0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+    chainId: 'eip155:1',
+    symbol: 'USDC',
+    name: 'USDC',
+    precision: 6,
+    color: '#2373CB',
+    icon: 'https://rawcdn.githack.com/trustwallet/assets/master/blockchains/ethereum/assets/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/logo.png',
+    explorer: 'https://etherscan.io',
+    explorerAddressLink: 'https://etherscan.io/address/',
+    explorerTxLink: 'https://etherscan.io/tx/',
+    relatedAssetKey: 'eip155:1/erc20:0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+    networkName: 'Ethereum',
+    networkIcon:
+      'https://rawcdn.githack.com/trustwallet/assets/master/blockchains/ethereum/info/logo.png',
+  },
+  {
+    assetId: 'eip155:1/erc20:0xdac17f958d2ee523a2206206994597c13d831ec7',
+    chainId: 'eip155:1',
+    symbol: 'USDT',
+    name: 'Tether',
+    precision: 6,
+    color: '#24A37B',
+    icon: 'https://rawcdn.githack.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png',
+    explorer: 'https://etherscan.io',
+    explorerAddressLink: 'https://etherscan.io/address/',
+    explorerTxLink: 'https://etherscan.io/tx/',
+    relatedAssetKey: 'eip155:1/erc20:0xdac17f958d2ee523a2206206994597c13d831ec7',
+    networkName: 'Ethereum',
+    networkIcon:
+      'https://rawcdn.githack.com/trustwallet/assets/master/blockchains/ethereum/info/logo.png',
+  },
+  {
+    assetId: 'eip155:42161/slip44:60',
+    chainId: 'eip155:42161',
+    symbol: 'ETH',
+    name: 'Ethereum',
+    precision: 18,
+    color: '#5C6BC0',
+    icon: 'https://rawcdn.githack.com/trustwallet/assets/32e51d582a890b3dd3135fe3ee7c20c2fd699a6d/blockchains/ethereum/info/logo.png',
+    explorer: 'https://arbiscan.io',
+    explorerAddressLink: 'https://arbiscan.io/address/',
+    explorerTxLink: 'https://arbiscan.io/tx/',
+    relatedAssetKey: 'eip155:1/slip44:60',
+    networkName: 'Arbitrum One',
+    networkIcon:
+      'https://raw.githubusercontent.com/trustwallet/assets/b7a5f12d893fcf58e0eb1dd64478f076857b720b/blockchains/arbitrum/info/logo.png',
+    networkColor: '#213147',
+  },
+  {
+    assetId: 'eip155:42161/erc20:0xaf88d065e77c8cc2239327c5edb3a432268e5831',
+    chainId: 'eip155:42161',
+    symbol: 'USDC',
+    name: 'USDC',
+    precision: 6,
+    color: '#2E7ACD',
+    icon: 'https://assets.coingecko.com/coins/images/6319/large/usdc.png?1696506694',
+    explorer: 'https://arbiscan.io',
+    explorerAddressLink: 'https://arbiscan.io/address/',
+    explorerTxLink: 'https://arbiscan.io/tx/',
+    relatedAssetKey: 'eip155:1/erc20:0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+    networkName: 'Arbitrum One',
+    networkIcon:
+      'https://raw.githubusercontent.com/trustwallet/assets/b7a5f12d893fcf58e0eb1dd64478f076857b720b/blockchains/arbitrum/info/logo.png',
+    networkColor: '#213147',
+  },
+  {
+    assetId: 'bip122:000000000019d6689c085ae165831e93/slip44:0',
+    chainId: 'bip122:000000000019d6689c085ae165831e93',
+    symbol: 'BTC',
+    name: 'Bitcoin',
+    precision: 8,
+    color: '#FF9800',
+    icon: 'https://rawcdn.githack.com/trustwallet/assets/b7a5f12d893fcf58e0eb1dd64478f076857b720b/blockchains/bitcoin/info/logo.png',
+    explorer: 'https://live.blockcypher.com',
+    explorerAddressLink: 'https://live.blockcypher.com/btc/address/',
+    explorerTxLink: 'https://live.blockcypher.com/btc/tx/',
+    relatedAssetKey: null,
+    networkName: 'Bitcoin',
+    networkIcon:
+      'https://rawcdn.githack.com/trustwallet/assets/master/blockchains/bitcoin/info/logo.png',
+  },
+  {
+    assetId: 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp/slip44:501',
+    chainId: 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp',
+    symbol: 'SOL',
+    name: 'Solana',
+    precision: 9,
+    color: '#9971d8',
+    icon: 'https://rawcdn.githack.com/trustwallet/assets/426526def2f327476e868ecb902c515ab17518af/blockchains/solana/info/logo.png',
+    explorer: 'https://explorer.solana.com',
+    explorerAddressLink: 'https://explorer.solana.com/address/',
+    explorerTxLink: 'https://explorer.solana.com/tx/',
+    relatedAssetKey: null,
+    networkName: 'Solana',
+    networkColor: '#9971d8',
+    networkIcon:
+      'https://rawcdn.githack.com/trustwallet/assets/master/blockchains/solana/info/logo.png',
+  },
+  {
+    assetId:
+      'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp/token:EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+    chainId: 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp',
+    symbol: 'USDC',
+    name: 'USDC',
+    precision: 6,
+    color: '#FFFFFF',
+    icon: 'https://assets.coingecko.com/coins/images/6319/large/usdc.png?1696506694',
+    explorer: 'https://explorer.solana.com',
+    explorerAddressLink: 'https://explorer.solana.com/address/',
+    explorerTxLink: 'https://explorer.solana.com/tx/',
+    relatedAssetKey: 'eip155:1/erc20:0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+    networkName: 'Solana',
+    networkIcon:
+      'https://rawcdn.githack.com/trustwallet/assets/master/blockchains/solana/info/logo.png',
+    networkColor: '#9971d8',
+  },
+]
+
+export const initialAssetsById = initialAssets.reduce<Record<AssetId, Asset>>((acc, asset) => {
+  acc[asset.assetId] = asset
+  return acc
+}, {})
