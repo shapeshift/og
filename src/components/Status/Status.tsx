@@ -1,10 +1,13 @@
 import {
+  Alert,
+  AlertIcon,
   Box,
   Button,
   Card,
   CardBody,
   CardFooter,
   CardHeader,
+  Center,
   Circle,
   Divider,
   Flex,
@@ -362,6 +365,17 @@ export const Status = () => {
             isExpired={swapStatus?.status.depositChannel?.isExpired}
           />
         </SlideFade>
+        {!swapStatus?.status.depositChannel?.isExpired && !shouldDisplayPendingSwapBody && (
+          <Center>
+            <Alert status='info' mb={6} width='95%' borderRadius='lg'>
+              <AlertIcon boxSize={5} />
+              <Text fontSize='sm'>
+                Send {sellAmountCryptoPrecision} {sellAsset.symbol} from any wallet to the address
+                or scan the QR code above.
+              </Text>
+            </Alert>
+          </Center>
+        )}
         <SlideFade in={shouldDisplayPendingSwapBody} unmountOnExit style={pendingSlideFadeSx}>
           <PendingSwapCardBody swapStatus={swapStatus} />
         </SlideFade>
