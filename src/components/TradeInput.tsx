@@ -149,6 +149,10 @@ export const TradeInput = () => {
     // Run on rehydration only
     if (sellAmountInput !== '') return
     const amountCryptoPrecision = fromBaseUnit(sellAmountCryptoBaseUnit, sellAsset.precision)
+
+    // Don't rehydrate 0 value or problems
+    if (bnOrZero(amountCryptoPrecision).isZero()) return
+
     setSellAmountInput(amountCryptoPrecision)
   }, [sellAsset?.precision, sellAmountCryptoBaseUnit, sellAmountInput])
 
@@ -271,9 +275,19 @@ export const TradeInput = () => {
     setSellAmountInput,
   ])
 
-  const handleSellAmountChange = useCallback((values: { value: string }) => {
-    setSellAmountInput(bnOrZero(values.value).toFixed())
-  }, [])
+  const handleSellAmountChange = useCallback(
+    (values: { value: string }) => {
+      // Handle empty input
+      if (!values.value || !bnOrZero(values.value).gte(0)) {
+        setSellAmountInput('')
+        setValue('sellAmountCryptoBaseUnit', '0')
+        return
+      }
+
+      setSellAmountInput(values.value)
+    },
+    [setValue],
+  )
 
   const validateDestinationAddress = useCallback(
     async (value: string) => {
@@ -489,6 +503,7 @@ export const TradeInput = () => {
                     allowNegative={false}
                     decimalScale={sellAsset.precision}
                     isInvalid={!!errors.sellAmountCryptoBaseUnit}
+                    allowLeadingZeros
                   />
                   <Amount.Fiat value={sellAmountFiat} color='text.subtle' fontSize='sm' mt={1} />
                   {errors.sellAmountCryptoBaseUnit && (
