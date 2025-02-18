@@ -207,7 +207,7 @@ const PendingSwapCardBody = ({
               {config.message}
             </Text>
           </SlideFade>
-          {swapStatus?.status.state !== 'waiting' && (
+          {swapStatus?.status.state !== 'waiting' && swapStatus?.status.swapId && (
             <Link
               href={`${CHAINFLIP_EXPLORER_BASE_URL}/swaps/${swapStatus?.status.swapId}`}
               isExternal
