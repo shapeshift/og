@@ -13,10 +13,8 @@ const assertIsCleanRepo = async () => {
 }
 
 const getCommitsList = async () => {
-  const log = await git().log({
-    from: 'master',
-    to: 'develop',
-  })
+  // Use 'master..origin/develop' to list commits in origin/develop but not in master
+  const log = await git().log(['master..origin/develop'])
   return log.all.map(commit => `${commit.hash} - ${commit.message}`)
 }
 
@@ -37,10 +35,18 @@ const inquireProceedWithCommits = async (commits: string[]) => {
 const mergeAndPush = async () => {
   await assertIsCleanRepo()
 
+  // Fetch all branches from origin
   console.log(chalk.green('Fetching latest changes...'))
-  await git().fetch(['origin', 'develop'])
-  await git().fetch(['origin', 'master'])
+  await git().fetch('origin')
 
+  // Checkout master and pull updates from origin/master
+  console.log(chalk.green('Checking out master...'))
+  await git().checkout(['master'])
+
+  console.log(chalk.green('Pulling latest changes from origin/master...'))
+  await git().pull('origin', 'master')
+
+  // Get the list of commits to merge
   const commits = await getCommitsList()
 
   const shouldProceed = await inquireProceedWithCommits(commits)
@@ -49,19 +55,18 @@ const mergeAndPush = async () => {
     exit()
   }
 
-  console.log(chalk.green('Checking out master...'))
-  await git().checkout(['master'])
-
-  console.log(chalk.green('Merging develop into master...'))
+  // Merge origin/develop into master
+  console.log(chalk.green('Merging origin/develop into master...'))
   try {
-    await git().merge(['develop'])
+    await git().merge(['origin/develop'])
   } catch (error) {
     console.error(chalk.red('Merge conflict encountered.'))
     exit()
   }
 
+  // Push updated master to origin
   console.log(chalk.green('Pushing master to remote...'))
-  await git().push(['origin', 'master'])
+  await git().push('origin', 'master')
   console.log(chalk.green('Merge and push completed successfully.'))
 }
 

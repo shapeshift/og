@@ -60,6 +60,8 @@ jobs:
           path: |
             node_modules
           key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+      - name: Install Vercel CLI
+        run: npm i vercel@latest -g
       - name: Setup Environment Variables
         run: vercel pull --yes --environment=production --token ${{ secrets.VERCEL_TOKEN }}
       - name: Build Prod Artifacts
