@@ -1,17 +1,39 @@
+import { ArrowBackIcon } from '@chakra-ui/icons'
 import {
   Box,
   Container,
+  Flex,
   Heading,
+  IconButton,
   Link,
   ListItem,
   Text,
   UnorderedList,
   VStack,
 } from '@chakra-ui/react'
+import { useCallback } from 'react'
+import { useNavigate } from 'react-router'
+
+const arrowbackIcon = <ArrowBackIcon />
 
 export const TermsOfService = () => {
+  const navigate = useNavigate()
+
+  const handleBack = useCallback(() => navigate(-1), [navigate])
+
   return (
     <Container maxW='container.lg' py={8}>
+      <Flex width='100%' mb={4}>
+        <IconButton
+          aria-label='Back'
+          icon={arrowbackIcon}
+          onClick={handleBack}
+          variant='ghost'
+          color='whiteAlpha.800'
+          size='md'
+          borderRadius='full'
+        />
+      </Flex>
       <VStack spacing={8} align='stretch'>
         <Box textAlign='center' mb={6}>
           <Heading as='h1' size='xl' mb={3}>
