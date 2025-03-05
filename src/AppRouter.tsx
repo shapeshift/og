@@ -83,11 +83,8 @@ const subtitleTextProps = {
 } as const
 
 const getVariants = (pathname: string) => {
-  // Use fade up for status screen and legal pages
-  if (pathname === '/status' || pathname === '/privacy-policy' || pathname === '/terms-of-service') {
-    return fadeUpVariants
-  }
-  return slideVariants
+  // Not sure what this does but this looks good on status screen so
+  if (pathname === '/status') return fadeUpVariants
 }
 
 export const AppRouter = () => {
@@ -174,7 +171,7 @@ export const AppRouter = () => {
           display='flex'
           flexDir='column'
         >
-          <Box width='full' flex="1" display='flex' flexDir='column' alignItems='center'>
+          <Box width='full' flex='1' display='flex' flexDir='column' alignItems='center'>
             <Box mb={12} textAlign='center' maxWidth='container.sm' mx='auto' px={4}>
               <Heading
                 fontSize={headingFontSizeSx}
