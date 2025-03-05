@@ -103,7 +103,7 @@ export const AppRouter = () => {
   const [searchParams, setSearchParams] = useSearchParams()
   const location = useLocation()
 
-  // Don't apply query params to legal pages
+  // Don't apply query params rehydration to legal pages
   const isLegalPage =
     location.pathname === '/privacy-policy' || location.pathname === '/terms-of-service'
 
@@ -194,7 +194,6 @@ export const AppRouter = () => {
           flexDir='column'
         >
           <Box width='full' flex='1' display='flex' flexDir='column' alignItems='center'>
-            {/* Only show titles for non-legal pages */}
             {!isLegalPage && (
               <Box mb={12} textAlign='center' maxWidth='container.sm' mx='auto' px={4}>
                 <Heading
@@ -237,7 +236,6 @@ export const AppRouter = () => {
                 </Routes>
               </motion.div>
             </AnimatePresence>
-            {/* Only show Chatwoot for non-legal pages */}
             {!isLegalPage && (
               <Box {...chatwootBoxProps}>
                 <ChatwootButton />
