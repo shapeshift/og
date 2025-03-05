@@ -89,12 +89,11 @@ const subtitleTextProps = {
 } as const
 
 const getVariants = (pathname: string) => {
-  // Use fade up for status screen and legal pages
-  if (
-    pathname === '/status' ||
-    pathname === '/privacy-policy' ||
-    pathname === '/terms-of-service'
-  ) {
+  // No motion variants for legal pages, KISS
+  if (pathname === '/privacy-policy' || pathname === '/terms-of-service') return
+
+  // Use fade up for status screen
+  if (pathname === '/status') {
     return fadeUpVariants
   }
   return slideVariants
