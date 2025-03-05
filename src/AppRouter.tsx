@@ -95,6 +95,10 @@ export const AppRouter = () => {
   const [searchParams, setSearchParams] = useSearchParams()
   const location = useLocation()
 
+  // Don't apply query params rehydration to legal pages
+  const isLegalPage =
+    location.pathname === '/privacy-policy' || location.pathname === '/terms-of-service'
+
   const defaultValues = useMemo(() => {
     const sellAmountCryptoBaseUnit = searchParams.get('sellAmountCryptoBaseUnit')
 
@@ -119,6 +123,9 @@ export const AppRouter = () => {
 
   // Synchronize queryparams with form
   useEffect(() => {
+    // Skip for legal pages
+    if (isLegalPage) return
+
     const params = new URLSearchParams(searchParams)
 
     Object.entries(formValues || {}).forEach(([key, value]) => {
@@ -130,10 +137,13 @@ export const AppRouter = () => {
     })
 
     setSearchParams(params, { replace: true })
-  }, [formValues, setSearchParams, searchParams])
+  }, [formValues, setSearchParams, searchParams, isLegalPage])
 
   // Synchronize form with queryparams too
   useEffect(() => {
+    // Skip for legal pages
+    if (isLegalPage) return
+
     const currentParams = Object.fromEntries(searchParams.entries())
     const hasParams = Object.keys(currentParams).length > 0
 
@@ -146,7 +156,7 @@ export const AppRouter = () => {
       })
       methods.reset(formData)
     }
-  }, [searchParams, methods, defaultValues])
+  }, [searchParams, methods, defaultValues, isLegalPage])
 
   return (
     <FormProvider {...methods}>
