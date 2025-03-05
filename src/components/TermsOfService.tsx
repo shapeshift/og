@@ -49,10 +49,13 @@ export const TermsOfService = () => {
           <Text>
             We may, in our sole discretion, modify these terms at any time, so you should review
             this page periodically. When we change these terms, we will update the date at the top
-            of this page. Prior versions of these terms can be found here. Your continued use of the
-            Website after any change to these terms constitutes your acceptance of such change. If
-            you do not agree to any portion of these terms, then you should not use or access (or
-            continue to access) the Website.
+            of this page. Prior versions of these terms can be found
+            <Link color='blue.400' href='#' ml={1}>
+              here
+            </Link>
+            . Your continued use of the Website after any change to these terms constitutes your
+            acceptance of such change. If you do not agree to any portion of these terms, then you
+            should not use or access (or continue to access) the Website.
           </Text>
         </Box>
 
@@ -146,7 +149,15 @@ export const TermsOfService = () => {
             As we pointed out, the Website is being licensed to you for free, on an as-is basis, as
             a public good with a fully open-sourced codebase. In exchange for this, and because you
             can evaluate the Website's codebase yourself (find it
-            <Link color='blue.400' ml={1} href='https://github.com/shapeshift/og' isExternal>
+            <Link color='blue.400' href='#' ml={1}>
+              here
+            </Link>
+            ,
+            <Link color='blue.400' href='#' ml={1}>
+              here
+            </Link>
+            , and
+            <Link color='blue.400' href='#' ml={1}>
               here
             </Link>
             ): YOU ACKNOWLEDGE THAT YOUR USE OF THE PLATFORM IS ON AN "AS IS" AND "AS AVAILABLE"
