@@ -16,6 +16,8 @@ import type { SwapFormData } from 'types/form'
 
 const selectPair = <SelectPair />
 const tradeInput = <TradeInput />
+const privacyPolicy = <PrivacyPolicy />
+const termsOfService = <TermsOfService />
 const status = <Status />
 
 const slideVariants = {
@@ -85,6 +87,8 @@ const subtitleTextProps = {
 const getVariants = (pathname: string) => {
   // Not sure what this does but this looks good on status screen so
   if (pathname === '/status') return fadeUpVariants
+
+  return slideVariants
 }
 
 export const AppRouter = () => {
@@ -207,8 +211,8 @@ export const AppRouter = () => {
                   <Route path='/' element={selectPair} />
                   <Route path='/input' element={tradeInput} />
                   <Route path='/status' element={status} />
-                  <Route path='/privacy-policy' element={<PrivacyPolicy />} />
-                  <Route path='/terms-of-service' element={<TermsOfService />} />
+                  <Route path='/privacy-policy' element={privacyPolicy} />
+                  <Route path='/terms-of-service' element={termsOfService} />
                 </Routes>
               </motion.div>
             </AnimatePresence>
