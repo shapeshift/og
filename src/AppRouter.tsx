@@ -34,9 +34,13 @@ const fadeUpVariants = {
 
 const motionWrapperSx = {
   width: '100%',
-  maxWidth: '450px',
   display: 'flex',
   justifyContent: 'center',
+}
+
+const swapperWrapperSx = {
+  ...motionWrapperSx,
+  maxWidth: '450px',
 }
 
 const chatwootBoxProps = {
@@ -85,9 +89,14 @@ const subtitleTextProps = {
 } as const
 
 const getVariants = (pathname: string) => {
-  // Not sure what this does but this looks good on status screen so
-  if (pathname === '/status') return fadeUpVariants
-
+  // Use fade up for status screen and legal pages
+  if (
+    pathname === '/status' ||
+    pathname === '/privacy-policy' ||
+    pathname === '/terms-of-service'
+  ) {
+    return fadeUpVariants
+  }
   return slideVariants
 }
 
@@ -95,7 +104,7 @@ export const AppRouter = () => {
   const [searchParams, setSearchParams] = useSearchParams()
   const location = useLocation()
 
-  // Don't apply query params rehydration to legal pages
+  // Don't apply query params to legal pages
   const isLegalPage =
     location.pathname === '/privacy-policy' || location.pathname === '/terms-of-service'
 
@@ -186,27 +195,30 @@ export const AppRouter = () => {
           flexDir='column'
         >
           <Box width='full' flex='1' display='flex' flexDir='column' alignItems='center'>
-            <Box mb={12} textAlign='center' maxWidth='container.sm' mx='auto' px={4}>
-              <Heading
-                fontSize={headingFontSizeSx}
-                lineHeight={headingLineHeightSx}
-                fontWeight='semibold'
-                mb={4}
-                letterSpacing='-0.02em'
-                display='flex'
-                flexDirection='column'
-                alignItems='center'
-              >
-                <span>Ditch your wallet,</span>
-                <span>Swap multichain</span>
-              </Heading>
-              <Text {...subtitleTextProps}>
-                <span>No Wallet. No Tracking. No KYC.</span>
-              </Text>
-              <Text {...subtitleTextProps}>
-                <span>Swap in seconds.</span>
-              </Text>
-            </Box>
+            {/* Only show titles for non-legal pages */}
+            {!isLegalPage && (
+              <Box mb={12} textAlign='center' maxWidth='container.sm' mx='auto' px={4}>
+                <Heading
+                  fontSize={headingFontSizeSx}
+                  lineHeight={headingLineHeightSx}
+                  fontWeight='semibold'
+                  mb={4}
+                  letterSpacing='-0.02em'
+                  display='flex'
+                  flexDirection='column'
+                  alignItems='center'
+                >
+                  <span>Ditch your wallet,</span>
+                  <span>Swap multichain</span>
+                </Heading>
+                <Text {...subtitleTextProps}>
+                  <span>No Wallet. No Tracking. No KYC.</span>
+                </Text>
+                <Text {...subtitleTextProps}>
+                  <span>Swap in seconds.</span>
+                </Text>
+              </Box>
+            )}
             <AnimatePresence mode='wait' initial={false}>
               <motion.div
                 key={location.pathname}
@@ -215,7 +227,7 @@ export const AppRouter = () => {
                 exit='exit'
                 variants={getVariants(location.pathname)}
                 transition={transition}
-                style={motionWrapperSx}
+                style={isLegalPage ? motionWrapperSx : swapperWrapperSx}
               >
                 <Routes location={location}>
                   <Route path='/' element={selectPair} />
@@ -226,9 +238,12 @@ export const AppRouter = () => {
                 </Routes>
               </motion.div>
             </AnimatePresence>
-            <Box {...chatwootBoxProps}>
-              <ChatwootButton />
-            </Box>
+            {/* Only show Chatwoot for non-legal pages */}
+            {!isLegalPage && (
+              <Box {...chatwootBoxProps}>
+                <ChatwootButton />
+              </Box>
+            )}
           </Box>
           <Footer />
         </Box>

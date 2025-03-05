@@ -2,19 +2,21 @@ import { Box, Container, Heading, Link, Text, VStack } from '@chakra-ui/react'
 
 export const PrivacyPolicy = () => {
   return (
-    <Container maxW='container.md' py={8}>
-      <VStack spacing={6} align='stretch'>
-        <Box textAlign='center' mb={4}>
-          <Heading as='h1' size='xl' mb={2}>
+    <Container maxW='container.lg' py={8}>
+      <VStack spacing={8} align='stretch'>
+        <Box textAlign='center' mb={6}>
+          <Heading as='h1' size='xl' mb={3}>
             ShapeShift
           </Heading>
-          <Heading as='h2' size='lg' mb={2}>
+          <Heading as='h2' size='lg' mb={3}>
             Privacy Policy
           </Heading>
-          <Text fontWeight='medium'>Dated: February 2025</Text>
+          <Text fontWeight='medium' fontSize='md'>
+            Dated: February 2025
+          </Text>
         </Box>
 
-        <Text>
+        <Text fontSize='md' lineHeight='tall'>
           This notice summarizes our data collection, transfer, and protection practices associated
           with og.shapeshift.com ("Website"), and more generally outlines what we do with your data
           when you interact with the Website in any way. Your use of the Website constitutes your
@@ -23,27 +25,24 @@ export const PrivacyPolicy = () => {
         </Text>
 
         <Box>
-          <Heading as='h3' size='md' mb={2}>
+          <Heading as='h3' size='md' mb={3}>
             How we can change this notice:
           </Heading>
-          <Text>
+          <Text fontSize='md' lineHeight='tall'>
             We may, in our sole discretion, modify this notice, so you should review this page
             periodically. When we change this notice, we will update the date at the top of this
-            page. Prior versions of this notice can be found
-            <Link color='blue.400' href='#' ml={1}>
-              here
-            </Link>
-            . Your continued use of the Website after any change to this notice constitutes your
-            acceptance of such change. If you do not agree to any portion of this notice, then you
-            should not use or access (or continue to access) the Website.
+            page. Prior versions of this notice can be found here. Your continued use of the Website
+            after any change to this notice constitutes your acceptance of such change. If you do
+            not agree to any portion of this notice, then you should not use or access (or continue
+            to access) the Website.
           </Text>
         </Box>
 
         <Box>
-          <Heading as='h3' size='md' mb={2}>
+          <Heading as='h3' size='md' mb={3}>
             Privacy Generally:
           </Heading>
-          <Text>
+          <Text fontSize='md' lineHeight='tall'>
             We respect the privacy of the users of the Website and we will not request any
             information beyond: what is necessary for your use of the Website or to comply with our
             legal obligations. We also do not obscure any blockchain information requested or
@@ -56,10 +55,10 @@ export const PrivacyPolicy = () => {
         </Box>
 
         <Box>
-          <Heading as='h3' size='md' mb={2}>
+          <Heading as='h3' size='md' mb={3}>
             Data we collect:
           </Heading>
-          <Text>
+          <Text fontSize='md' lineHeight='tall'>
             Simply put, the Website itself does not collect any of your personal information. All of
             your data is either retained locally by you or your wallet software or stored on the
             respective blockchain. Please note that the Website is simply an interface to other
@@ -73,10 +72,10 @@ export const PrivacyPolicy = () => {
         </Box>
 
         <Box>
-          <Heading as='h3' size='md' mb={2}>
+          <Heading as='h3' size='md' mb={3}>
             Data we share:
           </Heading>
-          <Text>
+          <Text fontSize='md' lineHeight='tall'>
             We use a third-party service provider, Chatwoot, to assist in our responses to queries
             made by users of the Website and provide higher quality customer support to our users,
             which is necessary to perform agreement obligations (viz. our Terms of Service) for our
@@ -101,10 +100,10 @@ export const PrivacyPolicy = () => {
         </Box>
 
         <Box>
-          <Heading as='h3' size='md' mb={2}>
+          <Heading as='h3' size='md' mb={3}>
             How we store user data:
           </Heading>
-          <Text>
+          <Text fontSize='md' lineHeight='tall'>
             As we've mentioned in this notice, we limit the amount of user data in the first place.
             While we adhere to best practices when it comes to storing data, we limit the potential
             for a security breach that affects user data by not having user data in the first place.
@@ -112,10 +111,10 @@ export const PrivacyPolicy = () => {
         </Box>
 
         <Box>
-          <Heading as='h3' size='md' mb={2}>
+          <Heading as='h3' size='md' mb={3}>
             Who we are and how to contact us:
           </Heading>
-          <Text>
+          <Text fontSize='md' lineHeight='tall'>
             The Website and this notice are maintained by the ShapeShift decentralized autonomous
             organization. The best way to get in touch with us is through our discord server, which
             you can join
