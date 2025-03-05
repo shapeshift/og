@@ -5,8 +5,11 @@ import { useEffect, useMemo } from 'react'
 import { FormProvider, useForm, useWatch } from 'react-hook-form'
 import { Route, Routes, useLocation, useSearchParams } from 'react-router'
 import { ChatwootButton } from 'components/Chatwoot'
+import { Footer } from 'components/Footer'
+import { PrivacyPolicy } from 'components/PrivacyPolicy'
 import { SelectPair } from 'components/SelectPair'
 import { Status } from 'components/Status/Status'
+import { TermsOfService } from 'components/TermsOfService'
 import { TradeInput } from 'components/TradeInput'
 import { bnOrZero } from 'lib/bignumber/bignumber'
 import type { SwapFormData } from 'types/form'
@@ -80,8 +83,10 @@ const subtitleTextProps = {
 } as const
 
 const getVariants = (pathname: string) => {
-  // Not sure what this does but this looks good on status screen so
-  if (pathname === '/status') return fadeUpVariants
+  // Use fade up for status screen and legal pages
+  if (pathname === '/status' || pathname === '/privacy-policy' || pathname === '/terms-of-service') {
+    return fadeUpVariants
+  }
   return slideVariants
 }
 
@@ -166,8 +171,10 @@ export const AppRouter = () => {
           minHeight='100vh'
           pt={contentPt}
           px={contentPx}
+          display='flex'
+          flexDir='column'
         >
-          <Box width='full' minHeight='inherit' display='flex' flexDir='column' alignItems='center'>
+          <Box width='full' flex="1" display='flex' flexDir='column' alignItems='center'>
             <Box mb={12} textAlign='center' maxWidth='container.sm' mx='auto' px={4}>
               <Heading
                 fontSize={headingFontSizeSx}
@@ -203,6 +210,8 @@ export const AppRouter = () => {
                   <Route path='/' element={selectPair} />
                   <Route path='/input' element={tradeInput} />
                   <Route path='/status' element={status} />
+                  <Route path='/privacy-policy' element={<PrivacyPolicy />} />
+                  <Route path='/terms-of-service' element={<TermsOfService />} />
                 </Routes>
               </motion.div>
             </AnimatePresence>
@@ -210,6 +219,7 @@ export const AppRouter = () => {
               <ChatwootButton />
             </Box>
           </Box>
+          <Footer />
         </Box>
       </Box>
     </FormProvider>
