@@ -5,14 +5,19 @@ import { useEffect, useMemo } from 'react'
 import { FormProvider, useForm, useWatch } from 'react-hook-form'
 import { Route, Routes, useLocation, useSearchParams } from 'react-router'
 import { ChatwootButton } from 'components/Chatwoot'
+import { Footer } from 'components/Footer'
+import { PrivacyPolicy } from 'components/PrivacyPolicy'
 import { SelectPair } from 'components/SelectPair'
 import { Status } from 'components/Status/Status'
+import { TermsOfService } from 'components/TermsOfService'
 import { TradeInput } from 'components/TradeInput'
 import { bnOrZero } from 'lib/bignumber/bignumber'
 import type { SwapFormData } from 'types/form'
 
 const selectPair = <SelectPair />
 const tradeInput = <TradeInput />
+const privacyPolicy = <PrivacyPolicy />
+const termsOfService = <TermsOfService />
 const status = <Status />
 
 const slideVariants = {
@@ -29,9 +34,13 @@ const fadeUpVariants = {
 
 const motionWrapperSx = {
   width: '100%',
-  maxWidth: '450px',
   display: 'flex',
   justifyContent: 'center',
+}
+
+const swapperWrapperSx = {
+  ...motionWrapperSx,
+  maxWidth: '450px',
 }
 
 const chatwootBoxProps = {
@@ -80,14 +89,23 @@ const subtitleTextProps = {
 } as const
 
 const getVariants = (pathname: string) => {
-  // Not sure what this does but this looks good on status screen so
-  if (pathname === '/status') return fadeUpVariants
+  // No motion variants for legal pages, KISS
+  if (pathname === '/privacy-policy' || pathname === '/terms-of-service') return
+
+  // Use fade up for status screen
+  if (pathname === '/status') {
+    return fadeUpVariants
+  }
   return slideVariants
 }
 
 export const AppRouter = () => {
   const [searchParams, setSearchParams] = useSearchParams()
   const location = useLocation()
+
+  // Don't apply query params rehydration to legal pages
+  const isLegalPage =
+    location.pathname === '/privacy-policy' || location.pathname === '/terms-of-service'
 
   const defaultValues = useMemo(() => {
     const sellAmountCryptoBaseUnit = searchParams.get('sellAmountCryptoBaseUnit')
@@ -113,6 +131,9 @@ export const AppRouter = () => {
 
   // Synchronize queryparams with form
   useEffect(() => {
+    // Skip for legal pages
+    if (isLegalPage) return
+
     const params = new URLSearchParams(searchParams)
 
     Object.entries(formValues || {}).forEach(([key, value]) => {
@@ -124,10 +145,13 @@ export const AppRouter = () => {
     })
 
     setSearchParams(params, { replace: true })
-  }, [formValues, setSearchParams, searchParams])
+  }, [formValues, setSearchParams, searchParams, isLegalPage])
 
   // Synchronize form with queryparams too
   useEffect(() => {
+    // Skip for legal pages
+    if (isLegalPage) return
+
     const currentParams = Object.fromEntries(searchParams.entries())
     const hasParams = Object.keys(currentParams).length > 0
 
@@ -140,7 +164,7 @@ export const AppRouter = () => {
       })
       methods.reset(formData)
     }
-  }, [searchParams, methods, defaultValues])
+  }, [searchParams, methods, defaultValues, isLegalPage])
 
   return (
     <FormProvider {...methods}>
@@ -166,29 +190,33 @@ export const AppRouter = () => {
           minHeight='100vh'
           pt={contentPt}
           px={contentPx}
+          display='flex'
+          flexDir='column'
         >
-          <Box width='full' minHeight='inherit' display='flex' flexDir='column' alignItems='center'>
-            <Box mb={12} textAlign='center' maxWidth='container.sm' mx='auto' px={4}>
-              <Heading
-                fontSize={headingFontSizeSx}
-                lineHeight={headingLineHeightSx}
-                fontWeight='semibold'
-                mb={4}
-                letterSpacing='-0.02em'
-                display='flex'
-                flexDirection='column'
-                alignItems='center'
-              >
-                <span>Ditch your wallet,</span>
-                <span>Swap multichain</span>
-              </Heading>
-              <Text {...subtitleTextProps}>
-                <span>No Wallet. No Tracking. No KYC.</span>
-              </Text>
-              <Text {...subtitleTextProps}>
-                <span>Swap in seconds.</span>
-              </Text>
-            </Box>
+          <Box width='full' flex='1' display='flex' flexDir='column' alignItems='center'>
+            {!isLegalPage && (
+              <Box mb={12} textAlign='center' maxWidth='container.sm' mx='auto' px={4}>
+                <Heading
+                  fontSize={headingFontSizeSx}
+                  lineHeight={headingLineHeightSx}
+                  fontWeight='semibold'
+                  mb={4}
+                  letterSpacing='-0.02em'
+                  display='flex'
+                  flexDirection='column'
+                  alignItems='center'
+                >
+                  <span>Ditch your wallet,</span>
+                  <span>Swap multichain</span>
+                </Heading>
+                <Text {...subtitleTextProps}>
+                  <span>No Wallet. No Tracking. No KYC.</span>
+                </Text>
+                <Text {...subtitleTextProps}>
+                  <span>Swap in seconds.</span>
+                </Text>
+              </Box>
+            )}
             <AnimatePresence mode='wait' initial={false}>
               <motion.div
                 key={location.pathname}
@@ -197,19 +225,24 @@ export const AppRouter = () => {
                 exit='exit'
                 variants={getVariants(location.pathname)}
                 transition={transition}
-                style={motionWrapperSx}
+                style={isLegalPage ? motionWrapperSx : swapperWrapperSx}
               >
                 <Routes location={location}>
                   <Route path='/' element={selectPair} />
                   <Route path='/input' element={tradeInput} />
                   <Route path='/status' element={status} />
+                  <Route path='/privacy-policy' element={privacyPolicy} />
+                  <Route path='/terms-of-service' element={termsOfService} />
                 </Routes>
               </motion.div>
             </AnimatePresence>
-            <Box {...chatwootBoxProps}>
-              <ChatwootButton />
-            </Box>
+            {!isLegalPage && (
+              <Box {...chatwootBoxProps}>
+                <ChatwootButton />
+              </Box>
+            )}
           </Box>
+          <Footer />
         </Box>
       </Box>
     </FormProvider>
