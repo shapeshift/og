@@ -206,14 +206,13 @@ export const AppRouter = () => {
                   flexDirection='column'
                   alignItems='center'
                 >
-                  <span>Ditch your wallet,</span>
-                  <span>Swap multichain</span>
+                  OG ShapeShift
                 </Heading>
                 <Text {...subtitleTextProps}>
                   <span>No Wallet. No Tracking. No KYC.</span>
                 </Text>
                 <Text {...subtitleTextProps}>
-                  <span>Swap in seconds.</span>
+                  <span>Swap multichain in seconds.</span>
                 </Text>
               </Box>
             )}
