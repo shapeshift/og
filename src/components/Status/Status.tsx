@@ -31,7 +31,7 @@ import { getChainflipId } from 'queries/chainflip/assets'
 import { useChainflipQuoteQuery } from 'queries/chainflip/quote'
 import { useChainflipStatusQuery } from 'queries/chainflip/status'
 import type { ChainflipSwapStatus } from 'queries/chainflip/types'
-import { useCallback, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { useFormContext, useWatch } from 'react-hook-form'
 import { FaArrowUpRightFromSquare, FaCheck, FaRegCopy } from 'react-icons/fa6'
 import { useNavigate, useSearchParams } from 'react-router'
@@ -39,6 +39,7 @@ import { useAssetById } from 'store/assets'
 import { Amount } from 'components/Amount/Amount'
 import { QRCode } from 'components/QRCode/QRCode'
 import { fromBaseUnit } from 'lib/bignumber/bignumber'
+import { mixpanel, MixPanelEvent } from 'lib/mixpanel'
 import { getChainflipStatusConfig } from 'lib/utils/chainflip'
 import type { SwapFormData } from 'types/form'
 
@@ -186,12 +187,22 @@ const PendingSwapCardBody = ({
   const StatusIcon = config.icon
   const isCompleted = swapStatus?.status.state === 'completed'
   const isRefunded = Boolean(swapStatus?.status.refundEgress) && isCompleted
+  const hasSentMixpanelEvent = useRef(false)
+
+  useEffect(() => {
+    if (isCompleted && !hasSentMixpanelEvent.current) {
+      mixpanel?.track(MixPanelEvent.SwapCompleted)
+      hasSentMixpanelEvent.current = true
+    }
+  }, [isCompleted])
 
   const handleLaunchApp = useCallback(() => {
+    mixpanel?.track(MixPanelEvent.LaunchShapeshiftApp)
     window.open('https://app.shapeshift.com', '_blank')
   }, [])
 
   const handleDoAnotherSwap = useCallback(() => {
+    mixpanel?.track(MixPanelEvent.DoAnotherSwap)
     navigate('/')
   }, [navigate])
 
