@@ -192,15 +192,25 @@ export const TradeInput = () => {
         .times(bn(1).minus(slippageTolerancePercentageDecimal))
         .toFixed(buyAsset.precision)
 
+      const sourceAsset = getChainflipId(sellAsset.assetId)
+      const destinationAsset = getChainflipId(buyAsset.assetId)
+
       const createSwapPayload = {
-        sourceAsset: getChainflipId(sellAsset.assetId),
-        destinationAsset: getChainflipId(buyAsset.assetId),
+        sourceAsset,
+        destinationAsset,
         destinationAddress: destinationAddress || '',
         refundAddress: refundAddress || '',
         minimumPrice: minimumRate,
       }
 
-      mixpanel?.track(MixPanelEvent.StartTransaction, createSwapPayload)
+      mixpanel?.track(MixPanelEvent.StartTransaction, {
+        sourceAsset,
+        destinationAsset,
+        sellAmountCryptoPrecision,
+        sellAmountFiat,
+        buyAmountCryptoPrecision,
+        buyAmountFiat,
+      })
 
       createSwap(createSwapPayload)
     },
@@ -208,11 +218,13 @@ export const TradeInput = () => {
       quote,
       sellAsset,
       buyAsset,
-      destinationAddress,
-      refundAddress,
-      createSwap,
       buyAmountCryptoPrecision,
       sellAmountCryptoPrecision,
+      destinationAddress,
+      refundAddress,
+      sellAmountFiat,
+      buyAmountFiat,
+      createSwap,
     ],
   )
 

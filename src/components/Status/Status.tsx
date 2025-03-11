@@ -31,6 +31,7 @@ import { getChainflipId } from 'queries/chainflip/assets'
 import { useChainflipQuoteQuery } from 'queries/chainflip/quote'
 import { useChainflipStatusQuery } from 'queries/chainflip/status'
 import type { ChainflipSwapStatus } from 'queries/chainflip/types'
+import { useMarketDataByAssetIdQuery } from 'queries/marketData'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { useFormContext, useWatch } from 'react-hook-form'
 import { FaArrowUpRightFromSquare, FaCheck, FaRegCopy } from 'react-icons/fa6'
@@ -38,7 +39,7 @@ import { useNavigate, useSearchParams } from 'react-router'
 import { useAssetById } from 'store/assets'
 import { Amount } from 'components/Amount/Amount'
 import { QRCode } from 'components/QRCode/QRCode'
-import { fromBaseUnit } from 'lib/bignumber/bignumber'
+import { bnOrZero, fromBaseUnit } from 'lib/bignumber/bignumber'
 import { mixpanel, MixPanelEvent } from 'lib/mixpanel'
 import { getChainflipStatusConfig } from 'lib/utils/chainflip'
 import type { SwapFormData } from 'types/form'
@@ -177,10 +178,14 @@ const IdleSwapCardBody = ({
 
 const PendingSwapCardBody = ({
   swapStatus,
+  sellAmountCryptoPrecision,
+  buyAmountCryptoPrecision,
 }: {
   swapStatus?: {
     status: ChainflipSwapStatus
   }
+  sellAmountCryptoPrecision: string
+  buyAmountCryptoPrecision: string
 }) => {
   const navigate = useNavigate()
   const config = getChainflipStatusConfig(swapStatus?.status.state, swapStatus)
@@ -188,13 +193,57 @@ const PendingSwapCardBody = ({
   const isCompleted = swapStatus?.status.state === 'completed'
   const isRefunded = Boolean(swapStatus?.status.refundEgress) && isCompleted
   const hasSentMixpanelEvent = useRef(false)
+  const { control } = useFormContext<SwapFormData>()
+
+  const sellAssetId = useWatch({ control, name: 'sellAssetId' })
+  const buyAssetId = useWatch({ control, name: 'buyAssetId' })
+
+  const sellAsset = useAssetById(sellAssetId)
+  const buyAsset = useAssetById(buyAssetId)
+
+  const sourceAsset = useMemo(
+    () => (sellAsset ? getChainflipId(sellAsset.assetId) : ''),
+    [sellAsset],
+  )
+  const destinationAsset = useMemo(
+    () => (buyAsset ? getChainflipId(buyAsset.assetId) : ''),
+    [buyAsset],
+  )
+
+  const { data: sellAssetMarketData } = useMarketDataByAssetIdQuery(sellAssetId || '')
+  const { data: buyAssetMarketData } = useMarketDataByAssetIdQuery(buyAssetId || '')
+
+  const sellAmountFiat = useMemo(() => {
+    if (!sellAssetMarketData?.price || !sellAmountCryptoPrecision) return '0'
+    return bnOrZero(sellAmountCryptoPrecision).times(sellAssetMarketData.price).toString()
+  }, [sellAssetMarketData?.price, sellAmountCryptoPrecision])
+
+  const buyAmountFiat = useMemo(() => {
+    if (!buyAssetMarketData?.price || !buyAmountCryptoPrecision) return '0'
+    return bnOrZero(buyAmountCryptoPrecision).times(buyAssetMarketData.price).toString()
+  }, [buyAmountCryptoPrecision, buyAssetMarketData?.price])
 
   useEffect(() => {
     if (isCompleted && !hasSentMixpanelEvent.current) {
-      mixpanel?.track(MixPanelEvent.SwapCompleted)
+      mixpanel?.track(MixPanelEvent.SwapCompleted, {
+        sourceAsset,
+        destinationAsset,
+        sellAmountCryptoPrecision,
+        sellAmountFiat,
+        buyAmountCryptoPrecision,
+        buyAmountFiat,
+      })
       hasSentMixpanelEvent.current = true
     }
-  }, [isCompleted])
+  }, [
+    buyAmountCryptoPrecision,
+    buyAmountFiat,
+    destinationAsset,
+    isCompleted,
+    sellAmountCryptoPrecision,
+    sellAmountFiat,
+    sourceAsset,
+  ])
 
   const handleLaunchApp = useCallback(() => {
     mixpanel?.track(MixPanelEvent.LaunchShapeshiftApp)
@@ -388,7 +437,11 @@ export const Status = () => {
           </Center>
         )}
         <SlideFade in={shouldDisplayPendingSwapBody} unmountOnExit style={pendingSlideFadeSx}>
-          <PendingSwapCardBody swapStatus={swapStatus} />
+          <PendingSwapCardBody
+            swapStatus={swapStatus}
+            sellAmountCryptoPrecision={sellAmountCryptoPrecision}
+            buyAmountCryptoPrecision={buyAmountCryptoPrecision}
+          />
         </SlideFade>
       </Box>
       <StatusStepper
