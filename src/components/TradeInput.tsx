@@ -296,25 +296,23 @@ export const TradeInput = () => {
       return
     }
 
+    setValue('sellAssetId', currentBuyAsset.assetId)
+    setValue('buyAssetId', currentSellAsset.assetId)
+
     if (isFiat) {
-      setValue('sellAssetId', currentBuyAsset.assetId)
-      setValue('buyAssetId', currentSellAsset.assetId)
+      setSellAmountFiatInput(sellAmountFiatInput)
 
-      const fiatValue = sellAmountFiatInput || '0'
-      setSellAmountFiatInput(fiatValue)
-
-      const cryptoValue = bnOrZero(fiatValue).div(buyAssetMarketData.price).toString()
+      const cryptoValue = bnOrZero(sellAmountFiatInput).div(buyAssetMarketData.price).toString()
       setValue('sellAmountCryptoBaseUnit', toBaseUnit(cryptoValue, currentBuyAsset.precision))
-    } else {
-      // Prorate sell amount in fiat terms
-      const sellAmountUsd = bnOrZero(sellAmountCryptoPrecision).times(sellAssetMarketData.price)
-      const newAmount = sellAmountUsd.div(buyAssetMarketData.price).toFixed()
-
-      setValue('sellAmountCryptoBaseUnit', toBaseUnit(newAmount, currentBuyAsset.precision))
-      setSellAmountInput(newAmount)
-      setValue('sellAssetId', currentBuyAsset.assetId)
-      setValue('buyAssetId', currentSellAsset.assetId)
+      return
     }
+
+    // Prorate sell amount in fiat terms
+    const sellAmountUsd = bnOrZero(sellAmountCryptoPrecision).times(sellAssetMarketData.price)
+    const newAmount = sellAmountUsd.div(buyAssetMarketData.price).toFixed()
+
+    setValue('sellAmountCryptoBaseUnit', toBaseUnit(newAmount, currentBuyAsset.precision))
+    setSellAmountInput(newAmount)
   }, [
     sellAsset,
     buyAsset,
@@ -327,9 +325,7 @@ export const TradeInput = () => {
   ])
 
   const toggleIsFiat = useCallback(() => {
-    const newIsFiat = !isFiat
-
-    if (newIsFiat) {
+    if (!isFiat) {
       const fiatValue = bnOrZero(sellAmountInput)
         .times(sellAssetMarketData?.price ?? 0)
         .toString()
@@ -348,8 +344,7 @@ export const TradeInput = () => {
       setValue('sellAmountCryptoBaseUnit', toBaseUnit(cryptoValue, sellAsset?.precision ?? 0))
     }
 
-    // Finally, update the mode
-    setIsFiat(newIsFiat)
+    setIsFiat(!isFiat)
   }, [
     sellAssetMarketData?.price,
     sellAsset?.precision,
@@ -361,6 +356,8 @@ export const TradeInput = () => {
 
   const handleSellAmountChange = useCallback(
     (values: { value: string }) => {
+      if (!sellAsset?.precision) return
+
       if (isFiat) {
         setSellAmountFiatInput(values.value)
 
@@ -369,15 +366,14 @@ export const TradeInput = () => {
           const cryptoValue = bnOrZero(values.value).div(sellAssetMarketData.price).toString()
           setValue('sellAmountCryptoBaseUnit', toBaseUnit(cryptoValue, sellAsset.precision))
         }
-      } else {
-        // Store crypto input immediately
-        setSellAmountInput(values.value)
-
-        // Update form state immediately
-        if (sellAsset?.precision) {
-          setValue('sellAmountCryptoBaseUnit', toBaseUnit(values.value, sellAsset.precision))
-        }
+        return
       }
+
+      // Store crypto input immediately
+      setSellAmountInput(values.value)
+
+      // Update form state immediately
+      setValue('sellAmountCryptoBaseUnit', toBaseUnit(values.value, sellAsset.precision))
     },
     [setValue, isFiat, sellAssetMarketData?.price, sellAsset?.precision],
   )
@@ -445,7 +441,7 @@ export const TradeInput = () => {
     // We have a quote error, most likely because of amount too high/low
     if (quoteError) return 'N/A'
     // We have a quote, show the estimated buy amount
-    return buyAmountCryptoPrecision || '0'
+    return buyAmountCryptoPrecision
   }, [buyAmountCryptoPrecision, debouncedSellAmount, debouncedSellAmountFiat, isFiat, quoteError])
 
   if (!(sellAsset && buyAsset)) return null
