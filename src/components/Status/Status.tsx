@@ -192,7 +192,7 @@ const PendingSwapCardBody = ({
   const StatusIcon = config.icon
   const isCompleted = swapStatus?.status.state === 'completed'
   const isRefunded = Boolean(swapStatus?.status.refundEgress) && isCompleted
-  const hasSentMixpanelEvent = useRef(false)
+  const hasSentMixpanelSwapCompletedEvent = useRef(false)
   const { control } = useFormContext<SwapFormData>()
 
   const sellAssetId = useWatch({ control, name: 'sellAssetId' })
@@ -224,7 +224,7 @@ const PendingSwapCardBody = ({
   }, [buyAmountCryptoPrecision, buyAssetMarketData?.price])
 
   useEffect(() => {
-    if (isCompleted && !hasSentMixpanelEvent.current) {
+    if (isCompleted && !hasSentMixpanelSwapCompletedEvent.current) {
       mixpanel?.track(MixPanelEvent.SwapCompleted, {
         sourceAsset,
         destinationAsset,
@@ -233,7 +233,7 @@ const PendingSwapCardBody = ({
         buyAmountCryptoPrecision,
         buyAmountFiat,
       })
-      hasSentMixpanelEvent.current = true
+      hasSentMixpanelSwapCompletedEvent.current = true
     }
   }, [
     buyAmountCryptoPrecision,
