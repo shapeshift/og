@@ -9,6 +9,7 @@ import {
   HStack,
   IconButton,
   Input,
+  Link,
   Skeleton,
   StackDivider,
   Stat,
@@ -599,17 +600,17 @@ export const TradeInput = () => {
                     allowLeadingZeros
                     prefix={isFiat ? '$' : undefined}
                   />
-                  <Text
+                  <Link
                     color='text.subtle'
                     fontSize='sm'
                     mt={1}
                     onClick={onToggleFiatMode}
-                    cursor='pointer'
+                    userSelect='none'
                   >
                     {isFiat
                       ? `≈ ${sellAmountCryptoPrecision} ${sellAsset.symbol}`
                       : `≈ $${bnOrZero(sellAmountFiat).toFixed(2)}`}
-                  </Text>
+                  </Link>
                   {errors.sellAmountCryptoBaseUnit && (
                     <Text fontSize='sm' color='red.500' mt={1}>
                       {errors.sellAmountCryptoBaseUnit.message}
