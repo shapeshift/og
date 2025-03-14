@@ -1,4 +1,5 @@
 import { Button, Card, CardBody, Flex, Heading, IconButton, useDisclosure } from '@chakra-ui/react'
+import { getChainflipId } from 'queries/chainflip/assets'
 import { useCallback, useState } from 'react'
 import { useFormContext, useWatch } from 'react-hook-form'
 import { FaArrowRightArrowLeft } from 'react-icons/fa6'
@@ -30,8 +31,8 @@ export const SelectPair = () => {
     if (!(sellAsset && buyAsset)) return
 
     mixpanel?.track(MixPanelEvent.PairSelected, {
-      sellAsset,
-      buyAsset,
+      sourceAsset: getChainflipId(sellAsset.assetId),
+      destinationAsset: getChainflipId(buyAsset.assetId),
     })
 
     navigate('/input')

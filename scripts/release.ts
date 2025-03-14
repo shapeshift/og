@@ -39,6 +39,10 @@ const mergeAndPush = async () => {
   console.log(chalk.green('Fetching latest changes...'))
   await git().fetch('origin')
 
+  // Pull latest changes from origin/develop
+  console.log(chalk.green('Pulling latest changes from origin/develop...'))
+  await git().pull('origin', 'develop')
+
   // Checkout master and pull updates from origin/master
   console.log(chalk.green('Checking out master...'))
   await git().checkout(['master'])
