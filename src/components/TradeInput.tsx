@@ -69,7 +69,7 @@ export const TradeInput = () => {
   const sellAssetId = useWatch({ control, name: 'sellAssetId' })
   const buyAssetId = useWatch({ control, name: 'buyAssetId' })
 
-  const [isFiat, setIsFiat] = useState(false)
+  const [isFiat, toggleIsFiat] = useState(false)
   const [isSwitching, setIsSwitching] = useState(false)
   const [assetSelectType, setAssetSelectType] = useState<AssetType>(AssetType.BUY)
   const [sellAmountInput, setSellAmountInput] = useState('')
@@ -324,7 +324,7 @@ export const TradeInput = () => {
     isFiat,
   ])
 
-  const toggleIsFiat = useCallback(() => {
+  const onToggleFiatMode = useCallback(() => {
     if (!isFiat) {
       const fiatValue = bnOrZero(sellAmountInput)
         .times(sellAssetMarketData?.price ?? 0)
@@ -344,7 +344,7 @@ export const TradeInput = () => {
       setValue('sellAmountCryptoBaseUnit', toBaseUnit(cryptoValue, sellAsset?.precision ?? 0))
     }
 
-    setIsFiat(!isFiat)
+    toggleIsFiat(!isFiat)
   }, [
     sellAssetMarketData?.price,
     sellAsset?.precision,
@@ -603,7 +603,7 @@ export const TradeInput = () => {
                     color='text.subtle'
                     fontSize='sm'
                     mt={1}
-                    onClick={toggleIsFiat}
+                    onClick={onToggleFiatMode}
                     cursor='pointer'
                   >
                     {isFiat
