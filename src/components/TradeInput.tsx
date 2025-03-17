@@ -9,6 +9,7 @@ import {
   HStack,
   IconButton,
   Input,
+  Link,
   Skeleton,
   StackDivider,
   Stat,
@@ -69,6 +70,14 @@ export const TradeInput = () => {
   const sellAssetId = useWatch({ control, name: 'sellAssetId' })
   const buyAssetId = useWatch({ control, name: 'buyAssetId' })
 
+  const [isFiat, toggleIsFiat] = useState(false)
+  const [isSwitching, setIsSwitching] = useState(false)
+  const [assetSelectType, setAssetSelectType] = useState<AssetType>(AssetType.BUY)
+  const [sellAmountInput, setSellAmountInput] = useState('')
+  const [sellAmountFiatInput, setSellAmountFiatInput] = useState('')
+  const debouncedSellAmount = useDebounce(sellAmountInput, 500)
+  const debouncedSellAmountFiat = useDebounce(sellAmountFiatInput, 500)
+
   useEffect(() => {
     trigger(['destinationAddress', 'refundAddress'])
   }, [trigger, destinationAddress, refundAddress, sellAssetId, buyAssetId])
@@ -82,7 +91,33 @@ export const TradeInput = () => {
     return fromBaseUnit(sellAmountCryptoBaseUnit, sellAsset.precision)
   }, [sellAsset, sellAmountCryptoBaseUnit])
 
-  const [isSwitching, setIsSwitching] = useState(false)
+  const { data: sellAssetMarketData } = useMarketDataByAssetIdQuery(sellAssetId || '')
+  const { data: buyAssetMarketData } = useMarketDataByAssetIdQuery(buyAssetId || '')
+
+  // virtual as in, derived from the fiat amount in fiat mode, or the input as-is if crypto mode
+  const virtualDebouncedSellAmountCryptoBaseUnit = useMemo(() => {
+    // In fiat mode, use the debounced fiat amount
+    if (isFiat && sellAssetMarketData?.price && sellAsset?.precision) {
+      const debouncedFiatValue = debouncedSellAmountFiat || '0'
+      const cryptoValue = bnOrZero(debouncedFiatValue).div(sellAssetMarketData.price).toFixed()
+      return toBaseUnit(cryptoValue, sellAsset.precision)
+    }
+
+    // In crypto mode, use the debounced crypto amount
+    if (!isFiat && sellAsset?.precision) {
+      const debouncedCryptoValue = debouncedSellAmount || '0'
+      return toBaseUnit(debouncedCryptoValue, sellAsset.precision)
+    }
+
+    return sellAmountCryptoBaseUnit
+  }, [
+    isFiat,
+    sellAmountCryptoBaseUnit,
+    sellAssetMarketData?.price,
+    sellAsset?.precision,
+    debouncedSellAmountFiat,
+    debouncedSellAmount,
+  ])
 
   const {
     data: quote,
@@ -92,12 +127,15 @@ export const TradeInput = () => {
     {
       sourceAsset: sellAsset ? getChainflipId(sellAsset.assetId) : '',
       destinationAsset: buyAsset ? getChainflipId(buyAsset.assetId) : '',
-      amount: sellAmountCryptoBaseUnit,
+      amount: virtualDebouncedSellAmountCryptoBaseUnit,
     },
     {
       refetchInterval: QUOTE_REFETCH_INTERVAL,
       enabled:
-        !isSwitching && !!sellAsset && !!buyAsset && bnOrZero(sellAmountCryptoBaseUnit).gt(0),
+        !isSwitching &&
+        !!sellAsset &&
+        !!buyAsset &&
+        bnOrZero(virtualDebouncedSellAmountCryptoBaseUnit).gt(0),
     },
   )
 
@@ -139,9 +177,6 @@ export const TradeInput = () => {
   })
 
   const { isOpen, onClose, onOpen } = useDisclosure()
-  const [assetSelectType, setAssetSelectType] = useState<AssetType>(AssetType.BUY)
-  const [sellAmountInput, setSellAmountInput] = useState('')
-  const debouncedSellAmount = useDebounce(sellAmountInput, 200)
 
   // Rehydrate sell amount input, since we only store amounts in base unit
   useEffect(() => {
@@ -156,9 +191,6 @@ export const TradeInput = () => {
     setSellAmountInput(amountCryptoPrecision)
   }, [sellAsset?.precision, sellAmountCryptoBaseUnit, sellAmountInput])
 
-  const { data: sellAssetMarketData } = useMarketDataByAssetIdQuery(sellAssetId || '')
-  const { data: buyAssetMarketData } = useMarketDataByAssetIdQuery(buyAssetId || '')
-
   const sellAmountFiat = useMemo(() => {
     if (!sellAssetMarketData?.price || !sellAmountCryptoPrecision) return '0'
     return bnOrZero(sellAmountCryptoPrecision).times(sellAssetMarketData.price).toString()
@@ -168,11 +200,6 @@ export const TradeInput = () => {
     if (!buyAssetMarketData?.price || !buyAmountCryptoPrecision) return '0'
     return bnOrZero(buyAmountCryptoPrecision).times(buyAssetMarketData.price).toString()
   }, [buyAssetMarketData?.price, buyAmountCryptoPrecision])
-
-  useEffect(() => {
-    if (!sellAsset?.precision) return
-    setValue('sellAmountCryptoBaseUnit', toBaseUnit(debouncedSellAmount, sellAsset.precision))
-  }, [debouncedSellAmount, sellAsset?.precision, setValue])
 
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
@@ -192,15 +219,25 @@ export const TradeInput = () => {
         .times(bn(1).minus(slippageTolerancePercentageDecimal))
         .toFixed(buyAsset.precision)
 
+      const sourceAsset = getChainflipId(sellAsset.assetId)
+      const destinationAsset = getChainflipId(buyAsset.assetId)
+
       const createSwapPayload = {
-        sourceAsset: getChainflipId(sellAsset.assetId),
-        destinationAsset: getChainflipId(buyAsset.assetId),
+        sourceAsset,
+        destinationAsset,
         destinationAddress: destinationAddress || '',
         refundAddress: refundAddress || '',
         minimumPrice: minimumRate,
       }
 
-      mixpanel?.track(MixPanelEvent.StartTransaction, createSwapPayload)
+      mixpanel?.track(MixPanelEvent.StartTransaction, {
+        sourceAsset,
+        destinationAsset,
+        sellAmountCryptoPrecision,
+        sellAmountFiat,
+        buyAmountCryptoPrecision,
+        buyAmountFiat,
+      })
 
       createSwap(createSwapPayload)
     },
@@ -208,11 +245,13 @@ export const TradeInput = () => {
       quote,
       sellAsset,
       buyAsset,
-      destinationAddress,
-      refundAddress,
-      createSwap,
       buyAmountCryptoPrecision,
       sellAmountCryptoPrecision,
+      destinationAddress,
+      refundAddress,
+      sellAmountFiat,
+      buyAmountFiat,
+      createSwap,
     ],
   )
 
@@ -251,9 +290,21 @@ export const TradeInput = () => {
 
     if (!sellAssetMarketData?.price || !buyAssetMarketData?.price) {
       setSellAmountInput('')
+      setSellAmountFiatInput('')
       setValue('sellAmountCryptoBaseUnit', '0')
       setValue('sellAssetId', currentBuyAsset.assetId)
       setValue('buyAssetId', currentSellAsset.assetId)
+      return
+    }
+
+    setValue('sellAssetId', currentBuyAsset.assetId)
+    setValue('buyAssetId', currentSellAsset.assetId)
+
+    if (isFiat) {
+      setSellAmountFiatInput(sellAmountFiatInput)
+
+      const cryptoValue = bnOrZero(sellAmountFiatInput).div(buyAssetMarketData.price).toString()
+      setValue('sellAmountCryptoBaseUnit', toBaseUnit(cryptoValue, currentBuyAsset.precision))
       return
     }
 
@@ -263,30 +314,69 @@ export const TradeInput = () => {
 
     setValue('sellAmountCryptoBaseUnit', toBaseUnit(newAmount, currentBuyAsset.precision))
     setSellAmountInput(newAmount)
-    setValue('sellAssetId', currentBuyAsset.assetId)
-    setValue('buyAssetId', currentSellAsset.assetId)
   }, [
     sellAsset,
     buyAsset,
     sellAmountCryptoPrecision,
+    sellAmountFiatInput,
     sellAssetMarketData?.price,
     buyAssetMarketData?.price,
     setValue,
-    setSellAmountInput,
+    isFiat,
+  ])
+
+  const onToggleFiatMode = useCallback(() => {
+    if (!isFiat) {
+      const fiatValue = bnOrZero(sellAmountInput)
+        .times(sellAssetMarketData?.price ?? 0)
+        .toString()
+
+      // Update the displayed fiat input immediately
+      setSellAmountFiatInput(fiatValue)
+    } else {
+      const cryptoValue = bnOrZero(sellAmountFiatInput)
+        .div(sellAssetMarketData?.price ?? 0)
+        .toString()
+
+      // Update the displayed crypto input immediately
+      setSellAmountInput(cryptoValue)
+
+      // Update form state immediately
+      setValue('sellAmountCryptoBaseUnit', toBaseUnit(cryptoValue, sellAsset?.precision ?? 0))
+    }
+
+    toggleIsFiat(!isFiat)
+  }, [
+    sellAssetMarketData?.price,
+    sellAsset?.precision,
+    sellAmountInput,
+    sellAmountFiatInput,
+    setValue,
+    isFiat,
   ])
 
   const handleSellAmountChange = useCallback(
     (values: { value: string }) => {
-      // Handle empty input
-      if (!values.value || !bnOrZero(values.value).gte(0)) {
-        setSellAmountInput('')
-        setValue('sellAmountCryptoBaseUnit', '0')
+      if (!sellAsset?.precision) return
+
+      if (isFiat) {
+        setSellAmountFiatInput(values.value)
+
+        // Update inverted (crypto) value immediately
+        if (sellAssetMarketData?.price && sellAsset?.precision) {
+          const cryptoValue = bnOrZero(values.value).div(sellAssetMarketData.price).toString()
+          setValue('sellAmountCryptoBaseUnit', toBaseUnit(cryptoValue, sellAsset.precision))
+        }
         return
       }
 
+      // Store crypto input immediately
       setSellAmountInput(values.value)
+
+      // Update form state immediately
+      setValue('sellAmountCryptoBaseUnit', toBaseUnit(values.value, sellAsset.precision))
     },
-    [setValue],
+    [setValue, isFiat, sellAssetMarketData?.price, sellAsset?.precision],
   )
 
   const validateDestinationAddress = useCallback(
@@ -342,14 +432,18 @@ export const TradeInput = () => {
 
   const isLoading = isQuoteFetching || isSwitching
 
-  const renderedBuyAmountCryptoPrecision = useMemo(() => {
-    // No sell amount has been entered
-    if (bnOrZero(sellAmountInput).eq(0)) return '0'
+  const formattedBuyAmountCryptoPrecision = useMemo(() => {
+    if (
+      (isFiat && bnOrZero(debouncedSellAmountFiat).eq(0)) ||
+      (!isFiat && bnOrZero(debouncedSellAmount).eq(0))
+    ) {
+      return '0'
+    }
     // We have a quote error, most likely because of amount too high/low
     if (quoteError) return 'N/A'
     // We have a quote, show the estimated buy amount
     return buyAmountCryptoPrecision
-  }, [buyAmountCryptoPrecision, sellAmountInput, quoteError])
+  }, [buyAmountCryptoPrecision, debouncedSellAmount, debouncedSellAmountFiat, isFiat, quoteError])
 
   if (!(sellAsset && buyAsset)) return null
 
@@ -394,7 +488,7 @@ export const TradeInput = () => {
                 </Flex>
               </>
             ) : null}
-            {bnOrZero(sellAmountInput).gt(0) && (
+            {bnOrZero(isFiat ? debouncedSellAmountFiat : debouncedSellAmount).gt(0) && (
               <Box position='absolute' right='4' top='50%' transform='translateY(-50%)'>
                 <CountdownSpinner
                   isLoading={isQuoteFetching}
@@ -497,15 +591,26 @@ export const TradeInput = () => {
                   <NumericFormat
                     customInput={Input}
                     variant='filled'
-                    placeholder={`Enter ${sellAsset.symbol} amount`}
-                    value={sellAmountInput}
+                    placeholder={isFiat ? 'Enter USD amount' : `Enter ${sellAsset.symbol} amount`}
+                    value={isFiat ? sellAmountFiatInput : sellAmountInput}
                     onValueChange={handleSellAmountChange}
                     allowNegative={false}
-                    decimalScale={sellAsset.precision}
+                    decimalScale={isFiat ? 2 : sellAsset.precision}
                     isInvalid={!!errors.sellAmountCryptoBaseUnit}
                     allowLeadingZeros
+                    prefix={isFiat ? '$' : undefined}
                   />
-                  <Amount.Fiat value={sellAmountFiat} color='text.subtle' fontSize='sm' mt={1} />
+                  <Link
+                    color='text.subtle'
+                    fontSize='sm'
+                    mt={1}
+                    onClick={onToggleFiatMode}
+                    userSelect='none'
+                  >
+                    {isFiat
+                      ? `≈ ${sellAmountCryptoPrecision} ${sellAsset.symbol}`
+                      : `≈ $${bnOrZero(sellAmountFiat).toFixed(2)}`}
+                  </Link>
                   {errors.sellAmountCryptoBaseUnit && (
                     <Text fontSize='sm' color='red.500' mt={1}>
                       {errors.sellAmountCryptoBaseUnit.message}
@@ -536,7 +641,7 @@ export const TradeInput = () => {
                     variant='filled'
                     placeholder={`0.0 ${buyAsset.symbol}`}
                     isReadOnly
-                    value={renderedBuyAmountCryptoPrecision}
+                    value={formattedBuyAmountCryptoPrecision}
                     {...skeletonInputSx}
                   />
                   <Amount.Fiat value={buyAmountFiat} color='text.subtle' fontSize='sm' />
