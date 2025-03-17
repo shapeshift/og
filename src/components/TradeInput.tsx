@@ -228,6 +228,7 @@ export const TradeInput = () => {
         destinationAddress: destinationAddress || '',
         refundAddress: refundAddress || '',
         minimumPrice: minimumRate,
+        retryDurationInBlocks: 150,
       }
 
       mixpanel?.track(MixPanelEvent.StartTransaction, {
