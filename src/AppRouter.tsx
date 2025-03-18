@@ -1,4 +1,4 @@
-import { Box, Center, Heading, Text } from '@chakra-ui/react'
+import { Alert, AlertIcon, AlertTitle, Box, Center, Heading, Text } from '@chakra-ui/react'
 import { btcAssetId, ethAssetId } from 'constants/caip'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useMemo } from 'react'
@@ -166,6 +166,13 @@ export const AppRouter = () => {
     }
   }, [searchParams, methods, defaultValues, isLegalPage])
 
+  const shouldShowMaintenanceAlert = useMemo(() => {
+    const now = new Date()
+    const startTime = new Date('2025-03-18T11:00:00+01:00') // 11am CET 18th March 2025
+    const endTime = new Date('2025-03-18T14:00:00+01:00') // 2pm CET 18th March 2025
+    return now >= startTime && now <= endTime
+  }, [])
+
   return (
     <FormProvider {...methods}>
       <Box width='full' height='100vh' position='relative' overflowY='auto'>
@@ -182,6 +189,22 @@ export const AppRouter = () => {
           bgRepeat='no-repeat'
           sx={bgContainerSx}
         />
+        {/* Maintenance Banner */}
+        {shouldShowMaintenanceAlert && (
+          <Alert
+            status='warning'
+            variant='subtle'
+            mb={4}
+            display='flex'
+            justifyContent='center'
+            width='full'
+          >
+            <AlertIcon />
+            <AlertTitle>
+              Planned maintenance may interrupt quotes over the next couple of hours
+            </AlertTitle>
+          </Alert>
+        )}
         {/* Akschual content overlay */}
         <Box
           position='relative'
