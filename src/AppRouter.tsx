@@ -168,8 +168,8 @@ export const AppRouter = () => {
 
   const shouldShowMaintenanceAlert = useMemo(() => {
     const now = new Date()
-    const startTime = new Date('2024-03-19T11:00:00+01:00') // 11am CET today
-    const endTime = new Date('2024-03-19T14:00:00+01:00') // 2pm CET today
+    const startTime = new Date('2025-03-18T11:00:00+01:00') // 11am CET 18th March 2025
+    const endTime = new Date('2025-03-18T14:00:00+01:00') // 2pm CET 18th March 2025
     return now >= startTime && now <= endTime
   }, [])
 
