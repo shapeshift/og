@@ -38,12 +38,12 @@ const inquireReleaseType = async (): Promise<ReleaseType> => {
   return (await inquirer.prompt(questions)).releaseType
 }
 
-const inquireCleanBranchOffMain = async (): Promise<boolean> => {
+const inquireCleanBranchOffMaster = async (): Promise<boolean> => {
   const questions: QuestionCollection<{ isCleanlyBranched: boolean }> = [
     {
       type: 'confirm',
       name: 'isCleanlyBranched',
-      message: 'Is your branch cleanly branched off origin/main?',
+      message: 'Is your branch cleanly branched off origin/master?',
       default: false,
     },
   ]
@@ -56,7 +56,7 @@ const inquireProceedWithCommits = async (commits: string[], action: 'create' | '
   const message =
     action === 'create'
       ? 'Do you want to create a release with these commits?'
-      : 'Do you want to merge and push these commits into main?'
+      : 'Do you want to merge and push these commits into master?'
   const questions: QuestionCollection<{ shouldProceed: boolean }> = [
     {
       type: 'confirm',
@@ -76,7 +76,7 @@ const createDraftRegularPR = async (): Promise<void> => {
   const formattedMessages = messages.map(m => m.replace(/"/g, '\\"'))
   const nextVersion = await getNextReleaseVersion('minor')
   const title = `chore: release ${nextVersion}`
-  const command = `gh pr create --draft --base "main" --title "${title}" --body "${formattedMessages}"`
+  const command = `gh pr create --draft --base "master" --title "${title}" --body "${formattedMessages}"`
   console.log(chalk.green('Creating draft PR...'))
   await pify(exec)(command)
   console.log(chalk.green('Draft PR created.'))
@@ -90,7 +90,7 @@ const createDraftHotfixPR = async (): Promise<void> => {
   const formattedMessages = messages.map(m => m.replace(/"/g, '\\"'))
   const nextVersion = await getNextReleaseVersion('minor')
   const title = `chore: hotfix release ${nextVersion}`
-  const command = `gh pr create --draft --base "main" --title "${title}" --body "${formattedMessages}"`
+  const command = `gh pr create --draft --base "master" --title "${title}" --body "${formattedMessages}"`
   console.log(chalk.green('Creating draft hotfix PR...'))
   await pify(exec)(command)
   console.log(chalk.green('Draft hotfix PR created.'))
@@ -145,29 +145,29 @@ const doRegularRelease = async () => {
 
 const doHotfixRelease = async () => {
   const currentBranch = await git().revparse(['--abbrev-ref', 'HEAD'])
-  const isMain = currentBranch === 'main'
+  const isMaster = currentBranch === 'master'
 
-  if (isMain) {
+  if (isMaster) {
     console.log(
       chalk.red(
-        'Cannot open hotfix PRs directly off local main branch for security reasons. Please branch out to another branch first.',
+        'Cannot open hotfix PRs directly off local master branch for security reasons. Please branch out to another branch first.',
       ),
     )
     exit()
   }
 
-  // Only continue if the branch is cleanly branched off origin/main since we will
+  // Only continue if the branch is cleanly branched off origin/master since we will
   // target it in the hotfix PR
-  const isCleanOffMain = await inquireCleanBranchOffMain()
-  if (!isCleanOffMain) {
+  const isCleanOffMaster = await inquireCleanBranchOffMaster()
+  if (!isCleanOffMaster) {
     exit(
       chalk.yellow(
-        'Please ensure your branch is cleanly branched off origin/main before proceeding.',
+        'Please ensure your branch is cleanly branched off origin/master before proceeding.',
       ),
     )
   }
 
-  // Dev has confirmed they're clean off main, here goes nothing
+  // Dev has confirmed they're clean off master, here goes nothing
   await fetch()
 
   // Force push current branch upstream so we can getCommits from it - getCommits uses upstream for diffing
@@ -177,9 +177,9 @@ const doHotfixRelease = async () => {
   assertCommitsToRelease(total)
   await inquireProceedWithCommits(messages, 'create')
 
-  // Merge origin/main as a paranoia check
-  console.log(chalk.green('Merging origin/main...'))
-  await git().merge(['origin/main'])
+  // Merge origin/master as a paranoia check
+  console.log(chalk.green('Merging origin/master...'))
+  await git().merge(['origin/master'])
 
   console.log(chalk.green('Setting release to current branch...'))
   await git().checkout(['-B', 'release'])
@@ -236,31 +236,23 @@ const mergeRelease = async () => {
   await git().checkout(['release'])
   console.log(chalk.green('Pulling release...'))
   await git().pull()
-  console.log(chalk.green('Checking out main...'))
-  await git().checkout(['main'])
-  console.log(chalk.green('Pulling main...'))
+  console.log(chalk.green('Checking out master...'))
+  await git().checkout(['master'])
+  console.log(chalk.green('Pulling master...'))
   await git().pull()
   console.log(chalk.green('Merging release...'))
   await git().merge(['release'])
   const nextVersion = await getNextReleaseVersion('minor')
-  console.log(chalk.green(`Tagging main with version ${nextVersion}`))
+  console.log(chalk.green(`Tagging master with version ${nextVersion}`))
   await git().tag(['-a', nextVersion, '-m', nextVersion])
-  console.log(chalk.green('Pushing main...'))
-  await git().push(['origin', 'main', '--tags'])
-  /**
-   * we want private to track main, as Cloudflare builds with different env vars
-   * based off the branch name, and there's in sufficient information with a single branch name.
-   */
-  console.log(chalk.green('Resetting private to main...'))
-  await git().checkout(['-B', 'private'])
-  console.log(chalk.green('Pushing private...'))
-  await git().push(['--force', 'origin', 'private', '--tags'])
+  console.log(chalk.green('Pushing master...'))
+  await git().push(['origin', 'master', '--tags'])
   console.log(chalk.green('Checking out develop...'))
   await git().checkout(['develop'])
   console.log(chalk.green('Pulling develop...'))
   await git().pull()
-  console.log(chalk.green('Merging main back into develop...'))
-  await git().merge(['main'])
+  console.log(chalk.green('Merging master back into develop...'))
+  await git().merge(['master'])
   console.log(chalk.green('Pushing develop...'))
   await git().push(['origin', 'develop'])
   exit(chalk.green(`Release ${nextVersion} completed successfully.`))
