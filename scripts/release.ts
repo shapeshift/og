@@ -49,15 +49,20 @@ const getCommits = async (branch: string) => {
   const latestTag = await getLatestSemverTag()
 
   // If we have a last release tag, base the diff on that
-  // If no tags exist, we'll get all commits since the beginning
-  const range = latestTag ? `${latestTag}..origin/${branch}` : `origin/${branch}`
-
-  const { all, total } = await git().log([
+  // If no tags exist, we'll get all commits from the branch
+  const logOptions = [
     '--oneline',
     '--first-parent',
     '--pretty=format:%s', // no hash, just conventional commit style
-    range,
-  ])
+  ]
+
+  if (latestTag) {
+    logOptions.push(`${latestTag}..origin/${branch}`)
+  } else {
+    logOptions.push('origin/' + branch)
+  }
+
+  const { all, total } = await git().log(logOptions)
 
   const messages = all.map(({ hash }) => hash)
   return { messages, total }
