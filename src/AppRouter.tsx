@@ -1,4 +1,4 @@
-import { Alert, AlertIcon, AlertTitle, Box, Center, Heading, Text } from '@chakra-ui/react'
+import { Box, Center, Heading, Text } from '@chakra-ui/react'
 import { btcAssetId, ethAssetId } from 'constants/caip'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useMemo } from 'react'
