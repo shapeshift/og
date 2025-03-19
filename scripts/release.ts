@@ -1,5 +1,3 @@
-// CLI dev tool, we need dat console
-/* eslint-disable no-console */
 import chalk from 'chalk'
 import { exec } from 'child_process'
 import type { ListQuestion, QuestionCollection } from 'inquirer'
