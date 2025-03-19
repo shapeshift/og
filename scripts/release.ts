@@ -49,7 +49,7 @@ const getCommits = async (branch: string) => {
   const latestTag = await getLatestSemverTag()
 
   // If we have a last release tag, base the diff on that
-  // If no tags exist, we'll get all commits from the branch
+  // If no tags exist, we'll get commits since master/develop
   const logOptions = [
     '--oneline',
     '--first-parent',
@@ -59,8 +59,9 @@ const getCommits = async (branch: string) => {
   if (latestTag) {
     logOptions.push(`${latestTag}..origin/${branch}`)
   } else {
-    // For first release, get all commits from the branch
-    logOptions.push('origin/' + branch)
+    // For first release, get commits since master/develop
+    const baseBranch = branch === 'develop' ? 'master' : 'develop'
+    logOptions.push(`origin/${baseBranch}..origin/${branch}`)
   }
 
   const { all, total } = await git().log(logOptions)
