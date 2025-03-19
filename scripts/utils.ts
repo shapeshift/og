@@ -1,12 +1,16 @@
 // common CLI dev tool utils
-import * as chalk from 'chalk'
-import * as semver from 'semver'
+import chalk from 'chalk'
+import semver from 'semver'
 import { simpleGit as git } from 'simple-git'
 
 export const exit = (reason?: string) => Boolean(reason && console.log(reason)) || process.exit(0)
 
 export const getLatestSemverTag = async (): Promise<string> => {
   const tags = await getSemverTags()
+  // Handle case when no tags exist yet
+  if (tags.length === 0) {
+    return '1.0.0'
+  }
   const tag = tags.slice(-1)[0] // get the latest tag
   semver.valid(tag) || exit(chalk.red(`${tag} is not a valid semver tag.`))
   return tag

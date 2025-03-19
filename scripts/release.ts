@@ -1,10 +1,11 @@
 // CLI dev tool, we need dat console
-import * as chalk from 'chalk'
+/* eslint-disable no-console */
+import chalk from 'chalk'
 import { exec } from 'child_process'
 import type { ListQuestion, QuestionCollection } from 'inquirer'
 import inquirer from 'inquirer'
 import pify from 'pify'
-import * as semver from 'semver'
+import semver from 'semver'
 import { simpleGit as git } from 'simple-git'
 
 import { exit, getLatestSemverTag } from './utils'
@@ -77,7 +78,7 @@ const createDraftRegularPR = async (): Promise<void> => {
   const title = `chore: release ${nextVersion}`
   const command = `gh pr create --draft --base "main" --title "${title}" --body "${formattedMessages}"`
   console.log(chalk.green('Creating draft PR...'))
-  await (pify(exec) as (options: { input: string }) => Promise<void>)({ input: command })
+  await pify(exec)(command)
   console.log(chalk.green('Draft PR created.'))
   exit(chalk.green(`Release ${nextVersion} created.`))
 }
@@ -91,7 +92,7 @@ const createDraftHotfixPR = async (): Promise<void> => {
   const title = `chore: hotfix release ${nextVersion}`
   const command = `gh pr create --draft --base "main" --title "${title}" --body "${formattedMessages}"`
   console.log(chalk.green('Creating draft hotfix PR...'))
-  await (pify(exec) as (options: { input: string }) => Promise<void>)({ input: command })
+  await pify(exec)(command)
   console.log(chalk.green('Draft hotfix PR created.'))
   exit(chalk.green(`Hotfix release ${nextVersion} created.`))
 }
@@ -103,11 +104,9 @@ type GetCommitMessagesReturn = {
 }
 type GetCommitMessages = (branch: GetCommitMessagesArgs) => Promise<GetCommitMessagesReturn>
 const getCommits: GetCommitMessages = async branch => {
-  // Get the last release tag
-  const latestTag = await getLatestSemverTag()
-
-  // If we have a last release tag, base the diff on that
-  const range = latestTag ? `${latestTag}..origin/${branch}` : `origin/main..origin/${branch}`
+  // Always compare against master for initial release or release branch
+  // This ensures we only get commits that would be part of the release PR
+  const range = `origin/master..origin/${branch}`
 
   const { all, total } = await git().log([
     '--oneline',
@@ -205,15 +204,16 @@ const getNextReleaseVersion = async (versionBump: WebReleaseType): Promise<strin
 
 const assertGhInstalled = async () => {
   try {
-    await (pify(exec) as (options: { input: string }) => Promise<void>)({ input: 'hash gh' }) // will throw if gh is not installed
+    await pify(exec)('hash gh') // will throw if gh is not installed
   } catch (e) {
+    console.log(e)
     exit(chalk.red('Please install GitHub CLI https://github.com/cli/cli#installation'))
   }
 }
 
 const assertGhAuth = async () => {
   try {
-    await (pify(exec) as (options: { input: string }) => Promise<void>)({ input: 'gh auth status' }) // will throw if gh not authenticated
+    await pify(exec)('gh auth status') // will throw if gh not authenticated
   } catch (e) {
     exit(chalk.red((e as Error).message))
   }
