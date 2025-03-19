@@ -112,8 +112,14 @@ const getNextReleaseVersion = async (versionBump: WebReleaseType): Promise<strin
 }
 
 const isReleaseInProgress = async (): Promise<boolean> => {
-  const { total } = await getCommits('release')
-  return Boolean(total)
+  try {
+    // Check if there's an open PR with "chore: release" or "chore: hotfix release" in the title
+    const { stdout } = await pExec('gh pr list --search "chore: release" --state open')
+    return Boolean(stdout)
+  } catch {
+    // If gh command fails, assume no release in progress
+    return false
+  }
 }
 
 const createRelease = async () => {
