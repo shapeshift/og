@@ -209,11 +209,18 @@ const mergeRelease = async () => {
   await git().pull()
   console.log(chalk.green('Merging release...'))
   await git().merge(['release'])
+
   const nextVersion = await getNextReleaseVersion('minor')
-  console.log(chalk.green(`Tagging master with version ${nextVersion}`))
+  console.log(chalk.green(`Creating git tag ${nextVersion}...`))
   await git().tag(['-a', nextVersion, '-m', nextVersion])
-  console.log(chalk.green('Pushing master...'))
+  console.log(chalk.green('Pushing master and tags...'))
   await git().push(['origin', 'master', '--tags'])
+
+  console.log(chalk.green(`Creating GitHub release ${nextVersion}...`))
+  const releaseBody = messages.map(msg => `- ${msg}`).join('\n')
+  const releaseCommand = `gh release create ${nextVersion} --title "${nextVersion}" --notes "${releaseBody}"`
+  await pExec(releaseCommand)
+
   console.log(chalk.green('Checking out develop...'))
   await git().checkout(['develop'])
   console.log(chalk.green('Pulling develop...'))
@@ -222,6 +229,7 @@ const mergeRelease = async () => {
   await git().merge(['master'])
   console.log(chalk.green('Pushing develop...'))
   await git().push(['origin', 'develop'])
+
   exit(chalk.green(`Release ${nextVersion} completed successfully.`))
 }
 
