@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import chalk from 'chalk'
 import { exec } from 'child_process'
 import inquirer from 'inquirer'
