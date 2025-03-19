@@ -70,7 +70,6 @@ const inquireProceedWithCommits = async (commits: string[], action: 'create' | '
 
 const createDraftRegularPR = async (): Promise<void> => {
   const { messages } = await getCommits('release')
-  // TODO(0xdef1cafe): parse version bump from commit messages
   const formattedMessages = messages.map(m => m.replace(/"/g, '\\"'))
   const nextVersion = await getNextReleaseVersion('minor')
   const title = `chore: release ${nextVersion}`
@@ -84,7 +83,6 @@ const createDraftRegularPR = async (): Promise<void> => {
 const createDraftHotfixPR = async (): Promise<void> => {
   const currentBranch = await git().revparse(['--abbrev-ref', 'HEAD'])
   const { messages } = await getCommits(currentBranch as GetCommitMessagesArgs)
-  // TODO(0xdef1cafe): parse version bump from commit messages
   const formattedMessages = messages.map(m => m.replace(/"/g, '\\"'))
   const nextVersion = await getNextReleaseVersion('minor')
   const title = `chore: hotfix release ${nextVersion}`
