@@ -1,10 +1,20 @@
-import chalk from 'chalk'
+// CLI dev tool, we need dat console
+import * as chalk from 'chalk'
+import { exec } from 'child_process'
+import type { ListQuestion, QuestionCollection } from 'inquirer'
 import inquirer from 'inquirer'
+import pify from 'pify'
+import * as semver from 'semver'
 import { simpleGit as git } from 'simple-git'
 
-export const exit = (reason?: string) => Boolean(reason && console.log(reason)) || process.exit(0)
+import { exit, getLatestSemverTag } from './utils'
 
-const assertIsCleanRepo = async () => {
+const fetch = async () => {
+  console.log(chalk.green('Fetching...'))
+  await git().fetch(['origin', '--tags', '--force'])
+}
+
+export const assertIsCleanRepo = async () => {
   const gitStatus = await git().status()
   if (!gitStatus.isClean()) {
     console.log(chalk.red('Your repository is not clean. Please commit or stash your changes.'))
@@ -12,77 +22,256 @@ const assertIsCleanRepo = async () => {
   }
 }
 
-const getCommitsList = async () => {
-  // Use 'master..origin/develop' to list commits in origin/develop but not in master
-  const log = await git().log(['master..origin/develop'])
-  return log.all.map(commit => `${commit.hash} - ${commit.message}`)
-}
+const releaseType = ['Regular', 'Hotfix'] as const
+type ReleaseType = (typeof releaseType)[number]
 
-const inquireProceedWithCommits = async (commits: string[]) => {
-  console.log(chalk.blue(['', ...commits, ''].join('\n')))
-  const questions = [
+const inquireReleaseType = async (): Promise<ReleaseType> => {
+  const questions: ListQuestion<{ releaseType: ReleaseType }>[] = [
     {
-      type: 'confirm',
-      name: 'shouldProceed',
-      message: 'Do you want to merge and push these commits into master?',
-      default: true,
+      type: 'list',
+      name: 'releaseType',
+      message: 'What type of release is this?',
+      choices: releaseType,
     },
   ]
-  const answers = await inquirer.prompt(questions)
-  return answers.shouldProceed
+  return (await inquirer.prompt(questions)).releaseType
 }
 
-const mergeAndPush = async () => {
-  await assertIsCleanRepo()
+const inquireCleanBranchOffMain = async (): Promise<boolean> => {
+  const questions: QuestionCollection<{ isCleanlyBranched: boolean }> = [
+    {
+      type: 'confirm',
+      name: 'isCleanlyBranched',
+      message: 'Is your branch cleanly branched off origin/main?',
+      default: false,
+    },
+  ]
+  const { isCleanlyBranched } = await inquirer.prompt(questions)
+  return isCleanlyBranched
+}
 
-  // Fetch all branches from origin
-  console.log(chalk.green('Fetching latest changes...'))
-  await git().fetch('origin')
+const inquireProceedWithCommits = async (commits: string[], action: 'create' | 'merge') => {
+  console.log(chalk.blue(['', commits, ''].join('\n')))
+  const message =
+    action === 'create'
+      ? 'Do you want to create a release with these commits?'
+      : 'Do you want to merge and push these commits into main?'
+  const questions: QuestionCollection<{ shouldProceed: boolean }> = [
+    {
+      type: 'confirm',
+      default: 'y',
+      name: 'shouldProceed',
+      message,
+      choices: ['y', 'n'],
+    },
+  ]
+  const { shouldProceed } = await inquirer.prompt(questions)
+  if (!shouldProceed) exit('Release cancelled.')
+}
 
-  // Pull latest changes from origin/develop
-  console.log(chalk.green('Pulling latest changes from origin/develop...'))
-  await git().pull('origin', 'develop')
+const createDraftRegularPR = async (): Promise<void> => {
+  const { messages } = await getCommits('release')
+  // TODO(0xdef1cafe): parse version bump from commit messages
+  const formattedMessages = messages.map(m => m.replace(/"/g, '\\"'))
+  const nextVersion = await getNextReleaseVersion('minor')
+  const title = `chore: release ${nextVersion}`
+  const command = `gh pr create --draft --base "main" --title "${title}" --body "${formattedMessages}"`
+  console.log(chalk.green('Creating draft PR...'))
+  await (pify(exec) as (options: { input: string }) => Promise<void>)({ input: command })
+  console.log(chalk.green('Draft PR created.'))
+  exit(chalk.green(`Release ${nextVersion} created.`))
+}
 
-  // Checkout master and pull updates from origin/master
-  console.log(chalk.green('Checking out master...'))
-  await git().checkout(['master'])
+const createDraftHotfixPR = async (): Promise<void> => {
+  const currentBranch = await git().revparse(['--abbrev-ref', 'HEAD'])
+  const { messages } = await getCommits(currentBranch as GetCommitMessagesArgs)
+  // TODO(0xdef1cafe): parse version bump from commit messages
+  const formattedMessages = messages.map(m => m.replace(/"/g, '\\"'))
+  const nextVersion = await getNextReleaseVersion('minor')
+  const title = `chore: hotfix release ${nextVersion}`
+  const command = `gh pr create --draft --base "main" --title "${title}" --body "${formattedMessages}"`
+  console.log(chalk.green('Creating draft hotfix PR...'))
+  await (pify(exec) as (options: { input: string }) => Promise<void>)({ input: command })
+  console.log(chalk.green('Draft hotfix PR created.'))
+  exit(chalk.green(`Hotfix release ${nextVersion} created.`))
+}
 
-  console.log(chalk.green('Pulling latest changes from origin/master...'))
-  await git().pull('origin', 'master')
+type GetCommitMessagesArgs = 'develop' | 'release'
+type GetCommitMessagesReturn = {
+  messages: string[]
+  total: number
+}
+type GetCommitMessages = (branch: GetCommitMessagesArgs) => Promise<GetCommitMessagesReturn>
+const getCommits: GetCommitMessages = async branch => {
+  // Get the last release tag
+  const latestTag = await getLatestSemverTag()
 
-  // Get the list of commits to merge
-  const commits = await getCommitsList()
+  // If we have a last release tag, base the diff on that
+  const range = latestTag ? `${latestTag}..origin/${branch}` : `origin/main..origin/${branch}`
 
-  const shouldProceed = await inquireProceedWithCommits(commits)
-  if (!shouldProceed) {
-    console.log(chalk.yellow('Merge and push cancelled.'))
+  const { all, total } = await git().log([
+    '--oneline',
+    '--first-parent',
+    '--pretty=format:%s', // no hash, just conventional commit style
+    range,
+  ])
+
+  const messages = all.map(({ hash }) => hash)
+  return { messages, total }
+}
+
+const assertCommitsToRelease = (total: number) => {
+  if (!total) exit(chalk.red('No commits to release.'))
+}
+
+const doRegularRelease = async () => {
+  const { messages, total } = await getCommits('develop')
+  assertCommitsToRelease(total)
+  await inquireProceedWithCommits(messages, 'create')
+  console.log(chalk.green('Checking out develop...'))
+  await git().checkout(['develop'])
+  console.log(chalk.green('Pulling develop...'))
+  await git().pull()
+  console.log(chalk.green('Resetting release to develop...'))
+  // **note** - most devs are familiar with lowercase -b to check out a new branch
+  // capital -B will checkout and reset the branch to the current HEAD
+  // so we can reuse the release branch, and force push over it
+  // this is required as the fleek environment is pointed at this specific branch
+  await git().checkout(['-B', 'release'])
+  console.log(chalk.green('Force pushing release branch...'))
+  await git().push(['--force', 'origin', 'release'])
+  await createDraftRegularPR()
+  exit()
+}
+
+const doHotfixRelease = async () => {
+  const currentBranch = await git().revparse(['--abbrev-ref', 'HEAD'])
+  const isMain = currentBranch === 'main'
+
+  if (isMain) {
+    console.log(
+      chalk.red(
+        'Cannot open hotfix PRs directly off local main branch for security reasons. Please branch out to another branch first.',
+      ),
+    )
     exit()
   }
 
-  // Merge origin/develop into master
-  console.log(chalk.green('Merging origin/develop into master...'))
+  // Only continue if the branch is cleanly branched off origin/main since we will
+  // target it in the hotfix PR
+  const isCleanOffMain = await inquireCleanBranchOffMain()
+  if (!isCleanOffMain) {
+    exit(
+      chalk.yellow(
+        'Please ensure your branch is cleanly branched off origin/main before proceeding.',
+      ),
+    )
+  }
+
+  // Dev has confirmed they're clean off main, here goes nothing
+  await fetch()
+
+  // Force push current branch upstream so we can getCommits from it - getCommits uses upstream for diffing
+  console.log(chalk.green(`Force pushing ${currentBranch} branch...`))
+  await git().push(['-u', 'origin', currentBranch, '--force'])
+  const { messages, total } = await getCommits(currentBranch as GetCommitMessagesArgs)
+  assertCommitsToRelease(total)
+  await inquireProceedWithCommits(messages, 'create')
+
+  // Merge origin/main as a paranoia check
+  console.log(chalk.green('Merging origin/main...'))
+  await git().merge(['origin/main'])
+
+  console.log(chalk.green('Setting release to current branch...'))
+  await git().checkout(['-B', 'release'])
+
+  console.log(chalk.green('Force pushing release branch...'))
+  await git().push(['--force', 'origin', 'release'])
+
+  console.log(chalk.green('Creating draft hotfix PR...'))
+  await createDraftHotfixPR()
+
+  exit(chalk.green('Hotfix release process completed.'))
+}
+
+type WebReleaseType = Extract<semver.ReleaseType, 'minor' | 'patch'>
+
+const getNextReleaseVersion = async (versionBump: WebReleaseType): Promise<string> => {
+  const latestTag = await getLatestSemverTag()
+  const nextVersion = semver.inc(latestTag, versionBump)
+  if (!nextVersion) exit(chalk.red(`Could not bump version to ${nextVersion}`))
+  return `v${nextVersion}`
+}
+
+const assertGhInstalled = async () => {
   try {
-    await git().merge(['origin/develop'])
-  } catch (error) {
-    console.error(chalk.red('Merge conflict encountered.'))
-    exit()
+    await (pify(exec) as (options: { input: string }) => Promise<void>)({ input: 'hash gh' }) // will throw if gh is not installed
+  } catch (e) {
+    exit(chalk.red('Please install GitHub CLI https://github.com/cli/cli#installation'))
   }
+}
 
-  // Push updated master to origin
-  console.log(chalk.green('Pushing master to remote...'))
-  await git().push('origin', 'master')
-  console.log(chalk.green('Merge and push completed successfully.'))
+const assertGhAuth = async () => {
+  try {
+    await (pify(exec) as (options: { input: string }) => Promise<void>)({ input: 'gh auth status' }) // will throw if gh not authenticated
+  } catch (e) {
+    exit(chalk.red((e as Error).message))
+  }
+}
+
+const isReleaseInProgress = async (): Promise<boolean> => {
+  const { total } = await getCommits('release')
+  return Boolean(total)
+}
+
+const createRelease = async () => {
+  ;(await inquireReleaseType()) === 'Regular' ? await doRegularRelease() : doHotfixRelease()
+}
+
+const mergeRelease = async () => {
+  const { messages, total } = await getCommits('release')
+  assertCommitsToRelease(total)
+  await inquireProceedWithCommits(messages, 'merge')
+  console.log(chalk.green('Checking out release...'))
+  await git().checkout(['release'])
+  console.log(chalk.green('Pulling release...'))
+  await git().pull()
+  console.log(chalk.green('Checking out main...'))
+  await git().checkout(['main'])
+  console.log(chalk.green('Pulling main...'))
+  await git().pull()
+  console.log(chalk.green('Merging release...'))
+  await git().merge(['release'])
+  const nextVersion = await getNextReleaseVersion('minor')
+  console.log(chalk.green(`Tagging main with version ${nextVersion}`))
+  await git().tag(['-a', nextVersion, '-m', nextVersion])
+  console.log(chalk.green('Pushing main...'))
+  await git().push(['origin', 'main', '--tags'])
+  /**
+   * we want private to track main, as Cloudflare builds with different env vars
+   * based off the branch name, and there's in sufficient information with a single branch name.
+   */
+  console.log(chalk.green('Resetting private to main...'))
+  await git().checkout(['-B', 'private'])
+  console.log(chalk.green('Pushing private...'))
+  await git().push(['--force', 'origin', 'private', '--tags'])
+  console.log(chalk.green('Checking out develop...'))
+  await git().checkout(['develop'])
+  console.log(chalk.green('Pulling develop...'))
+  await git().pull()
+  console.log(chalk.green('Merging main back into develop...'))
+  await git().merge(['main'])
+  console.log(chalk.green('Pushing develop...'))
+  await git().push(['origin', 'develop'])
+  exit(chalk.green(`Release ${nextVersion} completed successfully.`))
 }
 
 const main = async () => {
-  try {
-    await mergeAndPush()
-  } catch (error) {
-    console.error(chalk.red('An error occurred:'), error)
-    exit()
-  }
+  await assertIsCleanRepo()
+  await assertGhInstalled()
+  await assertGhAuth()
+  await fetch()
+  ;(await isReleaseInProgress()) ? await mergeRelease() : await createRelease()
 }
 
 main()
-
-// A meaningless comment to test the release process.

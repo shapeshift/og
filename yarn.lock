@@ -3170,6 +3170,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/semver@npm:^7":
+  version: 7.5.8
+  resolution: "@types/semver@npm:7.5.8"
+  checksum: 10c0/8663ff927234d1c5fcc04b33062cb2b9fcfbe0f5f351ed26c4d1e1581657deebd506b41ff7fdf89e787e3d33ce05854bc01686379b89e9c49b564c4cfa988efa
+  languageName: node
+  linkType: hard
+
 "@types/semver@npm:^7.3.12, @types/semver@npm:^7.5.0":
   version: 7.5.6
   resolution: "@types/semver@npm:7.5.6"
@@ -7517,6 +7524,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"pify@npm:6.1.0":
+  version: 6.1.0
+  resolution: "pify@npm:6.1.0"
+  checksum: 10c0/5744905e271d821ce1c96a615aecc857bfc0154a2f55cfd773e0a27478c1e1457dd69c932f2196cfa0d298cc4a2847edaf42b1ba600b95022ba5225c079443a6
+  languageName: node
+  linkType: hard
+
 "pkg-types@npm:^1.0.3":
   version: 1.0.3
   resolution: "pkg-types@npm:1.0.3"
@@ -8226,6 +8240,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"semver@npm:^7.7.1":
+  version: 7.7.1
+  resolution: "semver@npm:7.7.1"
+  bin:
+    semver: bin/semver.js
+  checksum: 10c0/fd603a6fb9c399c6054015433051bdbe7b99a940a8fb44b85c2b524c4004b023d7928d47cb22154f8d054ea7ee8597f586605e05b52047f048278e4ac56ae958
+  languageName: node
+  linkType: hard
+
 "set-blocking@npm:^2.0.0":
   version: 2.0.0
   resolution: "set-blocking@npm:2.0.0"
@@ -8284,6 +8307,7 @@ __metadata:
     "@types/qrcode": "npm:^1.5.5"
     "@types/react": "npm:^18.2.43"
     "@types/react-dom": "npm:^18.2.17"
+    "@types/semver": "npm:^7"
     "@typescript-eslint/eslint-plugin": "npm:^6.14.0"
     "@typescript-eslint/parser": "npm:^6.14.0"
     "@vitejs/plugin-react-swc": "npm:^3.5.0"
@@ -8306,6 +8330,7 @@ __metadata:
     match-sorter: "npm:^6.3.1"
     mixpanel-browser: "npm:^2.48.1"
     multicoin-address-validator: "npm:^0.5.24"
+    pify: "npm:6.1.0"
     prettier: "npm:^3.1.1"
     qrcode: "npm:^1.5.4"
     react: "npm:^18.2.0"
@@ -8315,6 +8340,7 @@ __metadata:
     react-number-format: "npm:^5.4.3"
     react-router: "npm:^7.1.5"
     react-virtuoso: "npm:^4.6.2"
+    semver: "npm:^7.7.1"
     simple-git: "npm:^3.22.0"
     tsx: "npm:^4.19.2"
     typescript: "npm:^5.2.2"
