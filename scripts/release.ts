@@ -59,6 +59,7 @@ const getCommits = async (branch: string) => {
   if (latestTag) {
     logOptions.push(`${latestTag}..origin/${branch}`)
   } else {
+    // For first release, get all commits from the branch
     logOptions.push('origin/' + branch)
   }
 
@@ -103,7 +104,8 @@ type WebReleaseType = Extract<semver.ReleaseType, 'minor' | 'patch'>
 
 const getNextReleaseVersion = async (versionBump: WebReleaseType): Promise<string> => {
   const latestTag = await getLatestSemverTag()
-  const nextVersion = semver.inc(latestTag, versionBump)
+  const baseVersion = latestTag || 'v1.0.0'
+  const nextVersion = semver.inc(baseVersion, versionBump)
   if (!nextVersion) exit(chalk.red(`Could not bump version to ${nextVersion}`))
   return `v${nextVersion}`
 }

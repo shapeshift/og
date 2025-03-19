@@ -12,13 +12,13 @@ export const exit = (reason: string): never => {
   process.exit(1)
 }
 
-export const getLatestSemverTag = async (): Promise<string> => {
+export const getLatestSemverTag = async (): Promise<string | null> => {
   const { all } = await git().tags()
   const tags = all.map(tag => tag.replace('refs/tags/', ''))
   const semverTags = tags.filter(tag => semver.valid(tag))
   if (!semverTags.length) {
     console.log(chalk.yellow('No semver tags found. Starting from v1.0.0'))
-    return 'v1.0.0'
+    return null
   }
   return semverTags.sort(semver.rcompare)[0]
 }
