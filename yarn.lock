@@ -3127,6 +3127,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/pify@npm:^6.1.0":
+  version: 6.1.0
+  resolution: "@types/pify@npm:6.1.0"
+  dependencies:
+    pify: "npm:*"
+  checksum: 10c0/3b3460b207701d5ab3beafcbf8188988515982cd9c01c95ae8b70edf36e7b37ea9cca7cd44035e32e80189e100320497e999372c4de9b2376842df593aa9c331
+  languageName: node
+  linkType: hard
+
 "@types/prop-types@npm:*":
   version: 15.7.11
   resolution: "@types/prop-types@npm:15.7.11"
@@ -7517,6 +7526,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"pify@npm:*, pify@npm:^6.1.0":
+  version: 6.1.0
+  resolution: "pify@npm:6.1.0"
+  checksum: 10c0/5744905e271d821ce1c96a615aecc857bfc0154a2f55cfd773e0a27478c1e1457dd69c932f2196cfa0d298cc4a2847edaf42b1ba600b95022ba5225c079443a6
+  languageName: node
+  linkType: hard
+
 "pkg-types@npm:^1.0.3":
   version: 1.0.3
   resolution: "pkg-types@npm:1.0.3"
@@ -8281,6 +8297,7 @@ __metadata:
     "@types/mixpanel-browser": "npm:^2.48.1"
     "@types/multicoin-address-validator": "npm:^0"
     "@types/node": "npm:^20.10.7"
+    "@types/pify": "npm:^6.1.0"
     "@types/qrcode": "npm:^1.5.5"
     "@types/react": "npm:^18.2.43"
     "@types/react-dom": "npm:^18.2.17"
@@ -8306,6 +8323,7 @@ __metadata:
     match-sorter: "npm:^6.3.1"
     mixpanel-browser: "npm:^2.48.1"
     multicoin-address-validator: "npm:^0.5.24"
+    pify: "npm:^6.1.0"
     prettier: "npm:^3.1.1"
     qrcode: "npm:^1.5.4"
     react: "npm:^18.2.0"
