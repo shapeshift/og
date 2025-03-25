@@ -302,6 +302,7 @@ const PendingSwapCardBody = ({
 
 export const Status = () => {
   const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
 
   const swapId = searchParams.get('swapId')
   const { data: swapStatus, isLoading: isStatusLoading } = useChainflipStatusQuery({
@@ -374,6 +375,8 @@ export const Status = () => {
       copyDepositAddress()
     }
   }, [copyDepositAddress, swapData.address])
+
+  const handleCancel = useCallback(() => navigate('/'), [navigate])
 
   const handleCopyReceiveAddress = useCallback(() => {
     if (destinationAddress) {
@@ -526,6 +529,9 @@ export const Status = () => {
             </Flex>
           </Flex>
         </Stack>
+        <Button width='100%' variant='solid' onClick={handleCancel} mt={2}>
+          Cancel
+        </Button>
       </CardFooter>
     </Card>
   )
