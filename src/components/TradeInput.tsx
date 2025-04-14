@@ -9,6 +9,8 @@ import {
   HStack,
   IconButton,
   Input,
+  InputGroup,
+  InputRightElement,
   Link,
   Skeleton,
   StackDivider,
@@ -41,10 +43,13 @@ import { AssetIcon } from './AssetIcon'
 import { AssetSelectModal } from './AssetSelectModal/AssetSelectModal'
 import { AssetType } from './AssetSelectModal/types'
 import { CountdownSpinner } from './CountdownSpinner/CountdownSpinner'
+import { QRCodeIcon } from './QRCodeIcon'
+import { QrCodeScanner } from './QrCodeScanner'
 
 const QUOTE_REFETCH_INTERVAL = 15_000
 
 const divider = <StackDivider borderColor='border.base' />
+const qrCodeIcon = <QRCodeIcon />
 
 const skeletonInputSx = {
   bg: 'background.surface.raised.base',
@@ -77,6 +82,10 @@ export const TradeInput = () => {
   const [sellAmountFiatInput, setSellAmountFiatInput] = useState('')
   const debouncedSellAmount = useDebounce(sellAmountInput, 500)
   const debouncedSellAmountFiat = useDebounce(sellAmountFiatInput, 500)
+  const [isQrScannerOpen, setIsQrScannerOpen] = useState(false)
+  const [activeAddressField, setActiveAddressField] = useState<
+    'destinationAddress' | 'refundAddress' | null
+  >(null)
 
   useEffect(() => {
     trigger(['destinationAddress', 'refundAddress'])
@@ -446,6 +455,34 @@ export const TradeInput = () => {
     return buyAmountCryptoPrecision
   }, [buyAmountCryptoPrecision, debouncedSellAmount, debouncedSellAmountFiat, isFiat, quoteError])
 
+  const handleQrButtonClick = useCallback((field: 'destinationAddress' | 'refundAddress') => {
+    setActiveAddressField(field)
+    setIsQrScannerOpen(true)
+  }, [])
+
+  const handleDestinationAddressQrClick = useCallback(
+    () => handleQrButtonClick('destinationAddress'),
+    [handleQrButtonClick],
+  )
+  const handleRefundAddressQrClick = useCallback(
+    () => handleQrButtonClick('refundAddress'),
+    [handleQrButtonClick],
+  )
+
+  const handleQrScannerClose = useCallback(() => {
+    setIsQrScannerOpen(false)
+    setActiveAddressField(null)
+  }, [])
+
+  const handleQrScannerSuccess = useCallback(
+    (address: string) => {
+      if (activeAddressField) {
+        setValue(activeAddressField, address, { shouldValidate: true })
+      }
+    },
+    [activeAddressField, setValue],
+  )
+
   if (!(sellAsset && buyAsset)) return null
 
   return (
@@ -654,13 +691,24 @@ export const TradeInput = () => {
             <Text fontSize='sm' color='text.subtle'>
               Destination Address
             </Text>
-            <Input
-              {...register('destinationAddress', destinationAddressRules)}
-              placeholder={`Enter ${buyAsset.symbol || ''} address`}
-              isInvalid={!!errors.destinationAddress}
-              required
-              title='Please enter a valid destination address'
-            />
+            <InputGroup>
+              <Input
+                {...register('destinationAddress', destinationAddressRules)}
+                placeholder={`Enter ${buyAsset.symbol || ''} address`}
+                isInvalid={!!errors.destinationAddress}
+                required
+                title='Please enter a valid destination address'
+              />
+              <InputRightElement>
+                <IconButton
+                  aria-label='Scan QR Code'
+                  icon={qrCodeIcon}
+                  onClick={handleDestinationAddressQrClick}
+                  size='sm'
+                  variant='ghost'
+                />
+              </InputRightElement>
+            </InputGroup>
             {errors.destinationAddress && (
               <Text fontSize='sm' color='red.500'>
                 {errors.destinationAddress.message}
@@ -671,13 +719,24 @@ export const TradeInput = () => {
             <Text fontSize='sm' color='text.subtle'>
               Refund Address
             </Text>
-            <Input
-              {...register('refundAddress', refundAddressRules)}
-              placeholder={`Enter ${sellAsset.symbol || ''} address`}
-              isInvalid={!!errors.refundAddress}
-              required
-              title='Please enter a valid refund address'
-            />
+            <InputGroup>
+              <Input
+                {...register('refundAddress', refundAddressRules)}
+                placeholder={`Enter ${sellAsset.symbol || ''} address`}
+                isInvalid={!!errors.refundAddress}
+                required
+                title='Please enter a valid refund address'
+              />
+              <InputRightElement>
+                <IconButton
+                  aria-label='Scan QR Code'
+                  icon={qrCodeIcon}
+                  onClick={handleRefundAddressQrClick}
+                  size='sm'
+                  variant='ghost'
+                />
+              </InputRightElement>
+            </InputGroup>
             {errors.refundAddress && (
               <Text fontSize='sm' color='red.500'>
                 {errors.refundAddress.message}
@@ -700,6 +759,11 @@ export const TradeInput = () => {
         </CardFooter>
       </Card>
       <AssetSelectModal isOpen={isOpen} onClose={onClose} onClick={handleAssetSelect} />
+      <QrCodeScanner
+        isOpen={isQrScannerOpen}
+        onClose={handleQrScannerClose}
+        onSuccess={handleQrScannerSuccess}
+      />
     </>
   )
 }
