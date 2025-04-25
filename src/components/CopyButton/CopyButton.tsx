@@ -7,9 +7,10 @@ const copyIcon = <CopyIcon />
 type CopyButtonProps = {
   text: string
   timeout?: number
+  ariaLabel?: string
 }
 
-export const CopyButton = ({ text, timeout = 3000 }: CopyButtonProps) => {
+export const CopyButton = ({ text, timeout = 3000, ariaLabel }: CopyButtonProps) => {
   const { onCopy, hasCopied: isCopied } = useClipboard(text, { timeout })
 
   return (
@@ -18,7 +19,7 @@ export const CopyButton = ({ text, timeout = 3000 }: CopyButtonProps) => {
       size='sm'
       variant='ghost'
       icon={isCopied ? checkIcon : copyIcon}
-      aria-label='Copy address'
+      aria-label={ariaLabel ?? 'Copy button'}
       onClick={onCopy}
     />
   )
