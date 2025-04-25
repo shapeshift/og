@@ -38,6 +38,7 @@ import { FaArrowUpRightFromSquare, FaCheck, FaRegCopy } from 'react-icons/fa6'
 import { useNavigate, useSearchParams } from 'react-router'
 import { useAssetById } from 'store/assets'
 import { Amount } from 'components/Amount/Amount'
+import { CopyButton } from 'components/CopyButton/CopyButton'
 import { QRCode } from 'components/QRCode/QRCode'
 import { bnOrZero, fromBaseUnit } from 'lib/bignumber/bignumber'
 import { mixpanel, MixPanelEvent } from 'lib/mixpanel'
@@ -129,7 +130,10 @@ const IdleSwapCardBody = ({
           <Flex alignItems='center' gap={2}>
             <AssetIcon assetId={sellAssetId} size='sm' />
             <VStack spacing={0} alignItems='flex-start'>
-              <Amount.Crypto value={sellAmountCryptoPrecision} symbol={sellAsset.symbol} />
+              <Flex alignItems='center' gap={1}>
+                <Amount.Crypto value={sellAmountCryptoPrecision} symbol={sellAsset.symbol} />
+                <CopyButton text={sellAmountCryptoPrecision} />
+              </Flex>
               {sellAsset.relatedAssetKey && (
                 <Text fontSize='xs' color='text.subtle'>
                   on {sellAsset.networkName}
