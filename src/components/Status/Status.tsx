@@ -11,7 +11,6 @@ import {
   Circle,
   Divider,
   Flex,
-  IconButton,
   Input,
   InputGroup,
   InputRightElement,
@@ -20,7 +19,6 @@ import {
   Stack,
   Tag,
   Text,
-  useClipboard,
   VStack,
 } from '@chakra-ui/react'
 import type { AssetId } from '@shapeshiftoss/caip'
@@ -34,10 +32,11 @@ import type { ChainflipSwapStatus } from 'queries/chainflip/types'
 import { useMarketDataByAssetIdQuery } from 'queries/marketData'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { useFormContext, useWatch } from 'react-hook-form'
-import { FaArrowUpRightFromSquare, FaCheck, FaRegCopy } from 'react-icons/fa6'
+import { FaArrowUpRightFromSquare } from 'react-icons/fa6'
 import { useNavigate, useSearchParams } from 'react-router'
 import { useAssetById } from 'store/assets'
 import { Amount } from 'components/Amount/Amount'
+import { CopyButton } from 'components/CopyButton/CopyButton'
 import { QRCode } from 'components/QRCode/QRCode'
 import { bnOrZero, fromBaseUnit } from 'lib/bignumber/bignumber'
 import { mixpanel, MixPanelEvent } from 'lib/mixpanel'
@@ -51,9 +50,6 @@ const CHAINFLIP_EXPLORER_BASE_URL = import.meta.env.VITE_CHAINFLIP_EXPLORER_BASE
 
 dayjs.extend(duration)
 dayjs.extend(relativeTime)
-
-const copyIcon = <FaRegCopy />
-const checkIcon = <FaCheck />
 
 const pendingSlideFadeSx = { position: 'absolute', top: 0, left: 0, right: 0 } as const
 const linkHoverSx = { color: 'blue.600' }
@@ -74,8 +70,6 @@ const IdleSwapCardBody = ({
   buyAssetId,
   sellAmountCryptoPrecision,
   buyAmountCryptoPrecision,
-  handleCopyDepositAddress,
-  isDepositAddressCopied,
   estimatedExpiryTime,
   isStatusLoading,
   isExpired,
@@ -85,8 +79,6 @@ const IdleSwapCardBody = ({
   buyAssetId: AssetId
   sellAmountCryptoPrecision: string
   buyAmountCryptoPrecision: string
-  handleCopyDepositAddress: () => void
-  isDepositAddressCopied: boolean
   estimatedExpiryTime?: string
   isStatusLoading: boolean
   isExpired?: boolean
@@ -129,7 +121,10 @@ const IdleSwapCardBody = ({
           <Flex alignItems='center' gap={2}>
             <AssetIcon assetId={sellAssetId} size='sm' />
             <VStack spacing={0} alignItems='flex-start'>
-              <Amount.Crypto value={sellAmountCryptoPrecision} symbol={sellAsset.symbol} />
+              <Flex alignItems='center' gap={1}>
+                <Amount.Crypto value={sellAmountCryptoPrecision} symbol={sellAsset.symbol} />
+                <CopyButton text={sellAmountCryptoPrecision} />
+              </Flex>
               {sellAsset.relatedAssetKey && (
                 <Text fontSize='xs' color='text.subtle'>
                   on {sellAsset.networkName}
@@ -144,14 +139,7 @@ const IdleSwapCardBody = ({
             <InputGroup>
               <Input isReadOnly value={swapData.address || ''} />
               <InputRightElement>
-                <IconButton
-                  borderRadius='lg'
-                  size='sm'
-                  variant='ghost'
-                  icon={isDepositAddressCopied ? checkIcon : copyIcon}
-                  aria-label='Copy address'
-                  onClick={handleCopyDepositAddress}
-                />
+                <CopyButton text={swapData.address} ariaLabel='Copy address' />
               </InputRightElement>
             </InputGroup>
           </Stack>
@@ -357,38 +345,7 @@ export const Status = () => {
     return fromBaseUnit(quote.egressAmountNative, buyAsset.precision)
   }, [quote?.egressAmountNative, buyAsset?.precision])
 
-  const { onCopy: copyDepositAddress, hasCopied: isDepositAddressCopied } = useClipboard(
-    swapData.address || '',
-    { timeout: 3000 },
-  )
-  const { onCopy: copyReceiveAddress, hasCopied: isReceiveAddressCopied } = useClipboard(
-    destinationAddress || '',
-    { timeout: 3000 },
-  )
-  const { onCopy: copyRefundAddress, hasCopied: isRefundAddressCopied } = useClipboard(
-    refundAddress || '',
-    { timeout: 3000 },
-  )
-
-  const handleCopyDepositAddress = useCallback(() => {
-    if (swapData.address) {
-      copyDepositAddress()
-    }
-  }, [copyDepositAddress, swapData.address])
-
   const handleCancel = useCallback(() => navigate('/'), [navigate])
-
-  const handleCopyReceiveAddress = useCallback(() => {
-    if (destinationAddress) {
-      copyReceiveAddress()
-    }
-  }, [copyReceiveAddress, destinationAddress])
-
-  const handleCopyRefundAddress = useCallback(() => {
-    if (refundAddress) {
-      copyRefundAddress()
-    }
-  }, [copyRefundAddress, refundAddress])
 
   if (!(sellAssetId && buyAssetId)) return null
   if (!(sellAsset && buyAsset)) return null
@@ -421,8 +378,6 @@ export const Status = () => {
             buyAssetId={buyAssetId}
             sellAmountCryptoPrecision={sellAmountCryptoPrecision}
             buyAmountCryptoPrecision={buyAmountCryptoPrecision}
-            handleCopyDepositAddress={handleCopyDepositAddress}
-            isDepositAddressCopied={isDepositAddressCopied}
             estimatedExpiryTime={swapStatus?.status.depositChannel?.estimatedExpiryTime}
             isStatusLoading={isStatusLoading}
             isExpired={swapStatus?.status.depositChannel?.isExpired}
@@ -472,14 +427,7 @@ export const Status = () => {
           <InputGroup>
             <Input isReadOnly value={refundAddress} />
             <InputRightElement>
-              <IconButton
-                borderRadius='lg'
-                size='sm'
-                variant='ghost'
-                icon={isRefundAddressCopied ? checkIcon : copyIcon}
-                aria-label='Copy refund address'
-                onClick={handleCopyRefundAddress}
-              />
+              <CopyButton text={refundAddress} ariaLabel='Copy refund address' />
             </InputRightElement>
           </InputGroup>
         </Stack>
@@ -493,14 +441,7 @@ export const Status = () => {
           <InputGroup>
             <Input isReadOnly value={destinationAddress} />
             <InputRightElement>
-              <IconButton
-                borderRadius='lg'
-                size='sm'
-                variant='ghost'
-                icon={isReceiveAddressCopied ? checkIcon : copyIcon}
-                aria-label='Copy receive address'
-                onClick={handleCopyReceiveAddress}
-              />
+              <CopyButton text={destinationAddress} ariaLabel='Copy receive address' />
             </InputRightElement>
           </InputGroup>
         </Stack>
