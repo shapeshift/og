@@ -13,7 +13,6 @@ on:
 jobs:
   install-and-cache:
     name: Install Lint Type-check
-    container: node:20-bullseye
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
