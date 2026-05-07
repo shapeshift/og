@@ -149,11 +149,17 @@ const IdleSwapCardBody = ({
   return (
     <CardBody
       display='flex'
+      // eslint-disable-next-line react-memo/require-usememo
       flexDir={{ base: 'column-reverse', md: 'row-reverse' }}
       gap={6}
       px={4}
     >
-      <Flex flexDir='column' gap={4} alignItems={{ base: 'center', md: 'stretch' }}>
+      <Flex
+        flexDir='column'
+        gap={4}
+        // eslint-disable-next-line react-memo/require-usememo
+        alignItems={{ base: 'center', md: 'stretch' }}
+      >
         {!isExpired && (
           <Box bg='white' p={4} borderRadius='xl'>
             <QRCode content={swapData.address || ''} width={150} icon={qrCodeIcon} />
@@ -200,6 +206,7 @@ const IdleSwapCardBody = ({
             <Text color='text.subtle'>To</Text>
             <AddressInput
               address={swapData.address || ''}
+              // eslint-disable-next-line react-memo/require-usememo
               minTruncationLength={{ base: 16, md: 23 }}
               ariaLabel='Copy address'
             />
@@ -487,6 +494,7 @@ export const Status = () => {
           </Flex>
           <AddressInput
             address={refundAddress}
+            // eslint-disable-next-line react-memo/require-usememo
             minTruncationLength={{ base: 16, md: 44 }}
             ariaLabel='Copy refund address'
           />
@@ -500,6 +508,7 @@ export const Status = () => {
           </Flex>
           <AddressInput
             address={destinationAddress}
+            // eslint-disable-next-line react-memo/require-usememo
             minTruncationLength={{ base: 16, md: 44 }}
             ariaLabel='Copy receive address'
           />

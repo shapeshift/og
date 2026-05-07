@@ -57,6 +57,8 @@ const skeletonInputSx = {
   _focus: { bg: 'background.surface.raised.base' },
 }
 
+const placeholderSx = { fontFamily: 'body' }
+
 export const TradeInput = () => {
   const navigate = useNavigate()
   const {
@@ -699,6 +701,7 @@ export const TradeInput = () => {
                 required
                 title='Please enter a valid destination address'
                 fontFamily='mono'
+                _placeholder={placeholderSx}
               />
               <InputRightElement>
                 <IconButton
@@ -728,6 +731,7 @@ export const TradeInput = () => {
                 required
                 title='Please enter a valid refund address'
                 fontFamily='mono'
+                _placeholder={placeholderSx}
               />
               <InputRightElement>
                 <IconButton
