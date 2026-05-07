@@ -79,15 +79,14 @@ const AddressInput = ({
   const resolvedMinTruncationLength =
     useBreakpointValue(
       typeof minTruncationLength === 'number' ? { base: minTruncationLength } : minTruncationLength,
-    ) ?? (typeof minTruncationLength === 'number' ? minTruncationLength : 0)
+    ) ?? (typeof minTruncationLength === 'number' ? minTruncationLength : address.length)
 
   const visibleChars = Math.max(0, resolvedMinTruncationLength - 1)
   const headLength = Math.ceil((visibleChars * 4) / 7)
   const tailLength = visibleChars - headLength
   const canTruncate = address.length > resolvedMinTruncationLength
-  const truncated = canTruncate
-    ? `${address.slice(0, headLength)}…${address.slice(-tailLength)}`
-    : address
+  const tail = tailLength > 0 ? address.slice(-tailLength) : ''
+  const truncated = canTruncate ? `${address.slice(0, headLength)}…${tail}` : address
 
   return (
     <Flex
@@ -493,7 +492,7 @@ export const Status = () => {
             </Flex>
           </Flex>
           <AddressInput
-            address={refundAddress}
+            address={refundAddress ?? ''}
             // eslint-disable-next-line react-memo/require-usememo
             minTruncationLength={{ base: 16, md: 44 }}
             ariaLabel='Copy refund address'
@@ -507,7 +506,7 @@ export const Status = () => {
             </Flex>
           </Flex>
           <AddressInput
-            address={destinationAddress}
+            address={destinationAddress ?? ''}
             // eslint-disable-next-line react-memo/require-usememo
             minTruncationLength={{ base: 16, md: 44 }}
             ariaLabel='Copy receive address'
