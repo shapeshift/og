@@ -1,3 +1,4 @@
+import { ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons'
 import {
   Alert,
   AlertIcon,
@@ -11,14 +12,13 @@ import {
   Circle,
   Divider,
   Flex,
-  Input,
-  InputGroup,
-  InputRightElement,
+  IconButton,
   Link,
   SlideFade,
   Stack,
   Tag,
   Text,
+  useBreakpointValue,
   VStack,
 } from '@chakra-ui/react'
 import type { AssetId } from '@shapeshiftoss/caip'
@@ -30,7 +30,7 @@ import { useChainflipQuoteQuery } from 'queries/chainflip/quote'
 import { useChainflipStatusQuery } from 'queries/chainflip/status'
 import type { ChainflipSwapStatus } from 'queries/chainflip/types'
 import { useMarketDataByAssetIdQuery } from 'queries/marketData'
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useFormContext, useWatch } from 'react-hook-form'
 import { FaArrowUpRightFromSquare } from 'react-icons/fa6'
 import { useNavigate, useSearchParams } from 'react-router'
@@ -64,6 +64,63 @@ const cardHeaderSx = {
   py: 2,
 }
 
+const AddressInput = ({
+  address,
+  ariaLabel,
+  minTruncationLength,
+}: {
+  address: string
+  ariaLabel: string
+  minTruncationLength: number | Partial<Record<'base' | 'sm' | 'md' | 'lg' | 'xl', number>>
+}) => {
+  const [isExpanded, setIsExpanded] = useState(false)
+  const handleToggle = useCallback(() => setIsExpanded(prev => !prev), [])
+
+  const resolvedMinTruncationLength =
+    useBreakpointValue(
+      typeof minTruncationLength === 'number' ? { base: minTruncationLength } : minTruncationLength,
+    ) ?? (typeof minTruncationLength === 'number' ? minTruncationLength : 0)
+
+  const visibleChars = Math.max(0, resolvedMinTruncationLength - 1)
+  const headLength = Math.ceil((visibleChars * 4) / 7)
+  const tailLength = visibleChars - headLength
+  const canTruncate = address.length > resolvedMinTruncationLength
+  const truncated = canTruncate
+    ? `${address.slice(0, headLength)}…${address.slice(-tailLength)}`
+    : address
+
+  return (
+    <Flex
+      alignItems='center'
+      bg='background.input.base'
+      borderWidth={2}
+      borderColor='border.input'
+      borderRadius='xl'
+      px={4}
+    >
+      {isExpanded ? (
+        <Text flex={1} py={2} wordBreak='break-all' fontFamily='mono'>
+          {address}
+        </Text>
+      ) : (
+        <Text flex={1} py={2} whiteSpace='nowrap' fontFamily='mono'>
+          {truncated}
+        </Text>
+      )}
+      {canTruncate && (
+        <IconButton
+          size='sm'
+          variant='ghost'
+          aria-label={isExpanded ? 'Collapse address' : 'Expand address'}
+          icon={isExpanded ? <ChevronUpIcon /> : <ChevronDownIcon />}
+          onClick={handleToggle}
+        />
+      )}
+      <CopyButton text={address} ariaLabel={ariaLabel} />
+    </Flex>
+  )
+}
+
 const IdleSwapCardBody = ({
   swapData,
   sellAssetId,
@@ -90,8 +147,13 @@ const IdleSwapCardBody = ({
   if (!(sellAsset && buyAsset)) return null
 
   return (
-    <CardBody display='flex' flexDir='row-reverse' gap={6} px={4}>
-      <Flex flexDir='column' gap={4}>
+    <CardBody
+      display='flex'
+      flexDir={{ base: 'column-reverse', md: 'row-reverse' }}
+      gap={6}
+      px={4}
+    >
+      <Flex flexDir='column' gap={4} alignItems={{ base: 'center', md: 'stretch' }}>
         {!isExpired && (
           <Box bg='white' p={4} borderRadius='xl'>
             <QRCode content={swapData.address || ''} width={150} icon={qrCodeIcon} />
@@ -136,12 +198,11 @@ const IdleSwapCardBody = ({
         {!isExpired && (
           <Stack>
             <Text color='text.subtle'>To</Text>
-            <InputGroup>
-              <Input isReadOnly value={swapData.address || ''} />
-              <InputRightElement>
-                <CopyButton text={swapData.address} ariaLabel='Copy address' />
-              </InputRightElement>
-            </InputGroup>
+            <AddressInput
+              address={swapData.address || ''}
+              minTruncationLength={{ base: 16, md: 23 }}
+              ariaLabel='Copy address'
+            />
           </Stack>
         )}
         <Divider borderColor='border.base' />
@@ -351,7 +412,7 @@ export const Status = () => {
   if (!(sellAsset && buyAsset)) return null
 
   return (
-    <Card width='full' maxW='465px'>
+    <Card width='full' maxW='560px'>
       <CardHeader {...cardHeaderSx}>
         <Text color='text.subtle'>Channel ID:</Text>
         {swapData.channelId && (
@@ -424,12 +485,11 @@ export const Status = () => {
               <Text color='text.subtle'>Refund Address</Text>
             </Flex>
           </Flex>
-          <InputGroup>
-            <Input isReadOnly value={refundAddress} />
-            <InputRightElement>
-              <CopyButton text={refundAddress} ariaLabel='Copy refund address' />
-            </InputRightElement>
-          </InputGroup>
+          <AddressInput
+            address={refundAddress}
+            minTruncationLength={{ base: 16, md: 44 }}
+            ariaLabel='Copy refund address'
+          />
         </Stack>
         <Stack>
           <Flex width='full' justifyContent='space-between'>
@@ -438,12 +498,11 @@ export const Status = () => {
               <Text color='text.subtle'>Receive Address</Text>
             </Flex>
           </Flex>
-          <InputGroup>
-            <Input isReadOnly value={destinationAddress} />
-            <InputRightElement>
-              <CopyButton text={destinationAddress} ariaLabel='Copy receive address' />
-            </InputRightElement>
-          </InputGroup>
+          <AddressInput
+            address={destinationAddress}
+            minTruncationLength={{ base: 16, md: 44 }}
+            ariaLabel='Copy receive address'
+          />
         </Stack>
         <Divider borderColor='border.base' />
         <Stack spacing={2}>

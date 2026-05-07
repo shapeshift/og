@@ -40,7 +40,7 @@ const motionWrapperSx = {
 
 const swapperWrapperSx = {
   ...motionWrapperSx,
-  maxWidth: '450px',
+  maxWidth: '560px',
 }
 
 const chatwootBoxProps = {

@@ -79,7 +79,7 @@ export const SelectPair = () => {
   }, [sellAssetId, buyAssetId, setValue])
 
   return (
-    <Card width='full' maxWidth='450px'>
+    <Card width='full' maxWidth='560px'>
       <CardBody display='flex' flexDir='column' gap={8}>
         <Heading as='h4' fontSize='md' textAlign='center'>
           Choose which assets to trade
