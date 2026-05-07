@@ -50,8 +50,9 @@ export const StatusStepper = ({
     <Flex
       bg='background.surface.raised.base'
       px={4}
+      py={4}
       flexDir='column'
-      gap={4}
+      justifyContent='center'
       borderBottomWidth={1}
       borderColor='border.base'
     >
@@ -63,7 +64,6 @@ export const StatusStepper = ({
         colorScheme={colorScheme}
         bg='gray.100'
         borderRadius='full'
-        mb={4}
       />
       <Flex gap={4} justify='space-between'></Flex>
     </Flex>

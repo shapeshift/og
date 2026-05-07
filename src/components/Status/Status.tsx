@@ -95,27 +95,28 @@ const AddressInput = ({
       borderWidth={2}
       borderColor='border.input'
       borderRadius='xl'
-      px={4}
     >
       {isExpanded ? (
-        <Text flex={1} py={2} wordBreak='break-all' fontFamily='mono'>
+        <Text flex={1} py={2} pl={4} wordBreak='break-all' fontFamily='mono' minWidth={0}>
           {address}
         </Text>
       ) : (
-        <Text flex={1} py={2} whiteSpace='nowrap' fontFamily='mono'>
+        <Text flex={1} py={2} pl={4} whiteSpace='nowrap' fontFamily='mono' minWidth={0}>
           {truncated}
         </Text>
       )}
-      {canTruncate && (
-        <IconButton
-          size='sm'
-          variant='ghost'
-          aria-label={isExpanded ? 'Collapse address' : 'Expand address'}
-          icon={isExpanded ? <ChevronUpIcon /> : <ChevronDownIcon />}
-          onClick={handleToggle}
-        />
-      )}
-      <CopyButton text={address} ariaLabel={ariaLabel} />
+      <Flex alignItems='center' flexShrink={0}>
+        {canTruncate && (
+          <IconButton
+            size='sm'
+            variant='ghost'
+            aria-label={isExpanded ? 'Collapse address' : 'Expand address'}
+            icon={isExpanded ? <ChevronUpIcon /> : <ChevronDownIcon />}
+            onClick={handleToggle}
+          />
+        )}
+        <CopyButton text={address} ariaLabel={ariaLabel} />
+      </Flex>
     </Flex>
   )
 }
@@ -151,7 +152,6 @@ const IdleSwapCardBody = ({
       // eslint-disable-next-line react-memo/require-usememo
       flexDir={{ base: 'column-reverse', md: 'row-reverse' }}
       gap={6}
-      px={4}
     >
       <Flex
         flexDir='column'
@@ -182,7 +182,7 @@ const IdleSwapCardBody = ({
           })()}
         </Tag>
       </Flex>
-      <Stack spacing={4} flex={1}>
+      <Stack spacing={4} flex={1} minWidth={0}>
         <Stack>
           <Text color='text.subtle'>Send</Text>
           <Flex alignItems='center' gap={2}>
@@ -215,7 +215,7 @@ const IdleSwapCardBody = ({
         <Stack>
           <Text color='text.subtle'>You will receive</Text>
           <Flex gap={2} alignItems='center'>
-            <AssetIcon assetId={buyAssetId} size='xs' />
+            <AssetIcon assetId={buyAssetId} size='sm' />
             <VStack spacing={0} alignItems='flex-start'>
               <Amount.Crypto value={buyAmountCryptoPrecision || '0'} symbol={buyAsset.symbol} />
               {buyAsset.relatedAssetKey && (
@@ -451,8 +451,8 @@ export const Status = () => {
           />
         </SlideFade>
         {!swapStatus?.status.depositChannel?.isExpired && !shouldDisplayPendingSwapBody && (
-          <Center>
-            <Alert status='info' mb={6} width='95%' borderRadius='lg'>
+          <Center px={6}>
+            <Alert status='info' mb={6} borderRadius='lg'>
               <AlertIcon boxSize={5} />
               <Text fontSize='sm'>
                 Send {sellAmountCryptoPrecision} {sellAsset.symbol} from any wallet to the address
@@ -479,15 +479,15 @@ export const Status = () => {
       <CardFooter
         flexDir='column'
         gap={4}
-        px={4}
+        px={6}
         bg='background.surface.raised.base'
         borderBottomRadius='xl'
       >
         <Text fontWeight='bold'>Order Details</Text>
-        <Stack>
+        <Stack spacing={4}>
           <Flex width='full' justifyContent='space-between'>
             <Flex alignItems='center' gap={2}>
-              <AssetIcon assetId={sellAssetId} size='xs' />
+              <AssetIcon assetId={sellAssetId} size='sm' />
               <Text color='text.subtle'>Refund Address</Text>
             </Flex>
           </Flex>
@@ -498,10 +498,10 @@ export const Status = () => {
             ariaLabel='Copy refund address'
           />
         </Stack>
-        <Stack>
+        <Stack spacing={4}>
           <Flex width='full' justifyContent='space-between'>
             <Flex alignItems='center' gap={2}>
-              <AssetIcon assetId={buyAssetId} size='xs' />
+              <AssetIcon assetId={buyAssetId} size='sm' />
               <Text color='text.subtle'>Receive Address</Text>
             </Flex>
           </Flex>
