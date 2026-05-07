@@ -57,6 +57,8 @@ const skeletonInputSx = {
   _focus: { bg: 'background.surface.raised.base' },
 }
 
+const placeholderSx = { fontFamily: 'body' }
+
 export const TradeInput = () => {
   const navigate = useNavigate()
   const {
@@ -487,7 +489,7 @@ export const TradeInput = () => {
 
   return (
     <>
-      <Card width='full' maxWidth='450px' overflow='hidden' as='form' onSubmit={handleSubmit}>
+      <Card width='full' maxWidth='560px' overflow='hidden' as='form' onSubmit={handleSubmit}>
         <CardHeader px={0} py={0} bg='background.surface.raised.base'>
           <Flex
             fontSize='sm'
@@ -698,6 +700,8 @@ export const TradeInput = () => {
                 isInvalid={!!errors.destinationAddress}
                 required
                 title='Please enter a valid destination address'
+                fontFamily='mono'
+                _placeholder={placeholderSx}
               />
               <InputRightElement>
                 <IconButton
@@ -726,6 +730,8 @@ export const TradeInput = () => {
                 isInvalid={!!errors.refundAddress}
                 required
                 title='Please enter a valid refund address'
+                fontFamily='mono'
+                _placeholder={placeholderSx}
               />
               <InputRightElement>
                 <IconButton
