@@ -6,10 +6,12 @@ import {
   ethAssetId,
   flipAssetId,
   solAssetId,
+  trxAssetId,
   usdcAssetId,
   usdcOnArbitrumOneAssetId,
   usdcOnSolanaAssetId,
   usdtAssetId,
+  usdtOnTronAssetId,
 } from 'constants/caip'
 
 import { reactQueries } from '../react-queries'
@@ -28,6 +30,8 @@ const ASSET_ID_TO_COINGECKO_ID: Record<string, string> = {
   [usdcOnArbitrumOneAssetId]: 'usd-coin',
   [solAssetId]: 'solana',
   [usdcOnSolanaAssetId]: 'usd-coin',
+  [trxAssetId]: 'tron',
+  [usdtOnTronAssetId]: 'tether',
 }
 
 export const findByAssetId = async (assetId: string): Promise<MarketData | null> => {

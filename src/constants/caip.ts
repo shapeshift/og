@@ -26,11 +26,17 @@ export const baseChainId: ChainId = 'eip155:8453'
 
 export const solanaChainId: ChainId = 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp'
 
+export const tronChainId: ChainId = 'tron:0x2b6653dc'
+
+export const trxAssetId: AssetId = 'tron:0x2b6653dc/slip44:195'
+export const usdtOnTronAssetId: AssetId = 'tron:0x2b6653dc/trc20:TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t'
+
 export const CHAIN_NAMESPACE = {
   Evm: 'eip155',
   Utxo: 'bip122',
   CosmosSdk: 'cosmos',
   Solana: 'solana',
+  Tron: 'tron',
 } as const
 
 export const CHAIN_REFERENCE = {
@@ -48,6 +54,7 @@ export const ASSET_NAMESPACE = {
   erc1155: 'erc1155',
   slip44: 'slip44',
   splToken: 'token',
+  trc20: 'trc20',
 } as const
 
 export const ASSET_REFERENCE = {
@@ -55,6 +62,7 @@ export const ASSET_REFERENCE = {
   Ethereum: '60',
   Arbitrum: '60', // evm chain which uses ethereum derivation path as common practice
   Solana: '501',
+  Tron: '195',
 } as const
 
-export const FEE_ASSET_IDS = [ethAssetId, btcAssetId, arbitrumAssetId, solAssetId]
+export const FEE_ASSET_IDS = [ethAssetId, btcAssetId, arbitrumAssetId, solAssetId, trxAssetId]
