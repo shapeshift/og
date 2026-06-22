@@ -6,10 +6,12 @@ import {
   ethAssetId,
   flipAssetId,
   solAssetId,
+  trxAssetId,
   usdcAssetId,
   usdcOnArbitrumOneAssetId,
   usdcOnSolanaAssetId,
   usdtAssetId,
+  usdtOnTronAssetId,
 } from 'constants/caip'
 import mirror from 'lodash/invert'
 
@@ -27,6 +29,8 @@ const assetIdToChainflipId: Record<AssetId, string> = {
   [usdcAssetId]: 'usdc.eth',
   [usdcOnSolanaAssetId]: 'usdc.sol',
   [usdtAssetId]: 'usdt.eth',
+  [trxAssetId]: 'trx.tron',
+  [usdtOnTronAssetId]: 'usdt.tron',
 }
 
 // Map Chainflip internal asset IDs to CAIPs

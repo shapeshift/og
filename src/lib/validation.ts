@@ -1,13 +1,13 @@
 import { btcChainId } from '@shapeshiftoss/caip'
 import { PublicKey } from '@solana/web3.js'
-import { solanaChainId } from 'constants/caip'
+import { solanaChainId, tronChainId } from 'constants/caip'
 import debounce from 'lodash/debounce'
 import WAValidator from 'multicoin-address-validator'
 import { isAddress } from 'viem'
 
 import { isEvmChainId } from './utils'
 
-const isValidAddressSync = (address: string, chainId: string): boolean => {
+export const isValidAddressSync = (address: string, chainId: string): boolean => {
   if (!address) {
     return true
   }
@@ -28,6 +28,10 @@ const isValidAddressSync = (address: string, chainId: string): boolean => {
         }
       case btcChainId: {
         const isValid = WAValidator.validate(address, 'BTC')
+        return isValid
+      }
+      case tronChainId: {
+        const isValid = WAValidator.validate(address, 'TRX')
         return isValid
       }
       default:

@@ -153,6 +153,40 @@ export const initialAssets: Asset[] = [
       'https://rawcdn.githack.com/trustwallet/assets/master/blockchains/solana/info/logo.png',
     networkColor: '#9971d8',
   },
+  {
+    assetId: 'tron:0x2b6653dc/slip44:195',
+    chainId: 'tron:0x2b6653dc',
+    symbol: 'TRX',
+    name: 'Tron',
+    precision: 6,
+    color: '#EB0029',
+    icon: 'https://rawcdn.githack.com/trustwallet/assets/master/blockchains/tron/info/logo.png',
+    explorer: 'https://tronscan.org',
+    explorerAddressLink: 'https://tronscan.org/#/address/',
+    explorerTxLink: 'https://tronscan.org/#/transaction/',
+    relatedAssetKey: null,
+    networkName: 'Tron',
+    networkColor: '#EB0029',
+    networkIcon:
+      'https://rawcdn.githack.com/trustwallet/assets/master/blockchains/tron/info/logo.png',
+  },
+  {
+    assetId: 'tron:0x2b6653dc/trc20:TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t',
+    chainId: 'tron:0x2b6653dc',
+    symbol: 'USDT',
+    name: 'Tether',
+    precision: 6,
+    color: '#24A37B',
+    icon: 'https://rawcdn.githack.com/trustwallet/assets/master/blockchains/tron/assets/TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t/logo.png',
+    explorer: 'https://tronscan.org',
+    explorerAddressLink: 'https://tronscan.org/#/address/',
+    explorerTxLink: 'https://tronscan.org/#/transaction/',
+    relatedAssetKey: 'eip155:1/erc20:0xdac17f958d2ee523a2206206994597c13d831ec7',
+    networkName: 'Tron',
+    networkColor: '#EB0029',
+    networkIcon:
+      'https://rawcdn.githack.com/trustwallet/assets/master/blockchains/tron/info/logo.png',
+  },
 ]
 
 export const initialAssetsById = initialAssets.reduce<Record<AssetId, Asset>>((acc, asset) => {
