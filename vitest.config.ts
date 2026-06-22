@@ -12,14 +12,5 @@ export default defineConfig({
     environment: 'happy-dom',
     setupFiles: [],
     clearMocks: true,
-    poolOptions: {
-      isolate: false,
-      threads: {
-        singleThread: true,
-      },
-      forks: {
-        isolate: false,
-      },
-    },
   },
 })

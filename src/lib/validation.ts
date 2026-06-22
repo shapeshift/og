@@ -7,7 +7,7 @@ import { isAddress } from 'viem'
 
 import { isEvmChainId } from './utils'
 
-const isValidAddressSync = (address: string, chainId: string): boolean => {
+export const isValidAddressSync = (address: string, chainId: string): boolean => {
   if (!address) {
     return true
   }

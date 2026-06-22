@@ -1,4 +1,10 @@
-import { btcAssetId, ethAssetId, usdcOnSolanaAssetId } from 'constants/caip'
+import {
+  btcAssetId,
+  ethAssetId,
+  trxAssetId,
+  usdcOnSolanaAssetId,
+  usdtOnTronAssetId,
+} from 'constants/caip'
 import { describe, expect, it } from 'vitest'
 
 import { transformChainflipAssets } from './assets'
@@ -64,6 +70,44 @@ describe('transformChainflipAssets', () => {
     }
 
     expect(transformChainflipAssets(mockResponse)).toEqual([usdcOnSolanaAssetId])
+  })
+
+  it('should transform tron chainflip assets to assetIds', () => {
+    const mockResponse: ChainflipAssetsResponse = {
+      assets: [
+        {
+          id: 'trx.tron',
+          direction: 'both',
+          ticker: 'TRX',
+          name: 'Tron',
+          network: 'Tron',
+          networkLogo: '/networks/trx/logo.svg',
+          assetLogo: '/assets/trx.tron/logo.svg',
+          decimals: 6,
+          minimalAmount: 10,
+          minimalAmountNative: '10000000',
+          usdPrice: 0.27,
+          usdPriceNative: '270000',
+        },
+        {
+          id: 'usdt.tron',
+          direction: 'both',
+          ticker: 'USDT',
+          name: 'Tether',
+          network: 'Tron',
+          contractAddress: 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t',
+          networkLogo: '/networks/trx/logo.svg',
+          assetLogo: '/assets/usdt.tron/logo.svg',
+          decimals: 6,
+          minimalAmount: 10,
+          minimalAmountNative: '10000000',
+          usdPrice: 1.0001,
+          usdPriceNative: '1000100',
+        },
+      ],
+    }
+
+    expect(transformChainflipAssets(mockResponse)).toEqual([trxAssetId, usdtOnTronAssetId])
   })
 
   it('should return empty array for unsupported assets', () => {
