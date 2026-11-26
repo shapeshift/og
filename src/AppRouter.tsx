@@ -1,5 +1,4 @@
 import { Box, Center, Heading, Text } from '@chakra-ui/react'
-import { btcAssetId, ethAssetId } from 'constants/caip'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useMemo } from 'react'
 import { FormProvider, useForm, useWatch } from 'react-hook-form'
@@ -11,7 +10,11 @@ import { SelectPair } from 'components/SelectPair'
 import { Status } from 'components/Status/Status'
 import { TermsOfService } from 'components/TermsOfService'
 import { TradeInput } from 'components/TradeInput'
-import { bnOrZero } from 'lib/bignumber/bignumber'
+import {
+  getFormDefaultsFromSearchParams,
+  getFormValuesFromSearchParams,
+  isUrlExcludedField,
+} from 'lib/formUrlState'
 import type { SwapFormData } from 'types/form'
 
 const selectPair = <SelectPair />
@@ -107,19 +110,7 @@ export const AppRouter = () => {
   const isLegalPage =
     location.pathname === '/privacy-policy' || location.pathname === '/terms-of-service'
 
-  const defaultValues = useMemo(() => {
-    const sellAmountCryptoBaseUnit = searchParams.get('sellAmountCryptoBaseUnit')
-
-    return {
-      sellAssetId: searchParams.get('sellAssetId') || ethAssetId,
-      buyAssetId: searchParams.get('buyAssetId') || btcAssetId,
-      sellAmountCryptoBaseUnit: bnOrZero(sellAmountCryptoBaseUnit).gt(0)
-        ? sellAmountCryptoBaseUnit!
-        : undefined,
-      destinationAddress: searchParams.get('destinationAddress') || undefined,
-      refundAddress: searchParams.get('refundAddress') || undefined,
-    }
-  }, [searchParams])
+  const defaultValues = useMemo(() => getFormDefaultsFromSearchParams(searchParams), [searchParams])
 
   const methods = useForm<SwapFormData>({
     mode: 'all',
@@ -144,6 +135,11 @@ export const AppRouter = () => {
       }
     })
 
+    // Addresses never go in the URL: they must not be shareable or pre-filled by a link
+    Array.from(params.keys()).forEach(key => {
+      if (isUrlExcludedField(key)) params.delete(key)
+    })
+
     setSearchParams(params, { replace: true })
   }, [formValues, setSearchParams, searchParams, isLegalPage])
 
@@ -156,15 +152,12 @@ export const AppRouter = () => {
     const hasParams = Object.keys(currentParams).length > 0
 
     if (hasParams) {
-      const formData: Partial<SwapFormData> = {}
-      searchParams.forEach((value, key) => {
-        if (key in defaultValues) {
-          formData[key as keyof SwapFormData] = value
-        }
-      })
-      methods.reset(formData)
+      const formData = getFormValuesFromSearchParams(searchParams)
+      // Addresses are not URL-backed, so keep whatever the user typed in this session
+      const { destinationAddress, refundAddress } = methods.getValues()
+      methods.reset({ ...formData, destinationAddress, refundAddress })
     }
-  }, [searchParams, methods, defaultValues, isLegalPage])
+  }, [searchParams, methods, isLegalPage])
 
   return (
     <FormProvider {...methods}>

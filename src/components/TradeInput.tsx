@@ -34,6 +34,7 @@ import { useAssetById } from 'store/assets'
 import { useDebounce } from 'hooks/useDebounce'
 import { bn, bnOrZero, fromBaseUnit, toBaseUnit } from 'lib/bignumber/bignumber'
 import { mixpanel, MixPanelEvent } from 'lib/mixpanel'
+import { saveSwapSession } from 'lib/swapSession'
 import { isValidAddress } from 'lib/validation'
 import type { Asset } from 'types/Asset'
 import type { SwapFormData } from 'types/form'
@@ -167,22 +168,26 @@ export const TradeInput = () => {
   const SwitchIcon = useMemo(() => <FaArrowRightArrowLeft />, [])
 
   const { mutate: createSwap, isPending: isSwapPending } = useChainflipSwapMutation({
-    onSuccess: swapData => {
-      const formValues = watch()
-      const searchParams = new URLSearchParams()
-      Object.entries(formValues).forEach(([key, value]) => {
-        if (value) {
-          searchParams.set(key, String(value))
-        }
-      })
+    onSuccess: (swapData, variables) => {
+      const { sellAssetId, buyAssetId, sellAmountCryptoBaseUnit } = watch()
+      if (!(sellAssetId && buyAssetId && sellAmountCryptoBaseUnit)) return
 
-      searchParams.set('swapId', swapData.id.toString())
-      searchParams.set('channelId', swapData.channelId.toString())
-      searchParams.set('depositAddress', swapData.address)
+      // Deposit details live in this tab's session state only. The URL carries just the swapId,
+      // so deposit details are never read from a /status link.
+      saveSwapSession({
+        swapId: swapData.id,
+        channelId: swapData.channelId,
+        depositAddress: swapData.address,
+        sellAssetId,
+        buyAssetId,
+        sellAmountCryptoBaseUnit,
+        destinationAddress: variables.destinationAddress,
+        refundAddress: variables.refundAddress,
+      })
 
       navigate({
         pathname: '/status',
-        search: searchParams.toString(),
+        search: new URLSearchParams({ swapId: swapData.id.toString() }).toString(),
       })
     },
   })
