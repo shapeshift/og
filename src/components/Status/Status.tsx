@@ -15,6 +15,7 @@ import {
   IconButton,
   Link,
   SlideFade,
+  Spinner,
   Stack,
   Tag,
   Text,
@@ -443,13 +444,21 @@ export const Status = () => {
   // Any deposit address, channel, asset, amount or address in the URL is ignored.
   const swapSession = useMemo(() => getSwapSession(swapId), [swapId])
 
-  const { data: swapStatus, isLoading: isStatusLoading } = useChainflipStatusQuery({
+  const {
+    data: swapStatus,
+    isLoading: isStatusLoading,
+    isError: isStatusError,
+    isFetching: isStatusFetching,
+    refetch: refetchStatus,
+  } = useChainflipStatusQuery({
     swapId: Number(swapId),
     enabled: isValidSwapId,
   })
 
+  // Deposit details are only shown once a broker response for this swapId has been checked
+  // against the session. "No response yet" or "request failed" is not the same as "verified".
   const sessionMismatches = useMemo(() => {
-    if (!(swapSession && swapStatus?.status)) return []
+    if (!(swapSession && swapStatus?.status)) return
     const mismatches: string[] = getSwapSessionMismatches(swapSession, swapStatus.status)
     if (swapStatus.id !== undefined && Number(swapStatus.id) !== swapSession.swapId) {
       mismatches.push('swapId')
@@ -500,6 +509,7 @@ export const Status = () => {
   }, [quote?.egressAmountNative, buyAsset?.precision])
 
   const handleCancel = useCallback(() => navigate('/'), [navigate])
+  const handleRetryStatus = useCallback(() => refetchStatus(), [refetchStatus])
 
   if (!isValidSwapId) {
     return (
@@ -514,6 +524,34 @@ export const Status = () => {
 
   if (!swapSession) {
     return <BrokerOnlyStatus swapStatus={swapStatus} onDone={handleCancel} />
+  }
+
+  if (!sessionMismatches) {
+    if (isStatusError && !isStatusFetching) {
+      return (
+        <StatusMessageCard
+          status='error'
+          title='Swap details could not be verified yet'
+          description='Chainflip status is unavailable right now. Deposit details will be shown once Chainflip confirms this swap. Do not send any funds until then.'
+          onDone={handleCancel}
+        >
+          <Button variant='outline' onClick={handleRetryStatus}>
+            Retry
+          </Button>
+        </StatusMessageCard>
+      )
+    }
+
+    return (
+      <Card width='full' maxW='560px'>
+        <CardBody>
+          <VStack spacing={4} py={6}>
+            <Spinner size='lg' />
+            <Text color='text.subtle'>Verifying swap details with Chainflip…</Text>
+          </VStack>
+        </CardBody>
+      </Card>
+    )
   }
 
   if (sessionMismatches.length > 0) {

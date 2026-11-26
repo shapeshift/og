@@ -64,7 +64,6 @@ export const TradeInput = () => {
   const navigate = useNavigate()
   const {
     register,
-    watch,
     setValue,
     setError,
     clearErrors,
@@ -167,30 +166,7 @@ export const TradeInput = () => {
   const BuyAssetIcon = useMemo(() => <AssetIcon assetId={buyAssetId} size='sm' />, [buyAssetId])
   const SwitchIcon = useMemo(() => <FaArrowRightArrowLeft />, [])
 
-  const { mutate: createSwap, isPending: isSwapPending } = useChainflipSwapMutation({
-    onSuccess: (swapData, variables) => {
-      const { sellAssetId, buyAssetId, sellAmountCryptoBaseUnit } = watch()
-      if (!(sellAssetId && buyAssetId && sellAmountCryptoBaseUnit)) return
-
-      // Deposit details live in this tab's session state only. The URL carries just the swapId,
-      // so deposit details are never read from a /status link.
-      saveSwapSession({
-        swapId: swapData.id,
-        channelId: swapData.channelId,
-        depositAddress: swapData.address,
-        sellAssetId,
-        buyAssetId,
-        sellAmountCryptoBaseUnit,
-        destinationAddress: variables.destinationAddress,
-        refundAddress: variables.refundAddress,
-      })
-
-      navigate({
-        pathname: '/status',
-        search: new URLSearchParams({ swapId: swapData.id.toString() }).toString(),
-      })
-    },
-  })
+  const { mutate: createSwap, isPending: isSwapPending } = useChainflipSwapMutation()
 
   const { isOpen, onClose, onOpen } = useDisclosure()
 
@@ -256,7 +232,35 @@ export const TradeInput = () => {
         buyAmountFiat,
       })
 
-      createSwap(createSwapPayload)
+      // Snapshot what is being submitted now: the form can still change while the request is
+      // pending, and the session must describe the swap the broker actually opened.
+      const submittedSellAssetId = sellAsset.assetId
+      const submittedBuyAssetId = buyAsset.assetId
+      const submittedSellAmountCryptoBaseUnit = sellAmountCryptoBaseUnit
+
+      createSwap(createSwapPayload, {
+        onSuccess: (swapData, variables) => {
+          if (!submittedSellAmountCryptoBaseUnit) return
+
+          // Deposit details live in this tab's session state only. The URL carries just the
+          // swapId, so deposit details are never read from a /status link.
+          saveSwapSession({
+            swapId: swapData.id,
+            channelId: swapData.channelId,
+            depositAddress: swapData.address,
+            sellAssetId: submittedSellAssetId,
+            buyAssetId: submittedBuyAssetId,
+            sellAmountCryptoBaseUnit: submittedSellAmountCryptoBaseUnit,
+            destinationAddress: variables.destinationAddress,
+            refundAddress: variables.refundAddress,
+          })
+
+          navigate({
+            pathname: '/status',
+            search: new URLSearchParams({ swapId: swapData.id.toString() }).toString(),
+          })
+        },
+      })
     },
     [
       quote,
@@ -268,7 +272,9 @@ export const TradeInput = () => {
       refundAddress,
       sellAmountFiat,
       buyAmountFiat,
+      sellAmountCryptoBaseUnit,
       createSwap,
+      navigate,
     ],
   )
 
@@ -596,6 +602,7 @@ export const TradeInput = () => {
                 icon={SellAssetIcon}
                 aria-label='From Asset'
                 onClick={handleSellAssetClick}
+                isDisabled={isSwapPending}
               />
             </Flex>
             <IconButton
@@ -603,6 +610,7 @@ export const TradeInput = () => {
               icon={SwitchIcon}
               aria-label='Switch Assets'
               onClick={handleSwitchAssets}
+              isDisabled={isSwapPending}
             />
             <Flex flex={1} justifyContent='center'>
               <IconButton
@@ -611,6 +619,7 @@ export const TradeInput = () => {
                 icon={BuyAssetIcon}
                 aria-label='To Asset'
                 onClick={handleBuyAssetClick}
+                isDisabled={isSwapPending}
               />
             </Flex>
           </Flex>
@@ -639,6 +648,7 @@ export const TradeInput = () => {
                     placeholder={isFiat ? 'Enter USD amount' : `Enter ${sellAsset.symbol} amount`}
                     value={isFiat ? sellAmountFiatInput : sellAmountInput}
                     onValueChange={handleSellAmountChange}
+                    disabled={isSwapPending}
                     allowNegative={false}
                     decimalScale={isFiat ? 2 : sellAsset.precision}
                     isInvalid={!!errors.sellAmountCryptoBaseUnit}

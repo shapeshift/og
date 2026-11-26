@@ -13,10 +13,13 @@ import { Status } from './Status'
 
 const statusQuery = vi.hoisted(() => ({
   data: undefined as ChainflipStatusResponse | undefined,
+  isLoading: false,
+  isError: false,
+  isFetching: false,
 }))
 
 vi.mock('queries/chainflip/status', () => ({
-  useChainflipStatusQuery: () => ({ data: statusQuery.data, isLoading: false }),
+  useChainflipStatusQuery: () => ({ ...statusQuery, refetch: () => Promise.resolve() }),
 }))
 vi.mock('queries/chainflip/quote', () => ({
   useChainflipQuoteQuery: () => ({ data: undefined }),
@@ -100,6 +103,9 @@ beforeEach(() => {
   document.body.appendChild(container)
   root = createRoot(container)
   statusQuery.data = undefined
+  statusQuery.isLoading = false
+  statusQuery.isError = false
+  statusQuery.isFetching = false
 })
 
 afterEach(() => {
@@ -142,6 +148,45 @@ describe('Status', () => {
     expect(container.textContent).toContain('Swap details could not be verified')
     expect(qrContent()).toBeUndefined()
     expect(container.innerHTML).not.toContain(session.depositAddress)
+  })
+
+  it('does not show deposit details while the broker status is pending', () => {
+    saveSwapSession(session)
+    statusQuery.isLoading = true
+    statusQuery.isFetching = true
+    render('swapId=42')
+
+    expect(container.textContent).toContain('Verifying swap details')
+    expect(qrContent()).toBeUndefined()
+    expect(container.innerHTML).not.toContain(session.depositAddress)
+    expect(container.textContent).not.toContain('Send ')
+  })
+
+  it('does not show deposit details when the broker status request fails', () => {
+    saveSwapSession(session)
+    statusQuery.isError = true
+    render('swapId=42')
+
+    expect(container.textContent).toContain('could not be verified yet')
+    expect(container.textContent).toContain('Retry')
+    expect(qrContent()).toBeUndefined()
+    expect(container.innerHTML).not.toContain(session.depositAddress)
+  })
+
+  it('shows deposit details once a pending broker status resolves and matches', () => {
+    saveSwapSession(session)
+    statusQuery.isLoading = true
+    statusQuery.isFetching = true
+    render('swapId=42')
+    expect(qrContent()).toBeUndefined()
+
+    statusQuery.data = makeStatus()
+    statusQuery.isLoading = false
+    statusQuery.isFetching = false
+    render('swapId=42')
+
+    expect(qrContent()).toBe(session.depositAddress)
+    expect(container.textContent).toContain('Send 1 ETH')
   })
 
   it('shows an error for a missing or invalid swapId', () => {
