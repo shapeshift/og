@@ -15,6 +15,7 @@ import {
   IconButton,
   Link,
   SlideFade,
+  Spinner,
   Stack,
   Tag,
   Text,
@@ -31,7 +32,6 @@ import { useChainflipStatusQuery } from 'queries/chainflip/status'
 import type { ChainflipSwapStatus } from 'queries/chainflip/types'
 import { useMarketDataByAssetIdQuery } from 'queries/marketData'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useFormContext, useWatch } from 'react-hook-form'
 import { FaArrowUpRightFromSquare } from 'react-icons/fa6'
 import { useNavigate, useSearchParams } from 'react-router'
 import { useAssetById } from 'store/assets'
@@ -40,8 +40,8 @@ import { CopyButton } from 'components/CopyButton/CopyButton'
 import { QRCode } from 'components/QRCode/QRCode'
 import { bnOrZero, fromBaseUnit } from 'lib/bignumber/bignumber'
 import { mixpanel, MixPanelEvent } from 'lib/mixpanel'
+import { getSwapSession, getSwapSessionMismatches } from 'lib/swapSession'
 import { getChainflipStatusConfig } from 'lib/utils/chainflip'
-import type { SwapFormData } from 'types/form'
 
 import { AssetIcon } from '../AssetIcon'
 import { StatusStepper } from './components/StatusStepper'
@@ -233,12 +233,16 @@ const IdleSwapCardBody = ({
 
 const PendingSwapCardBody = ({
   swapStatus,
+  sellAssetId,
+  buyAssetId,
   sellAmountCryptoPrecision,
   buyAmountCryptoPrecision,
 }: {
   swapStatus?: {
     status: ChainflipSwapStatus
   }
+  sellAssetId: AssetId | undefined
+  buyAssetId: AssetId | undefined
   sellAmountCryptoPrecision: string
   buyAmountCryptoPrecision: string
 }) => {
@@ -248,10 +252,6 @@ const PendingSwapCardBody = ({
   const isCompleted = swapStatus?.status.state === 'completed'
   const isRefunded = Boolean(swapStatus?.status.refundEgress) && isCompleted
   const hasSentMixpanelSwapCompletedEvent = useRef(false)
-  const { control } = useFormContext<SwapFormData>()
-
-  const sellAssetId = useWatch({ control, name: 'sellAssetId' })
-  const buyAssetId = useWatch({ control, name: 'buyAssetId' })
 
   const sellAsset = useAssetById(sellAssetId)
   const buyAsset = useAssetById(buyAssetId)
@@ -279,6 +279,7 @@ const PendingSwapCardBody = ({
   }, [buyAmountCryptoPrecision, buyAssetMarketData?.price])
 
   useEffect(() => {
+    if (!(sellAssetId && buyAssetId)) return
     if (isCompleted && !hasSentMixpanelSwapCompletedEvent.current) {
       mixpanel?.track(MixPanelEvent.SwapCompleted, {
         sourceAsset,
@@ -293,10 +294,12 @@ const PendingSwapCardBody = ({
   }, [
     buyAmountCryptoPrecision,
     buyAmountFiat,
+    buyAssetId,
     destinationAsset,
     isCompleted,
     sellAmountCryptoPrecision,
     sellAmountFiat,
+    sellAssetId,
     sourceAsset,
   ])
 
@@ -355,15 +358,113 @@ const PendingSwapCardBody = ({
   )
 }
 
+const StatusMessageCard = ({
+  status,
+  title,
+  description,
+  onDone,
+  children,
+}: {
+  status: 'warning' | 'error'
+  title: string
+  description: string
+  onDone: () => void
+  children?: React.ReactNode
+}) => (
+  <Card width='full' maxW='560px'>
+    <CardBody display='flex' flexDir='column' gap={4}>
+      <Alert status={status} borderRadius='lg' alignItems='flex-start'>
+        <AlertIcon boxSize={5} />
+        <Stack spacing={1}>
+          <Text fontWeight='bold'>{title}</Text>
+          <Text fontSize='sm'>{description}</Text>
+        </Stack>
+      </Alert>
+      {children}
+    </CardBody>
+    <CardFooter px={6} bg='background.surface.raised.base' borderBottomRadius='xl'>
+      <Button width='100%' variant='solid' onClick={onDone}>
+        Start a new swap
+      </Button>
+    </CardFooter>
+  </Card>
+)
+
+// Shown when this tab did not create the swap (e.g. the link was opened elsewhere). Only data
+// returned by the broker for this swapId is shown, and never a deposit address.
+const BrokerOnlyStatus = ({
+  swapStatus,
+  onDone,
+}: {
+  swapStatus?: { status: ChainflipSwapStatus }
+  onDone: () => void
+}) => {
+  const state = swapStatus?.status.state
+  const isRefunded = Boolean(swapStatus?.status.refundEgress) && state === 'completed'
+  const destinationAddress = swapStatus?.status.destinationAddress
+
+  return (
+    <StatusMessageCard
+      status='warning'
+      title='Deposit details unavailable'
+      description='Deposit details are only shown in the browser tab where this swap was created. Never send funds to an address received in a link or message.'
+      onDone={onDone}
+    >
+      {swapStatus && (
+        <>
+          <Text>
+            Status: <b>{getChainflipStatusConfig(state, swapStatus).message}</b>
+          </Text>
+          <StatusStepper state={state} isRefunded={isRefunded} isFailed={state === 'failed'} />
+          {destinationAddress && (
+            <Stack spacing={2}>
+              <Text color='text.subtle'>Receive Address (reported by Chainflip)</Text>
+              <AddressInput
+                address={destinationAddress}
+                // eslint-disable-next-line react-memo/require-usememo
+                minTruncationLength={{ base: 16, md: 44 }}
+                ariaLabel='Copy receive address'
+              />
+            </Stack>
+          )}
+        </>
+      )}
+    </StatusMessageCard>
+  )
+}
+
 export const Status = () => {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
 
   const swapId = searchParams.get('swapId')
-  const { data: swapStatus, isLoading: isStatusLoading } = useChainflipStatusQuery({
+  const isValidSwapId = Boolean(swapId && /^\d+$/.test(swapId))
+
+  // The only source of deposit details: what this tab stored when it created the swap.
+  // Any deposit address, channel, asset, amount or address in the URL is ignored.
+  const swapSession = useMemo(() => getSwapSession(swapId), [swapId])
+
+  const {
+    data: swapStatus,
+    isLoading: isStatusLoading,
+    isError: isStatusError,
+    isFetching: isStatusFetching,
+    refetch: refetchStatus,
+  } = useChainflipStatusQuery({
     swapId: Number(swapId),
-    enabled: Boolean(swapId),
+    enabled: isValidSwapId,
   })
+
+  // Deposit details are only shown once a broker response for this swapId has been checked
+  // against the session. "No response yet" or "request failed" is not the same as "verified".
+  const sessionMismatches = useMemo(() => {
+    if (!(swapSession && swapStatus?.status)) return
+    const mismatches: string[] = getSwapSessionMismatches(swapSession, swapStatus.status)
+    if (swapStatus.id !== undefined && Number(swapStatus.id) !== swapSession.swapId) {
+      mismatches.push('swapId')
+    }
+    return mismatches
+  }, [swapSession, swapStatus])
 
   const isCompleted = swapStatus?.status.state === 'completed'
   const shouldDisplayPendingSwapBody = useMemo(
@@ -371,13 +472,9 @@ export const Status = () => {
     [swapStatus?.status],
   )
 
-  const { control } = useFormContext<SwapFormData>()
-
-  const sellAmountCryptoBaseUnit = useWatch({ control, name: 'sellAmountCryptoBaseUnit' })
-  const destinationAddress = useWatch({ control, name: 'destinationAddress' })
-  const refundAddress = useWatch({ control, name: 'refundAddress' })
-  const sellAssetId = useWatch({ control, name: 'sellAssetId' })
-  const buyAssetId = useWatch({ control, name: 'buyAssetId' })
+  const sellAssetId = swapSession?.sellAssetId
+  const buyAssetId = swapSession?.buyAssetId
+  const sellAmountCryptoBaseUnit = swapSession?.sellAmountCryptoBaseUnit ?? ''
 
   const sellAsset = useAssetById(sellAssetId)
   const buyAsset = useAssetById(buyAssetId)
@@ -393,14 +490,13 @@ export const Status = () => {
 
   const { data: quote } = useChainflipQuoteQuery(quoteParams)
 
-  const swapData = useMemo(() => {
-    const channelId = searchParams.get('channelId')
-    const depositAddress = searchParams.get('depositAddress')
-    return {
-      channelId: channelId ? Number(channelId) : undefined,
-      address: depositAddress || '',
-    }
-  }, [searchParams])
+  const swapData = useMemo(
+    () => ({
+      channelId: swapSession?.channelId,
+      address: swapSession?.depositAddress ?? '',
+    }),
+    [swapSession],
+  )
 
   const sellAmountCryptoPrecision = useMemo(() => {
     if (!sellAsset?.precision || !sellAmountCryptoBaseUnit) return '0'
@@ -413,6 +509,61 @@ export const Status = () => {
   }, [quote?.egressAmountNative, buyAsset?.precision])
 
   const handleCancel = useCallback(() => navigate('/'), [navigate])
+  const handleRetryStatus = useCallback(() => refetchStatus(), [refetchStatus])
+
+  if (!isValidSwapId) {
+    return (
+      <StatusMessageCard
+        status='error'
+        title='Swap not found'
+        description='This status link is missing a valid swap ID.'
+        onDone={handleCancel}
+      />
+    )
+  }
+
+  if (!swapSession) {
+    return <BrokerOnlyStatus swapStatus={swapStatus} onDone={handleCancel} />
+  }
+
+  if (!sessionMismatches) {
+    if (isStatusError && !isStatusFetching) {
+      return (
+        <StatusMessageCard
+          status='error'
+          title='Swap details could not be verified yet'
+          description='Chainflip status is unavailable right now. Deposit details will be shown once Chainflip confirms this swap. Do not send any funds until then.'
+          onDone={handleCancel}
+        >
+          <Button variant='outline' onClick={handleRetryStatus}>
+            Retry
+          </Button>
+        </StatusMessageCard>
+      )
+    }
+
+    return (
+      <Card width='full' maxW='560px'>
+        <CardBody>
+          <VStack spacing={4} py={6}>
+            <Spinner size='lg' />
+            <Text color='text.subtle'>Verifying swap details with Chainflip…</Text>
+          </VStack>
+        </CardBody>
+      </Card>
+    )
+  }
+
+  if (sessionMismatches.length > 0) {
+    return (
+      <StatusMessageCard
+        status='error'
+        title='Swap details could not be verified'
+        description='The details for this swap do not match what Chainflip reports. Do not send any funds for this swap.'
+        onDone={handleCancel}
+      />
+    )
+  }
 
   if (!(sellAssetId && buyAssetId)) return null
   if (!(sellAsset && buyAsset)) return null
@@ -464,6 +615,8 @@ export const Status = () => {
         <SlideFade in={shouldDisplayPendingSwapBody} unmountOnExit style={pendingSlideFadeSx}>
           <PendingSwapCardBody
             swapStatus={swapStatus}
+            sellAssetId={sellAssetId}
+            buyAssetId={buyAssetId}
             sellAmountCryptoPrecision={sellAmountCryptoPrecision}
             buyAmountCryptoPrecision={buyAmountCryptoPrecision}
           />
@@ -492,7 +645,7 @@ export const Status = () => {
             </Flex>
           </Flex>
           <AddressInput
-            address={refundAddress ?? ''}
+            address={swapSession.refundAddress}
             // eslint-disable-next-line react-memo/require-usememo
             minTruncationLength={{ base: 16, md: 44 }}
             ariaLabel='Copy refund address'
@@ -506,7 +659,7 @@ export const Status = () => {
             </Flex>
           </Flex>
           <AddressInput
-            address={destinationAddress ?? ''}
+            address={swapSession.destinationAddress}
             // eslint-disable-next-line react-memo/require-usememo
             minTruncationLength={{ base: 16, md: 44 }}
             ariaLabel='Copy receive address'
